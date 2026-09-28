@@ -11,6 +11,7 @@
 ![Stato](https://img.shields.io/badge/stato-super%20alpha-b3122f)
 ![Stack](https://img.shields.io/badge/stack-HTML%20%C2%B7%20CSS%20%C2%B7%20JS-1a1a1b)
 ![Build](https://img.shields.io/badge/build-nessuna-1a1a1b)
+[![Licenza](https://img.shields.io/badge/codice-MIT-1a1a1b)](LICENSE)
 
 </div>
 
@@ -37,7 +38,7 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 | **Ruota delle sezioni** | **Cinematografia** | **Scopri** |
 | <img src="docs/screenshots/04-ruota.jpg" width="220" alt="Ruota girevole aperta dalla stella"> | <img src="docs/screenshots/05-cinematografia.jpg" width="220" alt="Righe di film per genere"> | <img src="docs/screenshots/06-scopri.jpg" width="220" alt="Globo con gli artisti nel mondo"> |
 
-<p align="center"><img src="docs/screenshots/07-opera.jpg" width="220" alt="Opera a schermo intero"><br><sub>Opera a schermo intero</sub></p>
+<p align="center"><img src="docs/screenshots/07-opera.jpg" width="220" alt="Opera a schermo intero"><br><sub>Opere a schermo intero: scorri su e giù, come nei Reels</sub></p>
 
 ## Cosa c'è dentro
 
@@ -46,7 +47,8 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 - **Invito**: si entra con un codice o un QR.
 - **Menu principale**: le 8 sezioni attorno alla stella NOVAE.
 - **Novae**: il feed delle opere, con valutazione a stelle, mi piace, commenti, condivisione e salvataggi.
-- **Opera**: vista a schermo intero e scheda completa con descrizione e opere correlate.
+- **Opere a schermo intero**: come Reels e TikTok, scorri su e giù per passare alla prossima. Tocca per mettere in pausa, doppio tocco per il mi piace.
+- **Scheda opera**: player, descrizione completa e opere correlate.
 - **Stile → Cinematografia**: serie, film e classifica, con le righe a gradini per genere (Novae, Thriller, Storico).
 - **Scopri**: un globo da girare con gli artisti di ogni paese.
 - **Seguiti**: le opere degli artisti che segui, filtrabili per artista.
@@ -66,7 +68,8 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 |---|---|
 | Doppio tocco su un'opera | Mi piace |
 | Trascinare la ruota della stella | Scegliere la sezione (anche con rotellina o frecce ← →) |
-| Swipe su e giù nella vista a schermo intero | Opera precedente o successiva (anche rotellina o frecce ↑ ↓) |
+| Scorrere su e giù nelle opere a schermo intero | Opera precedente o successiva (anche rotellina o frecce ↑ ↓) |
+| Tocco su un'opera a schermo intero | Pausa e ripresa di video e audio |
 | Trascinare giù il feed dall'alto | Aggiornare il feed |
 | `/` | Cercare opere e artisti |
 | `Esc` | Chiudere pannelli, ricerca e ruota |
@@ -93,6 +96,9 @@ novae/
 ├── index.html          le schermate (una sola pagina)
 ├── styles.css          lo stile
 ├── app.js              dati di esempio, navigazione e interazioni
+├── LICENSE             licenza MIT del codice
+├── ASSETS-LICENSE.md   diritti su marchio, logo e grafiche
+├── THIRD_PARTY_NOTICES.md  librerie, font e foto di terze parti
 ├── assets/
 │   └── icone/          icone disegnate a mano, usate dal sito
 └── docs/
@@ -101,6 +107,12 @@ novae/
 ```
 
 Librerie usate, caricate da CDN: [Phosphor Icons](https://phosphoricons.com/) per le icone, [D3](https://d3js.org/) e [world-atlas](https://github.com/topojson/world-atlas) per il globo, font [Outfit](https://fonts.google.com/specimen/Outfit). Le foto segnaposto arrivano da [Picsum](https://picsum.photos/).
+
+## Licenza
+
+- **Codice** (`index.html`, `styles.css`, `app.js`): [MIT](LICENSE).
+- **Marchio e grafiche** (nome NOVAE, logo, icone, bozzetti, screenshot): © 2026 Xandre04, tutti i diritti riservati. Dettagli in [`ASSETS-LICENSE.md`](ASSETS-LICENSE.md).
+- **Librerie, font e foto di terze parti**: elencati con le loro licenze in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ## Pubblicazione
 

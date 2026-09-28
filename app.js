@@ -433,43 +433,63 @@
   }
   function renderFeed() { $('#feed').innerHTML = [...MINE, ...FEED].map(postHtml).join(''); }
 
-  /* ---------------- 4. Vista ---------------- */
-  let vistaTimer;
-  function renderVista(id) {
-    const w = byId[id] || FEED[0];
+  /* ---------------- 4. Vista: full-screen vertical feed, like Reels / TikTok ----------------
+     Native scroll-snap does the swiping; an IntersectionObserver tracks the reel on screen. */
+  let reelObserver;
+  function reelHtml(w) {
     const a = ARTISTS[w.a];
-    const idx = FEED.indexOf(w);
-    clearTimeout(vistaTimer);
-    $('#vista').className = 'vista';
-    $('#vista').innerHTML = `
-      <button class="vista-back icon-btn" data-act="back" data-fallback="#novae" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
-      <div class="arch ph-img" data-dbl="${w.id}">${img(w.img, w.t)}</div>
-      ${w.type !== 'image' ? `<button class="vista-play" data-act="play" aria-label="Riproduci"><i class="ph-light ph-play"></i></button>` : ''}
-      <div class="progress"><span></span></div>
-      <div class="vista-rail">
-        ${avatarRing(w.a)}
+    const src = w.ts ? w.img : pic(w.id, 900, 1600); // portrait crop of the same photo
+    const canFollow = w.a !== 'me' && !followed.has(w.a);
+    return `<section class="reel" data-id="${w.id}" data-type="${w.type}" aria-label="${w.t} di ${a.name}">
+      <div class="reel-media ph-img" data-dbl="${w.id}">${img(src, w.t)}</div>
+      <span class="reel-shade" aria-hidden="true"></span>
+      ${w.type !== 'image' ? '<span class="reel-paused" aria-hidden="true"><i class="ph-fill ph-play"></i></span><div class="progress"><span></span></div>' : ''}
+      <div class="reel-rail">
+        <span class="reel-ava">${avatarRing(w.a)}${canFollow ? `<button class="reel-follow" data-act="follow" data-a="${w.a}" aria-label="Segui ${a.name}">+</button>` : ''}</span>
         ${heart(w, true)}
-        ${commentBtn(w)}
-        ${shareBtn(w)}
+        <button class="act" data-act="comments" data-id="${w.id}" aria-label="Commenti"><i class="ph-light ph-chat-circle"></i><small>${fmt(w.comments)}</small></button>
         ${saveBtn(w)}
+        ${shareBtn(w)}
         <button class="act" data-act="more" data-id="${w.id}" aria-label="Altro"><i class="ph-light ph-dots-three"></i></button>
-        ${idx > -1 ? `<button class="act" data-act="vista-step" data-dir="-1" aria-label="Opera precedente"><i class="ph-light ph-caret-up"></i></button>
-        <button class="act" data-act="vista-step" data-dir="1" aria-label="Opera successiva"><i class="ph-light ph-caret-down"></i></button>` : ''}
       </div>
-      <div class="vista-meta">
-        ${rating(w.rating, 16)}
+      <div class="reel-meta">
+        <a class="reel-by" href="${profileHref(w.a)}">@${a.handle}</a>
         <h2>${w.t}</h2>
-        <a class="by" href="#artista/${w.a}">${a.name}</a>
+        <p class="reel-desc" data-act="expand">${w.desc}</p>
+        <p class="reel-tags">${w.rating ? rating(w.rating, 12) : '<span class="new-tag">Nuova</span>'}<span>${w.disc} · ${agoText(w)}</span></p>
       </div>
-      <button class="vista-info" data-act="info" data-id="${w.id}">INFO*</button>`;
-    $('#vista').dataset.id = w.id;
+    </section>`;
+  }
+  function renderVista(id) {
+    const all = [...MINE, ...FEED];
+    const start = byId[id] || all[0];
+    const list = all.includes(start) ? all : [start, ...all]; // e.g. a film opened from Cinematografia
+    const root = $('#vista');
+    root.className = 'vista';
+    root.innerHTML = `
+      <button class="vista-back icon-btn" data-act="back" data-fallback="#novae" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
+      <p class="vista-hint" aria-hidden="true"><i class="ph-light ph-hand-swipe-up"></i>Scorri per la prossima</p>
+      <div class="reels" id="reels">${list.map(reelHtml).join('')}</div>`;
+    const reels = $('#reels');
+    reels.scrollTop = reels.querySelector(`[data-id="${start.id}"]`).offsetTop;
+    root.dataset.id = start.id;
+    if (!store.get('novae.reelHint')) { root.classList.add('hint'); store.set('novae.reelHint', '1'); }
+    reelObserver?.disconnect();
+    reelObserver = new IntersectionObserver(entries => entries.forEach(en => {
+      en.target.classList.toggle('active', en.isIntersecting);
+      if (!en.isIntersecting) return;
+      const wid = en.target.dataset.id, h = '#vista/' + wid;
+      root.dataset.id = wid;
+      if (location.hash !== h) { // keep the URL on the work you're watching, without adding history entries
+        history.replaceState(null, '', h);
+        curHash = h; trail[trail.length - 1] = h; cur.param = wid;
+      }
+    }), { root: reels, threshold: .6 });
+    $$('.reel', reels).forEach(r => reelObserver.observe(r));
   }
   function stepVista(dir) {
-    const cur = byId[$('#vista').dataset.id];
-    const i = FEED.indexOf(cur);
-    const next = FEED[(i + dir + FEED.length) % FEED.length];
-    trail.pop(); // replace, don't stack: "back" returns to where you came from
-    location.replace('#vista/' + next.id);
+    const reels = $('#reels');
+    if (reels) reels.scrollBy({ top: dir * reels.clientHeight, behavior: reduceMotion ? 'auto' : 'smooth' });
   }
 
   /* ---------------- 5. Seguiti: works by the artists you follow ---------------- */
@@ -1061,7 +1081,13 @@
       }
       clearTimeout(dblTimer);
       dblEl = dbl;
-      dblTimer = setTimeout(() => { dblTimer = null; const h = dbl.getAttribute('href'); if (h) location.hash = h; }, 260);
+      dblTimer = setTimeout(() => {
+        dblTimer = null;
+        const h = dbl.getAttribute('href');
+        if (h) { location.hash = h; return; }
+        const reel = dbl.closest('.reel'); // single tap on a reel: pause / resume video and audio
+        if (reel && reel.dataset.type !== 'image') reel.classList.toggle('paused');
+      }, 260);
       return;
     }
     if (e.target.closest('.sr')) addRecent($('#q').value);
@@ -1134,6 +1160,7 @@
         break;
       case 'delete-yes': deleteMine(el.dataset.id); break;
       case 'publish': openPublish(); break;
+      case 'expand': el.classList.toggle('open'); break;
       case 'edit-profile': openEditProfile(); break;
       case 'play': {
         const box = el.closest('.vista, .player');
@@ -1230,21 +1257,6 @@
     if (scr === 'vista' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); stepVista(e.key === 'ArrowDown' ? 1 : -1); }
     if (scr === 'scopri' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) selectCountry(globe.idx + (e.key === 'ArrowRight' ? 1 : -1));
   });
-
-  // Vista: swipe up/down on touch, wheel on desktop, to move between works
-  let touchY = null, wheelLock = 0;
-  $('#vista').addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
-  $('#vista').addEventListener('touchend', e => {
-    if (touchY === null) return;
-    const dy = e.changedTouches[0].clientY - touchY;
-    touchY = null;
-    if (Math.abs(dy) > 60) stepVista(dy < 0 ? 1 : -1);
-  }, { passive: true });
-  $('#vista').addEventListener('wheel', e => {
-    if (Math.abs(e.deltaY) < 30 || Date.now() < wheelLock) return;
-    wheelLock = Date.now() + 700;
-    stepVista(e.deltaY > 0 ? 1 : -1);
-  }, { passive: true });
 
   window.addEventListener('hashchange', route);
 
