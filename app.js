@@ -34,9 +34,11 @@
   const starSvg = (cls = '') => `<svg class="star-svg ${cls}" aria-hidden="true"><use href="#star4"/></svg>`;
   const icon = key => {
     if (key === 'novae') return starSvg();
-    if (key === 'stile') return `<svg class="star-svg" viewBox="0 0 100 100" aria-hidden="true"><use href="#star4" x="30" y="26" width="62" height="66"/><use href="#star4" x="6" y="8" width="34" height="36"/></svg>`;
+    if (key === 'stile') return crop('gem');
+    if (key === 'seguiti') return crop('galleria');
     return crop(key);
   };
+  const coin = () => crop('mercato', 'coin');
 
   /* ---------------- Mock data ---------------- */
   const ARTISTS = {
@@ -139,6 +141,15 @@
   const liked = new Set((store.get('novae.liked') || '').split(',').filter(Boolean));
   const saveLikes = () => store.set('novae.liked', [...liked].join(','));
   const likeCount = w => w.likes + (liked.has(w.id) ? 1 : 0);
+  const readJSON = (k, def) => { try { return JSON.parse(store.get(k)) ?? def; } catch { return def; } };
+  const followed = new Set(readJSON('novae.followed', ['aiko', 'kitti', 'livia', 'ruben', 'ines']));
+  const saveFollowed = () => store.set('novae.followed', JSON.stringify([...followed]));
+  // UI preferences remembered between visits
+  const prefs = Object.assign({ seguiti: 'Tutti', cineTab: 'Film', cineSort: 'recenti', country: 0, lastHub: '' }, readJSON('novae.prefs', {}));
+  const savePrefs = () => store.set('novae.prefs', JSON.stringify(prefs));
+  let recent = readJSON('novae.recent', []);
+  const addRecent = q => { q = q.trim(); if (q.length < 2) return; recent = [q, ...recent.filter(x => x.toLowerCase() !== q.toLowerCase())].slice(0, 6); store.set('novae.recent', JSON.stringify(recent)); };
+  const buzz = () => { try { navigator.vibrate?.(12); } catch { /* unsupported */ } };
 
   /* ---------------- Shared fragments ---------------- */
   const rating = (v, size = 18) => {
@@ -161,15 +172,9 @@
     const r = rng(42);
     const sky = $('#sky');
     let html = '';
-    for (let i = 0; i < 26; i++) {
-      const pts = [];
-      for (let k = 0; k <= 5; k++) {
-        const a = (-90 + k * 144) * Math.PI / 180;
-        pts.push([12 + Math.cos(a) * 9.5 + (r() - .5) * 3, 12 + Math.sin(a) * 9.5 + (r() - .5) * 3]);
-      }
-      const d = 'M' + pts.map(p => p.map(v => v.toFixed(1)).join(' ')).join(' L') + ` l${((r() - .5) * 5).toFixed(1)} ${((r() - .5) * 5).toFixed(1)}`;
-      const x = (r() * 96 + 2).toFixed(1), y = (r() * 94 + 2).toFixed(1), rot = Math.round(r() * 90 - 45), s = (.7 + r() * .6).toFixed(2);
-      html += `<svg viewBox="0 0 24 24" style="left:${x}%;top:${y}%;transform:rotate(${rot}deg) scale(${s});--d:${(3 + r() * 5).toFixed(1)}s;--dl:${(-r() * 6).toFixed(1)}s"><path d="${d}"/></svg>`;
+    for (let i = 0; i < 34; i++) {
+      const x = (r() * 97 + 1).toFixed(1), y = (r() * 96 + 1).toFixed(1), sz = (4 + r() * 6).toFixed(1);
+      html += `<svg style="left:${x}%;top:${y}%;--sz:${sz}px;--d:${(3 + r() * 5).toFixed(1)}s;--dl:${(-r() * 6).toFixed(1)}s"><use href="#star4"/></svg>`;
     }
     sky.innerHTML = html;
   }
@@ -213,27 +218,28 @@
   });
 
   /* ---------------- 2. Hub ---------------- */
+  // Offsets from the centre star, in units of hub width (measured from the reference video)
   const HUB = [
-    { k: 'stile', l: 'Stile', x: 48.6, y: 15.8 },
-    { k: 'novae', l: 'Novae', x: 78, y: 25 },
-    { k: 'scopri', l: 'Scopri', x: 85.4, y: 47.3 },
-    { k: 'messaggi', l: 'Messaggi', x: 76.5, y: 69.8 },
-    { k: 'profilo', l: 'Profilo', x: 48.6, y: 83 },
-    { k: 'mercato', l: 'Mercato Novae', x: 21.1, y: 70.2 },
-    { k: 'impostazioni', l: 'Impostazioni', x: 11.7, y: 46.7 },
-    { k: 'galleria', l: 'Galleria', x: 21.8, y: 25.2 },
+    { k: 'stile', l: 'Stile', dx: 0, dy: -.33 },
+    { k: 'novae', l: 'Novae', dx: .256, dy: -.23 },
+    { k: 'scopri', l: 'Scopri', dx: .36, dy: .03 },
+    { k: 'messaggi', l: 'Messaggi', dx: .256, dy: .29 },
+    { k: 'profilo', l: 'Profilo', dx: 0, dy: .40 },
+    { k: 'mercato', l: 'Mercato<br>Novae', dx: -.256, dy: .29 },
+    { k: 'impostazioni', l: 'Impostazioni', dx: -.36, dy: .03 },
+    { k: 'seguiti', l: 'Seguiti', dx: -.256, dy: -.23 },
   ];
   function renderHub() {
     const hub = $('#hub');
     hub.innerHTML = `
       <div class="hub-core">${starSvg()}</div>
       <div class="hub-wordmark">${crop('wordmark')}</div>
-      ${HUB.map(h => `<div class="hub-item" style="left:${h.x}%;top:${h.y}%"><a class="hub-btn" href="#${h.k}"><span class="hub-circle">${icon(h.k)}</span><span class="hub-label">${h.l}</span></a></div>`).join('')}`;
+      ${HUB.map(h => `<div class="hub-item ${prefs.lastHub === h.k ? 'hub-last' : ''}" style="--dx:${h.dx};--dy:${h.dy}"><a class="hub-btn" href="#${h.k}"><span class="hub-circle i-${h.k}">${icon(h.k)}</span><span class="hub-label">${h.l}</span></a></div>`).join('')}`;
     if (reduceMotion) return;
     const box = hub.getBoundingClientRect();
     $$('.hub-item', hub).forEach((el, i) => {
       const h = HUB[i];
-      const dx = (48.8 - h.x) / 100 * box.width, dy = (46.7 - h.y) / 100 * box.height;
+      const dx = -h.dx * box.width, dy = -h.dy * box.width;
       el.firstElementChild.animate(
         [{ transform: `translate(${dx}px, ${dy}px) scale(.2)`, opacity: 0 }, { transform: 'none', opacity: 1 }],
         { duration: 900, delay: 120 + i * 55, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
@@ -244,7 +250,7 @@
   /* ---------------- Dock arc ---------------- */
   const ARC = [
     { k: 'impostazioni', l: 'Impostazioni', a: 180 },
-    { k: 'galleria', l: 'Galleria', a: 135 },
+    { k: 'seguiti', l: 'Seguiti', a: 135 },
     { k: 'stile', l: 'Stile', a: 90 },
     { k: 'novae', l: 'Novae', a: 45 },
     { k: 'scopri', l: 'Scopri', a: 0 },
@@ -253,10 +259,12 @@
     const R = 118;
     $('#arc').innerHTML = ARC.map((it, i) => {
       const rad = it.a * Math.PI / 180;
-      return `<a class="arc-item" href="#${it.k}" style="--i:${i};--tx:${(Math.cos(rad) * R).toFixed(1)}px;--ty:${(-Math.sin(rad) * R - 30).toFixed(1)}px" tabindex="-1"><span class="arc-circle">${icon(it.k)}</span><span class="arc-label">${it.l}</span></a>`;
+      return `<a class="arc-item" data-k="${it.k}" href="#${it.k}" style="--i:${i};--tx:${(Math.cos(rad) * R).toFixed(1)}px;--ty:${(-Math.sin(rad) * R - 30).toFixed(1)}px" tabindex="-1"><span class="arc-circle i-${it.k}">${icon(it.k)}</span><span class="arc-label">${it.l}</span></a>`;
     }).join('');
   }
   function setArc(open) {
+    const cur = document.body.dataset.screen === 'disciplina' ? 'stile' : document.body.dataset.screen;
+    $$('.arc-item').forEach(a => a.classList.toggle('current', a.dataset.k === cur));
     $('#arc').classList.toggle('open', open);
     $('#scrim').classList.toggle('open', open);
     $('#dockStar').setAttribute('aria-expanded', open);
@@ -269,7 +277,7 @@
     return `<article class="post">
       ${rating(w.rating)}
       <div class="post-side">${avatarRing(w.a)}<span class="post-by">${a.name.split(' ')[0]}</span></div>
-      <a class="frame" href="#vista/${w.id}" aria-label="${w.t} di ${a.name}">
+      <a class="frame" href="#vista/${w.id}" data-dbl="${w.id}" aria-label="${w.t} di ${a.name}">
         <span class="frame-inner ph-img">${img(w.thumb, w.t)}${mediaOverlay(w)}</span>
       </a>
       <div class="post-actions">${heart(w)}${shareBtn(w)}${commentBtn(w)}</div>
@@ -287,8 +295,8 @@
     clearTimeout(vistaTimer);
     $('#vista').className = 'vista';
     $('#vista').innerHTML = `
-      <a class="vista-back icon-btn" href="#novae" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></a>
-      <div class="arch ph-img">${img(w.img, w.t)}</div>
+      <button class="vista-back icon-btn" data-act="back" data-fallback="#novae" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
+      <div class="arch ph-img" data-dbl="${w.id}">${img(w.img, w.t)}</div>
       ${w.type !== 'image' ? `<button class="vista-play" data-act="play" aria-label="Riproduci"><i class="ph-light ph-play"></i></button>` : ''}
       <div class="progress"><span></span></div>
       <div class="vista-rail">
@@ -312,20 +320,26 @@
     const cur = byId[$('#vista').dataset.id];
     const i = FEED.indexOf(cur);
     const next = FEED[(i + dir + FEED.length) % FEED.length];
-    location.hash = '#vista/' + next.id;
+    trail.pop(); // replace, don't stack: "back" returns to where you came from
+    location.replace('#vista/' + next.id);
   }
 
-  /* ---------------- 5. Galleria ---------------- */
-  let galleryFilter = 'Tutte';
-  function renderGallery() {
-    const opts = ['Tutte', ...DISCIPLINES];
-    $('#galleryPills').innerHTML = opts.map(o => `<button class="pill" role="tab" aria-selected="${o === galleryFilter}" data-act="gfilter" data-v="${o}">${o}</button>`).join('');
-    const list = WORKS.filter(w => galleryFilter === 'Tutte' || w.disc === galleryFilter);
+  /* ---------------- 5. Seguiti: works by the artists you follow ---------------- */
+  function renderSeguiti() {
+    const ids = [...followed];
+    if (prefs.seguiti !== 'Tutti' && !followed.has(prefs.seguiti)) prefs.seguiti = 'Tutti';
+    $('#galleryPills').innerHTML = ids.length ? [`<button class="pill" role="tab" aria-selected="${prefs.seguiti === 'Tutti'}" data-act="gfilter" data-v="Tutti">Tutti</button>`,
+      ...ids.map(id => `<button class="pill" role="tab" aria-selected="${prefs.seguiti === id}" data-act="gfilter" data-v="${id}"><img src="${avatar(id)}" alt="">${ARTISTS[id].name.split(' ')[0]}</button>`)].join('') : '';
+    if (!ids.length) {
+      $('#masonry').innerHTML = `<div class="empty" style="column-span:all">${starSvg()}<strong>Non segui ancora nessuno</strong><p>Trova artisti in Scopri e tocca Segui sul loro profilo.</p><a class="btn-ghost" href="#scopri">Apri Scopri</a></div>`;
+      return;
+    }
+    const list = WORKS.filter(w => prefs.seguiti === 'Tutti' ? followed.has(w.a) : w.a === prefs.seguiti);
     $('#masonry').innerHTML = list.length ? list.map(w => {
       const h = Math.round(480 * (w.h || 900) / (w.w || 1200));
       return `<a class="m-tile" href="#opera/${w.id}"><div class="m-img"><div class="ph-img" style="aspect-ratio:480/${h}">${img(w.thumb, w.t)}${w.type === 'video' ? mediaOverlay(w) : ''}</div></div>
         <div class="m-cap"><strong>${w.t}</strong><span>${ARTISTS[w.a].name.split(' ')[0]}</span></div></a>`;
-    }).join('') : `<div class="empty" style="column-span:all">${starSvg()}<strong>Ancora vuoto</strong><p>Nessuna opera di ${galleryFilter.toLowerCase()} per ora. Pubblica la prima dal tuo profilo.</p></div>`;
+    }).join('') : `<div class="empty" style="column-span:all">${starSvg()}<strong>Ancora vuoto</strong><p>${ARTISTS[prefs.seguiti]?.name || 'Questo artista'} non ha ancora pubblicato opere.</p></div>`;
   }
 
   /* ---------------- 6. Stile ---------------- */
@@ -341,7 +355,7 @@
   }
 
   /* ---------------- 7. Disciplina ---------------- */
-  const cineState = { tab: 'Film', sort: 'recenti', expanded: null, sortOpen: false, center: { Novae: 3, Thriller: 3, Storico: 3 } };
+  const cineState = { tab: prefs.cineTab, sort: prefs.cineSort, expanded: null, sortOpen: false, center: { Novae: 3, Thriller: 3, Storico: 3 } };
   const SIZES = [[46, 100], [12, 44], [8, 30], [5, 17]]; // width %, height % by distance from center
   function genreWorks(g) {
     let list = WORKS.filter(w => w.genre === g);
@@ -360,14 +374,14 @@
     const name = DISCIPLINES.find(d => d.toLowerCase() === (slug || '').toLowerCase()) || 'Cinematografia';
     const root = $('#cine');
     if (name !== 'Cinematografia') {
-      root.innerHTML = `<a class="cine-back icon-btn" href="#stile" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></a>
+      root.innerHTML = `<button class="cine-back icon-btn" data-act="back" data-fallback="#stile" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
         <h1 class="cine-title">${name}</h1>
-        <div class="empty">${starSvg()}<strong>Sala in allestimento</strong><p>La sezione ${name.toLowerCase()} apre nella prossima alpha. Intanto trovi queste opere in Galleria.</p><a class="btn-ghost" href="#galleria">Apri Galleria</a></div>`;
+        <div class="empty">${starSvg()}<strong>Sala in allestimento</strong><p>La sezione ${name.toLowerCase()} apre nella prossima alpha. Intanto trovi nuove opere nel feed.</p><a class="btn-ghost" href="#novae">Apri Novae</a></div>`;
       return;
     }
     const tabs = ['Serie', 'Film', 'Classifica', 'Ordina per'];
     root.innerHTML = `
-      <a class="cine-back icon-btn" href="#stile" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></a>
+      <button class="cine-back icon-btn" data-act="back" data-fallback="#stile" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
       <h1 class="cine-title">${name}</h1>
       <div class="tabs" role="tablist">${tabs.map(t => `<button class="tab" role="tab" data-act="ctab" data-v="${t}" aria-selected="${t === cineState.tab || (t === 'Ordina per' && cineState.sortOpen)}">${t}</button>`).join('')}</div>
       ${cineState.sortOpen ? `<div class="sortmenu" role="menu" style="top:${0}px">${[['recenti', 'Più recenti'], ['stelle', 'Più stelle'], ['visti', 'Più visti']].map(([v, l]) => `<button role="menuitemradio" aria-checked="${cineState.sort === v}" data-act="csort" data-v="${v}">${l}</button>`).join('')}</div>` : ''}
@@ -387,7 +401,7 @@
         <button class="band-close icon-btn" data-act="collapse" aria-label="Chiudi"><i class="ph-light ph-x"></i></button>
         <div class="band">
           <div class="band-left">${avatarRing(cw.a, 'sm')}<small>${a.name}</small><span class="line"></span>${rating(cw.rating, 15)}</div>
-          <a class="band-media ph-img" href="#opera/${cw.id}">${img(cw.img, cw.t)}<span class="play-ico"><i class="ph-fill ph-play"></i></span></a>
+          <a class="band-media ph-img" href="#opera/${cw.id}" data-dbl="${cw.id}">${img(cw.img, cw.t)}<span class="play-ico"><i class="ph-fill ph-play"></i></span></a>
           <div class="band-info"><h4>INFO*</h4>${cw.kind}, ${cw.year}. ${cw.desc}<br><a class="btn-ghost" href="#opera/${cw.id}">Scheda completa</a></div>
         </div>
         <div class="cf-foot">${heart(cw, true)}<a href="#opera/${cw.id}">${cw.t}</a>${commentBtn(cw)}</div>
@@ -412,8 +426,8 @@
     const a = ARTISTS[w.a];
     const related = WORKS.filter(x => x !== w && (x.genre ? x.genre === w.genre : x.disc === w.disc || x.a === w.a)).slice(0, 6);
     $('#detail').innerHTML = `
-      <div class="player ph-img">
-        <a class="back icon-btn" href="javascript:history.back()" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></a>
+      <div class="player ph-img" data-dbl="${w.id}">
+        <button class="back icon-btn" data-act="back" data-fallback="#novae" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
         ${img(w.img, w.t)}
         ${w.type !== 'image' ? `<button class="vista-play" data-act="play" aria-label="Riproduci"><i class="ph-light ph-play"></i></button><div class="progress"><span></span></div>` : ''}
       </div>
@@ -441,7 +455,8 @@
   }
 
   /* ---------------- 9. Scopri ---------------- */
-  const globe = { ready: false, loading: false, idx: 0, rot: [-100.9, -15.2, 0] };
+  const startC = COUNTRIES[prefs.country] || COUNTRIES[0];
+  const globe = { ready: false, loading: false, idx: COUNTRIES.indexOf(startC), rot: [-startC.c[0], -startC.c[1], 0] };
   function artistsIn(c) { return AIDS.filter(id => ARTISTS[id].country === c.it); }
   function updateCountryUi() {
     const c = COUNTRIES[globe.idx];
@@ -507,6 +522,7 @@
   }
   function selectCountry(i) {
     globe.idx = (i + COUNTRIES.length) % COUNTRIES.length;
+    prefs.country = globe.idx; savePrefs();
     updateCountryUi();
     if (!globe.ready) return;
     const c = COUNTRIES[globe.idx];
@@ -526,18 +542,18 @@
     const items = WORKS.filter(w => w.type !== 'audio').slice(8, 20);
     const feat = byId.w3;
     $('#market').innerHTML = `
-      <div class="market-head"><h1>${crop('mercato')}Mercato Novae</h1>
-        <span class="wallet">${crop('gem')}<span><strong>1.240</strong> <small>gemme</small></span></span></div>
+      <div class="market-head"><h1>${coin()}Mercato Novae</h1>
+        <span class="wallet">${coin()}<span><strong>1.240</strong> <small>crediti</small></span></span></div>
       <div class="m-feature">
         ${img(feat.img, feat.t)}
         <div><h2>${feat.t}</h2><p>Edizione unica di ${ARTISTS[feat.a].name}. Chi la acquista riceve il file originale e una stella sul profilo.</p>
-          <div class="m-buy"><span class="price">${crop('gem')}${fmt(feat.price)}</span><button class="btn-accent" data-act="buy" data-id="${feat.id}">Acquista</button></div></div>
+          <div class="m-buy"><span class="price">${coin()}${fmt(feat.price)}</span><button class="btn-accent" data-act="buy" data-id="${feat.id}">Acquista</button></div></div>
       </div>
       <div class="market-grid">${items.map(w => `
         <div class="m-item">
           <a class="frame" href="#opera/${w.id}"><span class="frame-inner ph-img">${img(w.thumb, w.t)}</span></a>
           <div><h3>${w.t}</h3><span class="by">${ARTISTS[w.a].name}</span></div>
-          <div class="m-buy"><span class="price">${crop('gem')}${fmt(w.price)}</span><button class="btn-ghost" data-act="buy" data-id="${w.id}">Acquista</button></div>
+          <div class="m-buy"><span class="price">${coin()}${fmt(w.price)}</span><button class="btn-ghost" data-act="buy" data-id="${w.id}">Acquista</button></div>
         </div>`).join('')}</div>`;
   }
 
@@ -563,10 +579,10 @@
         <div class="stats">
           <div><strong>${works.length}</strong><span>opere</span></div>
           <div><strong>${other ? fmt(works.reduce((s, w) => s + likeCount(w), 0)) : saved.length}</strong><span>${other ? 'cuori' : 'salvate'}</span></div>
-          <div><strong>${other ? fmt(120 + works.length * 37) : '1.240'}</strong><span>${other ? 'seguaci' : 'gemme'}</span></div>
+          <div><strong>${other ? fmt(120 + works.length * 37) : '1.240'}</strong><span>${other ? 'seguaci' : 'crediti'}</span></div>
         </div>
         <div class="prof-cta">${other
-          ? `<button class="btn-accent" data-act="follow">Segui</button><a class="btn-ghost" href="#messaggi/${aid}">Messaggio</a>`
+          ? `<button class="${followed.has(aid) ? 'btn-ghost' : 'btn-accent'}" data-act="follow" data-a="${aid}" aria-pressed="${followed.has(aid)}">${followed.has(aid) ? 'Segui già' : 'Segui'}</button><a class="btn-ghost" href="#messaggi/${aid}">Messaggio</a>`
           : `<button class="btn-accent" data-act="soon">Pubblica opera</button><a class="btn-ghost" href="#impostazioni">Modifica</a>`}</div>
       </div>
       <div class="seg" role="tablist">${['Opere', 'Salvate', 'Stelle'].map(t => `<button role="tab" aria-selected="${t === profTab}" data-act="ptab" data-v="${t}" data-a="${aid || ''}">${t}</button>`).join('')}</div>
@@ -583,7 +599,7 @@
       const a = ARTISTS[th.id];
       root.innerHTML = `
         <div class="chat">
-          <div class="chat-top"><a class="icon-btn" href="#messaggi" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></a>${avatarRing(th.id, 'sm')}<div><strong>${a.name}</strong><small>${a.country}</small></div></div>
+          <div class="chat-top"><button class="icon-btn" data-act="back" data-fallback="#messaggi" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>${avatarRing(th.id, 'sm')}<div><strong>${a.name}</strong><small>${a.country}</small></div></div>
           <div class="bubbles" id="bubbles">${th.msgs.length ? th.msgs.map(([who, text]) => `<p class="bubble ${who === 'me' ? 'me' : ''}">${text}</p>`).join('') : `<div class="empty"><strong>Inizia tu</strong><p>Scrivi il primo messaggio a ${a.name.split(' ')[0]}.</p></div>`}</div>
           <form class="composer" data-thread="${th.id}"><label class="sr-only" for="msgInput" hidden>Messaggio</label><input id="msgInput" placeholder="Scrivi un messaggio" autocomplete="off"><button aria-label="Invia"><i class="ph-light ph-paper-plane-right"></i></button></form>
         </div>`;
@@ -637,10 +653,14 @@
     q = q.trim().toLowerCase();
     const works = WORKS.filter(w => !q || w.t.toLowerCase().includes(q) || w.disc.toLowerCase().includes(q) || ARTISTS[w.a].country.toLowerCase().includes(q)).slice(0, 8);
     const artists = AIDS.filter(id => !q || ARTISTS[id].name.toLowerCase().includes(q) || ARTISTS[id].country.toLowerCase().includes(q)).slice(0, 5);
-    $('#results').innerHTML = (!works.length && !artists.length)
+    const recentHtml = !q && recent.length
+      ? `<h3>Recenti</h3><div class="recent">${recent.map(r => `<button class="pill" data-act="recent" data-v="${r.replace(/"/g, '&quot;')}">${r.replace(/</g, '&lt;')}</button>`).join('')}<button class="recent-clear" data-act="recent-clear">Cancella</button></div>`
+      : '';
+    const hint = '<p class="kbd-hint">Premi <kbd>/</kbd> ovunque per cercare, <kbd>Esc</kbd> per chiudere.</p>';
+    $('#results').innerHTML = recentHtml + ((!works.length && !artists.length)
       ? `<div class="empty"><strong>Nessun risultato</strong><p>Prova con un titolo, un nome o un paese.</p></div>`
       : `${artists.length ? `<h3>Artisti</h3>${artists.map(id => `<a class="sr" href="#artista/${id}"><img class="round" src="${avatar(id)}" alt=""><div>${ARTISTS[id].name}<span>${ARTISTS[id].country}</span></div></a>`).join('')}` : ''}
-         ${works.length ? `<h3>Opere</h3>${works.map(w => `<a class="sr" href="#opera/${w.id}"><img src="${pic(w.id, 120, 120)}" alt=""><div>${w.t}<span>${ARTISTS[w.a].name}, ${w.disc.toLowerCase()}</span></div></a>`).join('')}` : ''}`;
+         ${works.length ? `<h3>Opere</h3>${works.map(w => `<a class="sr" href="#opera/${w.id}"><img src="${pic(w.id, 120, 120)}" alt=""><div>${w.t}<span>${ARTISTS[w.a].name}, ${w.disc.toLowerCase()}</span></div></a>`).join('')}` : ''}`) + hint;
   }
 
   /* ---------------- Sheet + toast ---------------- */
@@ -667,7 +687,7 @@
     hub: renderHub,
     novae: renderFeed,
     vista: renderVista,
-    galleria: renderGallery,
+    seguiti: renderSeguiti,
     stile: renderStile,
     disciplina: renderCine,
     opera: renderDetail,
@@ -678,8 +698,19 @@
     messaggi: renderMessages,
     impostazioni: renderSettings,
   };
+  const TITLES = {
+    invito: 'Invito', novae: 'Novae', vista: 'Opera', seguiti: 'Seguiti', stile: 'Stile', disciplina: 'Cinematografia', opera: 'Opera',
+    scopri: 'Scopri', mercato: 'Mercato', profilo: 'Profilo', artista: 'Artista', messaggi: 'Messaggi', impostazioni: 'Impostazioni',
+  };
+  const scrollMemo = new Map(); // hash -> scrollY, so "back" lands where you left
+  let curHash = null;
+  const trail = []; // visited hashes, so the back button knows if history.back() stays inside NOVAE
   function route() {
+    if (curHash !== null) scrollMemo.set(curHash, window.scrollY);
+    curHash = location.hash;
+    if (trail.length > 1 && trail[trail.length - 2] === curHash) trail.pop(); else trail.push(curHash);
     let [name, param] = decodeURIComponent(location.hash.slice(1)).split('/');
+    if (name === 'galleria') name = 'seguiti';
     if (!store.get('novae.in')) name = 'invito';
     else if (!name || name === 'invito' || !(name in RENDER)) name = 'hub';
     if (name === 'stile' && param) name = 'disciplina';
@@ -689,8 +720,39 @@
     $('#search').hidden = true;
     $$('.screen').forEach(s => s.classList.toggle('active', s.dataset.screen === screen));
     document.body.dataset.screen = screen;
-    window.scrollTo(0, 0);
+    document.title = name === 'hub' ? 'NOVAE' : `${TITLES[name] || ''} | NOVAE`;
+    if (HUB.some(h => h.k === name)) { prefs.lastHub = name; savePrefs(); }
     RENDER[name](param);
+    const y = scrollMemo.get(curHash) || 0;
+    window.scrollTo(0, 0);
+    if (y) requestAnimationFrame(() => window.scrollTo(0, y));
+  }
+  function goBack(fallback) {
+    if (trail.length > 1) history.back(); else location.hash = fallback;
+  }
+
+  /* double-tap / double-click to like, with a heart burst */
+  let dblTimer = null, dblEl = null;
+  function setLike(w, on) {
+    on ? liked.add(w.id) : liked.delete(w.id);
+    saveLikes();
+    $$(`[data-act="like"][data-id="${w.id}"]`).forEach(b => {
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+      b.querySelector('i').className = `${on ? 'ph-fill' : 'ph-light'} ph-heart`;
+      b.classList.remove('pop'); void b.offsetWidth; if (on) b.classList.add('pop');
+    });
+    $$(`[data-count="${w.id}"]`).forEach(s => s.textContent = fmt(likeCount(w)));
+    if (on) buzz();
+  }
+  function burst(host, e) {
+    const r = host.getBoundingClientRect();
+    const b = document.createElement('span');
+    b.className = 'burst';
+    b.innerHTML = '<i class="ph-fill ph-heart"></i>';
+    b.style.setProperty('--x', (e.clientX - r.left) + 'px');
+    b.style.setProperty('--y', (e.clientY - r.top) + 'px');
+    host.appendChild(b);
+    setTimeout(() => b.remove(), 900);
   }
 
   /* ---------------- Events ---------------- */
@@ -699,6 +761,23 @@
   }, true);
 
   document.addEventListener('click', e => {
+    // Double-tap target: first tap waits briefly, second tap likes instead of opening
+    const dbl = e.target.closest('[data-dbl]');
+    if (dbl && !e.target.closest('[data-act]')) {
+      e.preventDefault();
+      if (dblTimer && dblEl === dbl) {
+        clearTimeout(dblTimer); dblTimer = null;
+        const w = byId[dbl.dataset.dbl];
+        if (!liked.has(w.id)) setLike(w, true);
+        burst(dbl, e);
+        return;
+      }
+      clearTimeout(dblTimer);
+      dblEl = dbl;
+      dblTimer = setTimeout(() => { dblTimer = null; const h = dbl.getAttribute('href'); if (h) location.hash = h; }, 260);
+      return;
+    }
+    if (e.target.closest('.sr')) addRecent($('#q').value);
     const el = e.target.closest('[data-act]');
     if (!el) {
       if (e.target.closest('.arc-item')) setArc(false);
@@ -712,18 +791,10 @@
       case 'search': openSearch(); break;
       case 'search-close': $('#search').hidden = true; break;
       case 'sheet-close': closeSheet(); break;
-      case 'like': {
-        const on = !liked.has(w.id);
-        on ? liked.add(w.id) : liked.delete(w.id);
-        saveLikes();
-        $$(`[data-act="like"][data-id="${w.id}"]`).forEach(b => {
-          b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
-          b.querySelector('i').className = `${on ? 'ph-fill' : 'ph-light'} ph-heart`;
-          b.classList.remove('pop'); void b.offsetWidth; if (on) b.classList.add('pop');
-        });
-        $$(`[data-count="${w.id}"]`).forEach(s => s.textContent = fmt(likeCount(w)));
-        break;
-      }
+      case 'back': goBack(el.dataset.fallback || '#hub'); break;
+      case 'recent': $('#q').value = el.dataset.v; renderResults(el.dataset.v); $('#q').focus(); break;
+      case 'recent-clear': recent = []; store.del('novae.recent'); renderResults(''); break;
+      case 'like': setLike(w, !liked.has(w.id)); break;
       case 'share': {
         const url = location.href.split('#')[0] + '#opera/' + w.id;
         if (navigator.share) navigator.share({ title: w.t, url }).catch(() => {});
@@ -751,12 +822,12 @@
         break;
       }
       case 'vista-step': stepVista(+el.dataset.dir); break;
-      case 'gfilter': galleryFilter = el.dataset.v; renderGallery(); break;
+      case 'gfilter': prefs.seguiti = el.dataset.v; savePrefs(); renderSeguiti(); break;
       case 'ctab':
         if (el.dataset.v === 'Ordina per') cineState.sortOpen = !cineState.sortOpen;
-        else { cineState.tab = el.dataset.v; cineState.sortOpen = false; cineState.expanded = null; }
+        else { cineState.tab = prefs.cineTab = el.dataset.v; cineState.sortOpen = false; cineState.expanded = null; savePrefs(); }
         renderCine('cinematografia'); break;
-      case 'csort': cineState.sort = el.dataset.v; cineState.sortOpen = false; renderCine('cinematografia'); break;
+      case 'csort': cineState.sort = prefs.cineSort = el.dataset.v; cineState.sortOpen = false; savePrefs(); renderCine('cinematografia'); break;
       case 'cf': cineState.center[el.dataset.g] = +el.dataset.i; cineState.expanded = null; renderCine('cinematografia'); break;
       case 'expand': cineState.expanded = el.dataset.id; renderCine('cinematografia'); break;
       case 'collapse': cineState.expanded = null; renderCine('cinematografia'); break;
@@ -769,8 +840,15 @@
       case 'country-prev': selectCountry(globe.idx - 1); break;
       case 'country-next': selectCountry(globe.idx + 1); break;
       case 'ptab': profTab = el.dataset.v; renderProfile(el.dataset.a || undefined); break;
-      case 'follow': el.textContent = el.textContent === 'Segui' ? 'Segui già' : 'Segui'; break;
-      case 'buy': toast(`Acquisto in gemme disponibile a breve`); break;
+      case 'follow': {
+        const id = el.dataset.a;
+        followed.has(id) ? followed.delete(id) : followed.add(id);
+        saveFollowed();
+        toast(followed.has(id) ? `Ora segui ${ARTISTS[id].name}` : `Non segui più ${ARTISTS[id].name}`);
+        renderProfile(id);
+        break;
+      }
+      case 'buy': toast('Acquisto in crediti disponibile a breve'); break;
       case 'invite': {
         const c = 'NVE-' + Math.random().toString(36).slice(2, 6).toUpperCase();
         navigator.clipboard?.writeText(c).catch(() => {});
@@ -811,12 +889,32 @@
 
   $('#q').addEventListener('input', e => renderResults(e.target.value));
 
+  $('#q').addEventListener('keydown', e => { if (e.key === 'Enter') addRecent(e.target.value); });
+
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { setArc(false); closeSheet(); $('#search').hidden = true; }
-    if (document.body.dataset.screen === 'vista' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-      e.preventDefault(); stepVista(e.key === 'ArrowDown' ? 1 : -1);
-    }
+    const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
+    const scr = document.body.dataset.screen;
+    if (e.key === 'Escape') { setArc(false); closeSheet(); $('#search').hidden = true; return; }
+    if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === '/' && store.get('novae.in')) { e.preventDefault(); openSearch(); }
+    if (scr === 'vista' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); stepVista(e.key === 'ArrowDown' ? 1 : -1); }
+    if (scr === 'scopri' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) selectCountry(globe.idx + (e.key === 'ArrowRight' ? 1 : -1));
   });
+
+  // Vista: swipe up/down on touch, wheel on desktop, to move between works
+  let touchY = null, wheelLock = 0;
+  $('#vista').addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
+  $('#vista').addEventListener('touchend', e => {
+    if (touchY === null) return;
+    const dy = e.changedTouches[0].clientY - touchY;
+    touchY = null;
+    if (Math.abs(dy) > 60) stepVista(dy < 0 ? 1 : -1);
+  }, { passive: true });
+  $('#vista').addEventListener('wheel', e => {
+    if (Math.abs(e.deltaY) < 30 || Date.now() < wheelLock) return;
+    wheelLock = Date.now() + 700;
+    stepVista(e.deltaY > 0 ? 1 : -1);
+  }, { passive: true });
 
   window.addEventListener('hashchange', route);
 
