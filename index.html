@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NOVAE</title>
+  <meta name="description" content="NOVAE, il social su invito dove gli artisti condividono le loro opere.">
+  <meta name="theme-color" content="#030303">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Cpath fill='%23b3122f' d='M0-50C3-14 8-8 44 0 8 8 3 14 0 50-3 14-8 8-44 0-8-8-3-14 0-50Z'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/light/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  <link rel="stylesheet" href="styles.css?v=6">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" defer></script>
+  <script src="app.js?v=3" defer></script>
+</head>
+<body data-screen="invito">
+
+  <!-- Brand mark: the NOVAE four-point star, reused everywhere -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="star4" viewBox="-50 -50 100 100">
+        <path d="M0-50C3-14 8-8 44 0 8 8 3 14 0 50-3 14-8 8-44 0-8-8-3-14 0-50Z"/>
+      </symbol>
+      <filter id="chalk" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7"/>
+        <feDisplacementMap in="SourceGraphic" scale="2.2"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <div id="sky" aria-hidden="true"></div>
+
+  <main id="app">
+
+    <!-- 1. Invito -->
+    <section class="screen" data-screen="invito" aria-label="Invito">
+      <div class="gate">
+        <svg class="gate-star" aria-hidden="true"><use href="#star4"/></svg>
+        <p class="sketch-box gate-msg hand">Ti serve un invito per entrare</p>
+        <div class="sketch-box gate-qr">
+          <canvas id="qr" width="264" height="264" aria-label="Codice QR di invito"></canvas>
+          <span class="qr-scan" aria-hidden="true"></span>
+        </div>
+        <form id="gateForm" class="gate-form" novalidate>
+          <label for="code" class="hand">Hai un codice?</label>
+          <div class="gate-row">
+            <input id="code" name="code" placeholder="NVE-7K2Q" autocomplete="off" spellcheck="false" maxlength="12">
+            <button type="submit" class="btn-accent">Entra</button>
+          </div>
+          <p class="gate-help" id="gateHelp">Inquadra il QR di chi ti invita, oppure inserisci il codice.</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 2. Hub radiale -->
+    <section class="screen" data-screen="hub" aria-label="Menu principale">
+      <div class="hub" id="hub"></div>
+    </section>
+
+    <!-- 3. Novae (feed) -->
+    <section class="screen" data-screen="novae" aria-label="Novae">
+      <div class="feed" id="feed"></div>
+    </section>
+
+    <!-- 4. Vista a schermo intero -->
+    <section class="screen" data-screen="vista" aria-label="Opera">
+      <div class="vista" id="vista"></div>
+    </section>
+
+    <!-- 5. Galleria -->
+    <section class="screen wide" data-screen="galleria" aria-label="Galleria">
+      <header class="page-head"><h1 class="hand">Galleria</h1></header>
+      <div class="pills" id="galleryPills" role="tablist"></div>
+      <div class="masonry" id="masonry"></div>
+    </section>
+
+    <!-- 6. Stile (discipline) -->
+    <section class="screen" data-screen="stile" aria-label="Stile">
+      <header class="page-head"><h1 class="hand">Stile</h1></header>
+      <div class="disciplines" id="disciplines"></div>
+    </section>
+
+    <!-- 7. Disciplina (es. Cinematografia) -->
+    <section class="screen wide" data-screen="disciplina" aria-label="Disciplina">
+      <div class="cine" id="cine"></div>
+    </section>
+
+    <!-- 8. Scheda opera -->
+    <section class="screen" data-screen="opera" aria-label="Scheda opera">
+      <div class="detail" id="detail"></div>
+    </section>
+
+    <!-- 9. Scopri -->
+    <section class="screen" data-screen="scopri" aria-label="Scopri">
+      <div class="discover">
+        <div class="globe-wrap">
+          <svg id="globe" viewBox="0 0 540 540" role="img" aria-label="Globo con gli artisti nel mondo"></svg>
+          <p class="globe-msg" id="globeMsg">Carico il mondo...</p>
+        </div>
+        <div class="country-nav">
+          <button class="icon-btn" data-act="country-prev" aria-label="Paese precedente"><i class="ph-light ph-caret-left"></i></button>
+          <span class="dots" aria-hidden="true"></span>
+          <h2 class="hand" id="countryName">Thailandia</h2>
+          <span class="dots" aria-hidden="true"></span>
+          <button class="icon-btn" data-act="country-next" aria-label="Paese successivo"><i class="ph-light ph-caret-right"></i></button>
+        </div>
+        <p class="country-meta" id="countryMeta"></p>
+        <div class="country-artists" id="countryArtists"></div>
+      </div>
+    </section>
+
+    <!-- 10. Mercato -->
+    <section class="screen wide" data-screen="mercato" aria-label="Mercato Novae">
+      <div id="market"></div>
+    </section>
+
+    <!-- 11. Profilo -->
+    <section class="screen" data-screen="profilo" aria-label="Profilo">
+      <div id="profile"></div>
+    </section>
+
+    <!-- 12. Messaggi -->
+    <section class="screen" data-screen="messaggi" aria-label="Messaggi">
+      <div id="messages"></div>
+    </section>
+
+    <!-- 13. Impostazioni -->
+    <section class="screen" data-screen="impostazioni" aria-label="Impostazioni">
+      <div id="settings"></div>
+    </section>
+  </main>
+
+  <!-- Scroll rail (driven by CSS scroll timeline) -->
+  <div class="rail" aria-hidden="true">
+    <i class="ph-light ph-caret-up"></i>
+    <span class="rail-track"><span class="rail-dot"></span></span>
+    <i class="ph-light ph-caret-down"></i>
+  </div>
+
+  <!-- Dock -->
+  <div class="scrim" id="scrim" data-act="arc-close"></div>
+  <nav class="dock" id="dock" aria-label="Navigazione">
+    <div class="dock-line"></div>
+    <div class="dock-bump"></div>
+    <button class="dock-side dock-search" data-act="search" aria-label="Cerca"><i class="ph-light ph-magnifying-glass"></i></button>
+    <button class="dock-star" id="dockStar" data-act="arc" aria-label="Apri menu rapido" aria-expanded="false">
+      <svg aria-hidden="true"><use href="#star4"/></svg>
+    </button>
+    <a class="dock-side dock-menu" href="#hub" aria-label="Menu principale"><i class="ph-light ph-list"></i></a>
+    <div class="arc" id="arc"></div>
+  </nav>
+
+  <!-- Search overlay -->
+  <div class="search" id="search" role="dialog" aria-modal="true" aria-label="Cerca" hidden>
+    <div class="search-inner">
+      <label for="q" class="hand">Cerca opere e artisti</label>
+      <div class="search-row">
+        <i class="ph-light ph-magnifying-glass"></i>
+        <input id="q" type="search" placeholder="Titolo, artista, paese" autocomplete="off">
+        <button class="icon-btn" data-act="search-close" aria-label="Chiudi"><i class="ph-light ph-x"></i></button>
+      </div>
+      <div class="search-results" id="results"></div>
+    </div>
+  </div>
+
+  <!-- Bottom sheet -->
+  <div class="sheet-scrim" id="sheetScrim" data-act="sheet-close"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" hidden>
+    <span class="sheet-grip" aria-hidden="true"></span>
+    <div id="sheetBody"></div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
