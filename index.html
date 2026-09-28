@@ -12,10 +12,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/light/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="styles.css?v=25">
+  <link rel="stylesheet" href="styles.css?v=26">
   <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" defer></script>
-  <script src="app.js?v=25" defer></script>
+  <script src="app.js?v=26" defer></script>
 </head>
 <body data-screen="invito">
 
@@ -61,8 +61,8 @@
       <div class="hub" id="hub"></div>
     </section>
 
-    <!-- 3. Novae (feed) -->
-    <section class="screen" data-screen="novae" aria-label="Novae">
+    <!-- 3. Scopri (feed) -->
+    <section class="screen" data-screen="scopri" aria-label="Scopri">
       <div class="ptr" id="ptr" aria-hidden="true"><svg><use href="#star4"/></svg></div>
       <div class="feed" id="feed"></div>
     </section>
@@ -72,9 +72,9 @@
       <div class="vista" id="vista"></div>
     </section>
 
-    <!-- 5. Seguiti -->
-    <section class="screen wide" data-screen="seguiti" aria-label="Seguiti">
-      <header class="page-head"><h1 class="hand">Seguiti</h1><p>Le opere degli artisti che segui</p></header>
+    <!-- 5. Galleria (opere degli artisti che segui) -->
+    <section class="screen wide" data-screen="galleria" aria-label="Galleria">
+      <header class="page-head"><h1 class="hand">Galleria</h1><p>Le opere degli artisti che segui</p></header>
       <div class="pills seguiti-pills" id="galleryPills" role="tablist"></div>
       <div class="masonry" id="masonry"></div>
     </section>
@@ -95,8 +95,8 @@
       <div class="detail" id="detail"></div>
     </section>
 
-    <!-- 9. Scopri -->
-    <section class="screen" data-screen="scopri" aria-label="Scopri">
+    <!-- 9. Novae (pianeta con le stelle) -->
+    <section class="screen" data-screen="novae" aria-label="Novae">
       <div class="discover">
         <div class="globe-wrap">
           <svg id="globe" viewBox="0 0 540 540" role="img" aria-label="Globo con gli artisti nel mondo"></svg>

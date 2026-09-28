@@ -18,11 +18,11 @@
   /* ---------------- Icons cropped from the hand-drawn sources in assets/icone/ ---------------- */
   // [file, centerX, centerY, cropSize] all as fractions of the square source image, [aspect]
   const CROPS = {
-    galleria:     ['assets/icone/seguiti.jpg', .505, .486, .125],
+    galleria:     ['assets/icone/seguiti.jpg', .5053, .4853, .12],
     impostazioni: ['assets/icone/impostazioni.jpg', .480, .494, .085],
-    scopri:       ['assets/icone/scopri.jpg', .4755, .4525, .10],
+    scopri:       ['assets/icone/scopri.jpg', .4919, .4685, .10],
     messaggi:     ['assets/icone/messaggi.jpg', .502, .4975, .13],
-    profilo:      ['assets/icone/profilo.jpg', .516, .486, .10],
+    profilo:      ['assets/icone/profilo.jpg', .5159, .4860, .10],
     mercato:      ['assets/icone/mercato.jpg', .489, .495, .10],
     gem:          ['assets/icone/stile.jpg', .491, .478, .055],
     wordmark:     ['assets/icone/logo.jpg', .4956, .5938, .169, .26],
@@ -35,7 +35,6 @@
   const icon = key => {
     if (key === 'novae') return starSvg();
     if (key === 'stile') return crop('gem');
-    if (key === 'seguiti') return crop('galleria');
     return crop(key);
   };
   const coin = () => crop('mercato', 'coin');
@@ -249,7 +248,7 @@
     { k: 'profilo', l: 'Profilo', dx: 0, dy: .40 },
     { k: 'mercato', l: 'Mercato<br>Novae', dx: -.256, dy: .29 },
     { k: 'impostazioni', l: 'Impostazioni', dx: -.36, dy: .03 },
-    { k: 'seguiti', l: 'Seguiti', dx: -.256, dy: -.23 },
+    { k: 'galleria', l: 'Galleria', dx: -.256, dy: -.23 },
   ];
   function renderHub() {
     const hub = $('#hub');
@@ -467,7 +466,7 @@
     const root = $('#vista');
     root.className = 'vista';
     root.innerHTML = `
-      <button class="vista-back icon-btn" data-act="back" data-fallback="#novae" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
+      <button class="vista-back icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
       <p class="vista-hint" aria-hidden="true"><i class="ph-light ph-hand-swipe-up"></i>Scorri per la prossima</p>
       <div class="reels" id="reels">${list.map(reelHtml).join('')}</div>`;
     const reels = $('#reels');
@@ -492,14 +491,14 @@
     if (reels) reels.scrollBy({ top: dir * reels.clientHeight, behavior: reduceMotion ? 'auto' : 'smooth' });
   }
 
-  /* ---------------- 5. Seguiti: works by the artists you follow ---------------- */
+  /* ---------------- 5. Galleria: works by the artists you follow ---------------- */
   function renderSeguiti() {
     const ids = [...followed];
     if (prefs.seguiti !== 'Tutti' && !followed.has(prefs.seguiti)) prefs.seguiti = 'Tutti';
     $('#galleryPills').innerHTML = ids.length ? [`<button class="pill" role="tab" aria-selected="${prefs.seguiti === 'Tutti'}" data-act="gfilter" data-v="Tutti">Tutti</button>`,
       ...ids.map(id => `<button class="pill" role="tab" aria-selected="${prefs.seguiti === id}" data-act="gfilter" data-v="${id}"><img src="${avatar(id)}" alt="">${ARTISTS[id].name.split(' ')[0]}</button>`)].join('') : '';
     if (!ids.length) {
-      $('#masonry').innerHTML = `<div class="empty" style="column-span:all">${starSvg()}<strong>Non segui ancora nessuno</strong><p>Trova artisti in Scopri e tocca Segui sul loro profilo.</p><a class="btn-ghost" href="#scopri">Apri Scopri</a></div>`;
+      $('#masonry').innerHTML = `<div class="empty" style="column-span:all">${starSvg()}<strong>Non segui ancora nessuno</strong><p>Trova artisti in Novae, il pianeta, e tocca Segui sul loro profilo.</p><a class="btn-ghost" href="#novae">Apri Novae</a></div>`;
       return;
     }
     const list = WORKS.filter(w => prefs.seguiti === 'Tutti' ? followed.has(w.a) : w.a === prefs.seguiti);
@@ -544,7 +543,7 @@
     if (name !== 'Cinematografia') {
       root.innerHTML = `<button class="cine-back icon-btn" data-act="back" data-fallback="#stile" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
         <h1 class="cine-title">${name}</h1>
-        <div class="empty">${starSvg()}<strong>Sala in allestimento</strong><p>La sezione ${name.toLowerCase()} apre nella prossima alpha. Intanto trovi nuove opere nel feed.</p><a class="btn-ghost" href="#novae">Apri Novae</a></div>`;
+        <div class="empty">${starSvg()}<strong>Sala in allestimento</strong><p>La sezione ${name.toLowerCase()} apre nella prossima alpha. Intanto trovi nuove opere in Scopri.</p><a class="btn-ghost" href="#scopri">Apri Scopri</a></div>`;
       return;
     }
     const tabs = ['Serie', 'Film', 'Classifica', 'Ordina per'];
@@ -595,7 +594,7 @@
     const related = WORKS.filter(x => x !== w && (x.genre ? x.genre === w.genre : x.disc === w.disc || x.a === w.a)).slice(0, 6);
     $('#detail').innerHTML = `
       <div class="player ph-img" data-dbl="${w.id}">
-        <button class="back icon-btn" data-act="back" data-fallback="#novae" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
+        <button class="back icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
         ${img(w.img, w.t)}
         ${w.type !== 'image' ? `<button class="vista-play" data-act="play" aria-label="Riproduci"><i class="ph-light ph-play"></i></button><div class="progress"><span></span></div>` : ''}
       </div>
@@ -813,7 +812,7 @@
     if (!saveMine()) { MINE.shift(); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: elimina una tua opera e riprova.'; return; }
     WORKS.unshift(w); byId[w.id] = w;
     closeSheet(); toast('Opera pubblicata'); buzz();
-    if (location.hash === '#novae') renderFeed(); else location.hash = '#novae';
+    if (location.hash === '#scopri') renderFeed(); else location.hash = '#scopri';
   }
   function deleteMine(id) {
     const i = MINE.findIndex(w => w.id === id);
@@ -954,13 +953,13 @@
   const RENDER = {
     invito: () => drawQR(),
     hub: renderHub,
-    novae: renderFeed,
+    scopri: renderFeed,
     vista: renderVista,
-    seguiti: renderSeguiti,
+    galleria: renderSeguiti,
     stile: renderStile,
     disciplina: renderCine,
     opera: renderDetail,
-    scopri: initGlobe,
+    novae: initGlobe,
     mercato: renderMarket,
     profilo: () => renderProfile(),
     artista: renderProfile,
@@ -968,8 +967,8 @@
     impostazioni: renderSettings,
   };
   const TITLES = {
-    invito: 'Invito', novae: 'Novae', vista: 'Opera', seguiti: 'Seguiti', stile: 'Stile', disciplina: 'Cinematografia', opera: 'Opera',
-    scopri: 'Scopri', mercato: 'Mercato', profilo: 'Profilo', artista: 'Artista', messaggi: 'Messaggi', impostazioni: 'Impostazioni',
+    invito: 'Invito', scopri: 'Scopri', vista: 'Opera', galleria: 'Galleria', stile: 'Stile', disciplina: 'Cinematografia', opera: 'Opera',
+    novae: 'Novae', mercato: 'Mercato', profilo: 'Profilo', artista: 'Artista', messaggi: 'Messaggi', impostazioni: 'Impostazioni',
   };
   const scrollMemo = new Map(); // hash -> scrollY, so "back" lands where you left
   let curHash = null;
@@ -979,7 +978,7 @@
     curHash = location.hash;
     if (trail.length > 1 && trail[trail.length - 2] === curHash) trail.pop(); else trail.push(curHash);
     let [name, param] = decodeURIComponent(location.hash.slice(1)).split('/');
-    if (name === 'galleria') name = 'seguiti';
+    if (name === 'seguiti') name = 'galleria'; // old links
     if (!store.get('novae.in')) name = 'invito';
     else if (!name || name === 'invito' || !(name in RENDER)) name = 'hub';
     if (name === 'stile' && param) name = 'disciplina';
@@ -1010,7 +1009,7 @@
     const ptr = $('#ptr');
     const reset = () => { ptr.classList.remove('ready', 'spin'); ptr.style.removeProperty('--pull'); ptr.style.opacity = ''; };
     window.addEventListener('touchstart', e => {
-      if (cur.name !== 'novae' || window.scrollY > 0 || busy) return;
+      if (cur.name !== 'scopri' || window.scrollY > 0 || busy) return;
       y0 = e.touches[0].clientY; dy = 0;
     }, { passive: true });
     window.addEventListener('touchmove', e => {
@@ -1255,7 +1254,7 @@
     if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === '/' && store.get('novae.in')) { e.preventDefault(); openSearch(); }
     if (scr === 'vista' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); stepVista(e.key === 'ArrowDown' ? 1 : -1); }
-    if (scr === 'scopri' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) selectCountry(globe.idx + (e.key === 'ArrowRight' ? 1 : -1));
+    if (scr === 'novae' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) selectCountry(globe.idx + (e.key === 'ArrowRight' ? 1 : -1));
   });
 
   window.addEventListener('hashchange', route);

@@ -186,14 +186,22 @@ body[data-screen="impostazioni"] #sky { opacity: 0; }
 .hub-btn { display: grid; justify-items: center; gap: calc(var(--hw) * .012); border-radius: 12px; }
 .hub-circle {
   position: relative; width: var(--c); aspect-ratio: 1; border-radius: 50%; border: var(--stroke) solid #5a5957; background: #050505;
-  display: grid; place-items: center; overflow: hidden; --w: calc(var(--hw) * .105);
+  display: grid; place-items: center; overflow: visible; --w: calc(var(--hw) * .105);
   transition: transform .35s var(--ease), border-color .3s;
 }
 .hub-circle .star-svg { width: 48%; height: 52%; }
 .hub-circle.i-stile { --w: calc(var(--hw) * .115); }
 .hub-circle.i-mercato { --w: calc(var(--hw) * .158); }
-.hub-circle.i-profilo { --w: calc(var(--hw) * .2); place-items: end center; }
-.hub-circle.i-profilo .crop { margin-bottom: calc(var(--hw) * -.03); }
+/* Galleria and Scopri: the drawing is bigger than the ring and crosses it, as in the menu sketch
+   (needle out at the bottom left; flame touching the top, tail out at the bottom left) */
+.hub-circle.i-galleria { --w: calc(var(--hw) * .177); }
+.hub-circle.i-galleria .crop { transform: translate(calc(var(--hw) * -.0144), calc(var(--hw) * .0226)); }
+.hub-circle.i-scopri { --w: calc(var(--hw) * .183); }
+.hub-circle.i-scopri .crop { transform: translate(calc(var(--hw) * .0063), calc(var(--hw) * .0081)); }
+/* Profilo: the drawing is symmetric but ends in a rounded, top-like base; cut it flat at the
+   shoulders' widest point (29.75% from the bottom of the crop) and centre what remains */
+.hub-circle.i-profilo { --w: calc(var(--hw) * .154); }
+.i-profilo .crop { clip-path: inset(0 0 29.75% 0); transform: translateY(9.75%); }
 .hub-label {
   font-family: var(--hand); font-weight: 700; font-size: clamp(9px, calc(var(--hw) * .026), 12px); line-height: 1.15;
   letter-spacing: .04em; text-transform: uppercase; text-align: center; white-space: nowrap;
@@ -261,7 +269,7 @@ body[data-screen="invito"] .dock, body[data-screen="hub"] .dock { display: none;
 .rail {
   position: fixed; z-index: 20; top: 28vh; right: max(4px, calc(50% - 280px + 2px)); display: none; flex-direction: column; align-items: center; gap: 6px; color: var(--ink-2); font-size: 18px;
 }
-body[data-screen="novae"] .rail, body[data-screen="disciplina"] .rail { display: flex; }
+body[data-screen="scopri"] .rail, body[data-screen="disciplina"] .rail { display: flex; }
 body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px)); }
 .rail-track { position: relative; width: 2px; height: 34vh; background-image: radial-gradient(circle, var(--ink-2) 1px, transparent 1.5px); background-size: 2px 14px; background-position: center; }
 .rail-dot { position: absolute; left: 50%; top: 0; width: 11px; height: 11px; margin-left: -5.5px; margin-top: -5.5px; border-radius: 50%; background: var(--ink); }
@@ -671,7 +679,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .arc-circle { border-color: #5a5957; background: #050505; }
 .arc-label { font-weight: 700; font-size: 9.5px; letter-spacing: .05em; }
 .arc-item.current .arc-circle { border-color: var(--accent-hi); }
-.arc-circle.i-profilo { place-items: end center; overflow: hidden; --w: 64px; }
+.arc-circle.i-profilo { --w: 50px; }
 #globe .sphere { stroke: #6b6a67; stroke-width: 1.5; }
 #globe .land { stroke: #cfcdc8; stroke-width: 1; }
 
@@ -742,3 +750,6 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .ptr.spin { opacity: 1 !important; transform: translateY(40px); transition: transform .2s; }
 @media (prefers-reduced-motion: no-preference) { .ptr.spin svg { animation: ptrspin .8s linear infinite; } }
 @keyframes ptrspin { to { transform: rotate(360deg); } }
+
+/* labels stay above icons that overflow their ring (Galleria, Scopri) */
+.hub-label { position: relative; z-index: 1; }
