@@ -261,7 +261,6 @@
   function renderArc() {
     $('#arc').innerHTML = `
       <div class="wheel-hit"></div>
-      <svg class="wheel-ring" viewBox="-160 -160 320 320" aria-hidden="true"><circle r="${R}"/><g id="wheelTicks">${WHEEL.map((_, i) => `<line x1="0" y1="${-R - 5}" x2="0" y2="${-R + 5}" transform="rotate(${i * STEP + STEP / 2})"/>`).join('')}</g></svg>
       <svg class="wheel-mark" aria-hidden="true"><use href="#star4"/></svg>
       <div class="wheel-label" id="wheelLabel" aria-live="polite"></div>
       ${WHEEL.map((it, i) => `<a class="arc-item" data-k="${it.k}" data-i="${i}" href="#${it.k}" tabindex="-1" aria-label="${it.l.replace('<br>', ' ')}"><span class="arc-circle i-${it.k}">${icon(it.k)}</span></a>`).join('')}`;
@@ -271,13 +270,12 @@
       const a = norm(i * STEP + wheel.rot);
       const rad = a * Math.PI / 180, abs = Math.abs(a);
       const s = 1 - .3 * Math.min(1, abs / 110);
-      const o = abs > 118 ? 0 : Math.min(1, 1 - (abs - 80) / 38);
+      const o = abs > 100 ? 0 : Math.min(1, 1 - (abs - 55) / 45); // side slots fade so they don't crowd the dock icons
       el.style.transform = `translate(calc(-50% + ${(R * Math.sin(rad)).toFixed(1)}px), calc(-50% + ${(-R * Math.cos(rad)).toFixed(1)}px)) scale(${s.toFixed(3)})`;
       el.style.opacity = o.toFixed(2);
       el.style.pointerEvents = o > .3 ? '' : 'none';
       el.classList.toggle('sel', abs < STEP / 2);
     });
-    $('#wheelTicks').setAttribute('transform', `rotate(${wheel.rot.toFixed(2)})`);
     $('#dockStar svg').style.transform = `rotate(${(wheel.rot * .5).toFixed(2)}deg) scale(.9)`;
     const sel = selIndex();
     if (sel !== wheel.sel) {
@@ -354,7 +352,7 @@
       wheel.drag = { c, a: angleAt(e, c), moved: 0, t: performance.now(), item: e.target.closest('.arc-item') };
       wheel.vel = 0;
       wheel.live = true;
-      arc.setPointerCapture(e.pointerId);
+      try { arc.setPointerCapture(e.pointerId); } catch { /* synthetic or already released pointer */ }
       e.preventDefault();
     });
     arc.addEventListener('pointermove', e => {
@@ -850,6 +848,7 @@
     document.title = name === 'hub' ? 'NOVAE' : `${TITLES[name] || ''} | NOVAE`;
     if (HUB.some(h => h.k === name)) { prefs.lastHub = name; savePrefs(); }
     RENDER[name](param);
+    document.dispatchEvent(new CustomEvent('novae:screen', { detail: screen })); // effects.js hooks in here
     const y = scrollMemo.get(curHash) || 0;
     window.scrollTo(0, 0);
     if (y) requestAnimationFrame(() => window.scrollTo(0, y));

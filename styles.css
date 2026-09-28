@@ -89,7 +89,7 @@ body[data-screen="impostazioni"] #sky { opacity: 0; }
 @keyframes twinkle { from { opacity: .12; } to { opacity: .6; } }
 
 /* ---------- Screens ---------- */
-#app { position: relative; z-index: 1; }
+#app { position: relative; } /* no z-index: crops must blend with the nebula behind */
 .screen {
   display: none;
   width: var(--col);
@@ -174,7 +174,8 @@ body[data-screen="impostazioni"] #sky { opacity: 0; }
 }
 .hub-core { position: absolute; left: 50%; top: var(--cy); transform: translate(-50%, -50%); }
 .hub-core .star-svg { width: calc(var(--hw) * .2); height: calc(var(--hw) * .215); }
-.hub-wordmark { position: absolute; left: 50%; top: calc(var(--cy) + var(--hw) * .158); transform: translate(-50%, -50%); --w: calc(var(--hw) * .36); }
+/* no transform here: a transform would isolate the crop's blend from the nebula behind it */
+.hub-wordmark { position: absolute; --w: calc(var(--hw) * .36); left: calc(50% - var(--w) / 2); top: calc(var(--cy) + var(--hw) * .158 - var(--w) * .13); }
 @media (prefers-reduced-motion: no-preference) {
   .hub-core .star-svg { animation: pulse 4s ease-in-out infinite; }
 }
@@ -234,13 +235,6 @@ body[data-screen="invito"] .dock, body[data-screen="hub"] .dock { display: none;
 }
 .arc.dragging .wheel-hit, .arc.dragging .arc-item { cursor: grabbing; }
 .arc:not(.open) .wheel-hit { display: none; }
-.wheel-ring {
-  position: absolute; left: -160px; top: -160px; width: 320px; height: 320px; overflow: visible; pointer-events: none;
-  clip-path: inset(0 0 48% 0); opacity: 0; transform: scale(.5); transition: opacity .3s, transform .6s var(--ease);
-}
-.arc.open .wheel-ring { opacity: 1; transform: none; }
-.wheel-ring circle { fill: none; stroke: #33322f; stroke-width: 1.5; }
-.wheel-ring line { stroke: #6b6a67; stroke-width: 1.5; stroke-linecap: round; }
 .wheel-mark { position: absolute; left: 0; top: -172px; width: 14px; height: 16px; transform: translate(-50%, -50%) scale(.4); fill: var(--accent-hi); opacity: 0; transition: opacity .3s, transform .5s var(--ease); pointer-events: none; }
 .arc.open .wheel-mark { opacity: 1; transform: translate(-50%, -50%); }
 .wheel-label {
@@ -688,3 +682,48 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .cf-foot { padding: 10px 6% 0; gap: 10px; }
 .cf-foot a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cf-foot .act small { font-size: 10px; }
+
+/* ---------- Shader effects (effects.js) ---------- */
+#nebula {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity 1.2s;
+  -webkit-mask-image: radial-gradient(60% 50% at 50% 46%, #000 20%, transparent 100%);
+  mask-image: radial-gradient(60% 50% at 50% 46%, #000 20%, transparent 100%);
+}
+#nebula > canvas, .fx-liquid > canvas { display: block; width: 100% !important; height: 100% !important; }
+body[data-screen="hub"] #nebula.on { opacity: .9; }
+body[data-screen="invito"] #nebula.on { opacity: .55; }
+.fx-liquid { position: absolute; inset: -26%; pointer-events: none; }
+.fx-host { position: relative; }
+.gate-star-host { width: 92px; height: 104px; }
+[data-fx="on"] > .star-svg, [data-fx="on"] > .gate-star { opacity: 0; }
+.hub-core[data-fx="on"] > .fx-liquid { filter: drop-shadow(0 0 22px rgba(214, 28, 64, .35)); }
+@media (prefers-reduced-motion: no-preference) {
+  .hub-core[data-fx="on"] > .fx-liquid, .gate-star-host[data-fx="on"] > .fx-liquid { animation: pulse 4s ease-in-out infinite; }
+}
+
+/* ---------- Liquid glass (web approximation: backdrop-filter + layered highlights, not Apple's material) ---------- */
+.hub-circle, .arc-circle, .sheet, .toast, .play-ico, .wallet {
+  --glass-edge: rgba(255, 255, 255, .16);
+  background:
+    radial-gradient(120% 90% at 30% 0%, rgba(255, 255, 255, .11), rgba(255, 255, 255, .02) 46%, transparent 70%),
+    rgba(14, 14, 16, .42);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+  border-color: var(--glass-edge);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .24),
+    inset 0 -1px 0 rgba(255, 255, 255, .05),
+    inset 0 0 14px rgba(255, 255, 255, .035),
+    0 10px 30px rgba(0, 0, 0, .45);
+}
+.hub-btn:hover .hub-circle, .hub-btn:focus-visible .hub-circle, .hub-last .hub-circle { --glass-edge: rgba(255, 255, 255, .38); border-color: var(--glass-edge); }
+.arc-item.sel .arc-circle { border-color: rgba(255, 255, 255, .55); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 0 0 5px rgba(214,28,64,.16), 0 10px 30px rgba(0,0,0,.5); }
+.sheet { background: radial-gradient(90% 40% at 30% 0%, rgba(255,255,255,.08), transparent 70%), rgba(16, 16, 18, .78); border: 1px solid var(--glass-edge); border-bottom: 0; }
+.toast { color: var(--ink); border: 1px solid var(--glass-edge); background: rgba(22, 22, 24, .7); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hub-circle, .arc-circle, .play-ico, .wallet { background: #0e0e10; }
+  .sheet, .toast { background: #161618; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .hub-circle, .arc-circle, .sheet, .toast, .play-ico, .wallet { background: #111113; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

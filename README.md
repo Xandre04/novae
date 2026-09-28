@@ -37,4 +37,5 @@ Poi apri http://localhost:5173
 - `index.html`: markup delle schermate
 - `styles.css`: stile (nero, linee a gesso, stella cremisi)
 - `app.js`: dati di prova, routing, interazioni
+- `effects.js`: effetti WebGL con [Paper Shaders](https://github.com/paper-design/shaders) (stella in metallo liquido, sfondo mesh gradient)
 - `IMG/`: bozzetti e icone disegnate a mano
