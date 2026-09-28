@@ -15,17 +15,17 @@
   const pic = (seed, w, h, gray) => `https://picsum.photos/seed/novae-${seed}/${w}/${h}${gray ? '?grayscale' : ''}`;
   const img = (src, alt = '', cls = '') => `<img class="fade ${cls}" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
 
-  /* ---------------- Icons cropped from the sketches in IMG/ ---------------- */
+  /* ---------------- Icons cropped from the hand-drawn sources in assets/icone/ ---------------- */
   // [file, centerX, centerY, cropSize] all as fractions of the square source image, [aspect]
   const CROPS = {
-    galleria:     ['IMG/IMG-20260928-WA0050.jpg', .505, .486, .125],
-    impostazioni: ['IMG/IMG-20260928-WA0051.jpg', .480, .494, .085],
-    scopri:       ['IMG/IMG-20260928-WA0052.jpg', .4755, .4525, .10],
-    messaggi:     ['IMG/IMG-20260928-WA0053.jpg', .502, .4975, .13],
-    profilo:      ['IMG/IMG-20260928-WA0049.jpg', .516, .486, .10],
-    mercato:      ['IMG/IMG-20260928-WA0048.jpg', .489, .495, .10],
-    gem:          ['IMG/IMG-20260928-WA0047.jpg', .491, .478, .055],
-    wordmark:     ['IMG/IMG-20260928-WA0054.jpg', .4956, .5938, .169, .26],
+    galleria:     ['assets/icone/seguiti.jpg', .505, .486, .125],
+    impostazioni: ['assets/icone/impostazioni.jpg', .480, .494, .085],
+    scopri:       ['assets/icone/scopri.jpg', .4755, .4525, .10],
+    messaggi:     ['assets/icone/messaggi.jpg', .502, .4975, .13],
+    profilo:      ['assets/icone/profilo.jpg', .516, .486, .10],
+    mercato:      ['assets/icone/mercato.jpg', .489, .495, .10],
+    gem:          ['assets/icone/stile.jpg', .491, .478, .055],
+    wordmark:     ['assets/icone/logo.jpg', .4956, .5938, .169, .26],
   };
   const crop = (name, extra = '') => {
     const [f, fx, fy, sz, ar = 1] = CROPS[name];
