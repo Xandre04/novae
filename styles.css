@@ -698,33 +698,6 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .cf-foot a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cf-foot .act small { font-size: 10px; }
 
-/* ---------- Liquid glass (web approximation: backdrop-filter + layered highlights, not Apple's material) ---------- */
-.hub-circle, .arc-circle, .sheet, .toast, .play-ico, .wallet {
-  --glass-edge: rgba(255, 255, 255, .16);
-  background:
-    radial-gradient(120% 90% at 30% 0%, rgba(255, 255, 255, .11), rgba(255, 255, 255, .02) 46%, transparent 70%),
-    rgba(14, 14, 16, .42);
-  -webkit-backdrop-filter: blur(14px) saturate(170%);
-  backdrop-filter: blur(14px) saturate(170%);
-  border-color: var(--glass-edge);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .24),
-    inset 0 -1px 0 rgba(255, 255, 255, .05),
-    inset 0 0 14px rgba(255, 255, 255, .035),
-    0 10px 30px rgba(0, 0, 0, .45);
-}
-.hub-btn:hover .hub-circle, .hub-btn:focus-visible .hub-circle, .hub-last .hub-circle { --glass-edge: rgba(255, 255, 255, .38); border-color: var(--glass-edge); }
-.arc-item.sel .arc-circle { border-color: rgba(255, 255, 255, .55); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 0 0 5px rgba(214,28,64,.16), 0 10px 30px rgba(0,0,0,.5); }
-.sheet { background: radial-gradient(90% 40% at 30% 0%, rgba(255,255,255,.08), transparent 70%), rgba(16, 16, 18, .78); border: 1px solid var(--glass-edge); border-bottom: 0; }
-.toast { color: var(--ink); border: 1px solid var(--glass-edge); background: rgba(22, 22, 24, .7); }
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .hub-circle, .arc-circle, .play-ico, .wallet { background: #0e0e10; }
-  .sheet, .toast { background: #161618; }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .hub-circle, .arc-circle, .sheet, .toast, .play-ico, .wallet { background: #111113; -webkit-backdrop-filter: none; backdrop-filter: none; }
-}
-
 /* ---------- QOL: save, publish, edit profile, action list, pull to refresh ---------- */
 .post-by small { display: block; margin-top: 2px; font-size: 9.5px; font-weight: 500; letter-spacing: .02em; text-transform: none; color: var(--ink-3); }
 .post .new-tag { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-hi); line-height: 18px; }
