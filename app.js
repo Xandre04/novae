@@ -26,13 +26,14 @@
     mercato:      ['assets/icone/mercato.jpg', .489, .495, .10],
     gem:          ['assets/icone/stile.jpg', .491, .478, .055],
     wordmark:     ['assets/icone/logo.jpg', .4956, .5938, .169, .26],
-    star:         ['assets/icone/logo.jpg', .495, .4875, .145],
   };
   const crop = (name, extra = '') => {
     const [f, fx, fy, sz, ar = 1] = CROPS[name];
     return `<span class="crop ${extra}" role="img" aria-label="${name}" style="--img:url('${f}');--fx:${fx};--fy:${fy};--sz:${sz};--ar:${ar}"></span>`;
   };
-  const starSvg = (cls = '') => `<svg class="star-svg ${cls}" aria-hidden="true"><use href="#star4"/></svg>`;
+  // The red star is the NOVAE logo itself (assets/icone/stella.png, cut from the logo with a transparent background)
+  const STAR_SRC = 'assets/icone/stella.png';
+  const starSvg = (cls = '') => `<img class="star-svg ${cls}" src="${STAR_SRC}" alt="" aria-hidden="true" draggable="false">`;
   const icon = key => {
     if (key === 'novae') return starSvg();
     if (key === 'stile') return crop('gem');
@@ -171,9 +172,8 @@
 
   /* ---------------- Shared fragments ---------------- */
   const rating = (v, size = 18) => {
-    // the red star is cropped from the logo drawing (assets/icone/logo.jpg), not redrawn
-    const [f, fx, fy, sz] = CROPS.star;
-    const one = `<span class="crop" style="--img:url('${f}');--fx:${fx};--fy:${fy};--sz:${sz}"></span>`;
+    // the red star is the NOVAE logo star, not a redrawing
+    const one = `<img src="${STAR_SRC}" alt="" draggable="false">`;
     return `<span class="rating" style="--s:${size}px" role="img" aria-label="Valutazione ${String(v).replace('.', ',')} su 5"><span class="r-off">${one.repeat(5)}</span><span class="r-on" style="width:${v / 5 * 100}%">${one.repeat(5)}</span></span>`;
   };
   const heart = (w, withCount = false, cls = '') => {
@@ -218,11 +218,11 @@
     [[0, 0], [N - 7, 0], [0, N - 7]].forEach(([x, y]) => {
       box(x, y, 7, 1); box(x, y + 6, 7, 1); box(x, y, 1, 7); box(x + 6, y, 1, 7); box(x + 2, y + 2, 3, 3);
     });
-    // brand star in the middle
+    // logo star in the middle
     ctx.fillStyle = '#030303'; box(10, 10, 5, 5);
-    ctx.fillStyle = '#b3122f';
-    ctx.save(); ctx.translate(c.width / 2, c.height / 2); ctx.scale(m * 2.2 / 50, m * 2.2 / 50);
-    ctx.fill(new Path2D('M0-50C3-14 8-8 44 0 8 8 3 14 0 50-3 14-8 8-44 0-8-8-3-14 0-50Z')); ctx.restore();
+    const star = new Image();
+    star.onload = () => { const h = m * 4.6, w = h * star.width / star.height; ctx.drawImage(star, (c.width - w) / 2, (c.height - h) / 2, w, h); };
+    star.src = STAR_SRC;
   }
   $('#gateForm').addEventListener('submit', e => {
     e.preventDefault();
@@ -301,7 +301,7 @@
       el.style.pointerEvents = o > .3 ? '' : 'none';
       el.classList.toggle('sel', abs < STEP / 2);
     });
-    $('#dockStar svg').style.transform = `rotate(${(wheel.rot * .5).toFixed(2)}deg) scale(.9)`;
+    $('#dockStar img').style.transform = `rotate(${(wheel.rot * .5).toFixed(2)}deg) scale(.9)`;
     const sel = selIndex();
     if (sel !== wheel.sel) {
       wheel.sel = sel;
@@ -370,7 +370,7 @@
       arc.classList.add('closing');
       animateWheel(wheel.rot + 90, 0, 360, () => {
         arc.classList.remove('open', 'closing');
-        $('#dockStar svg').style.transform = '';
+        $('#dockStar img').style.transform = '';
       }, true);
     }
   }
@@ -674,7 +674,7 @@
       const r = rng(9);
       const markers = COUNTRIES.flatMap(c => artistsIn(c).map(() => [c.c[0] + (r() - .5) * 6, c.c[1] + (r() - .5) * 4]))
         .concat(Array.from({ length: 10 }, () => [r() * 360 - 180, r() * 120 - 50]));
-      const mk = svg.append('g').selectAll('use').data(markers).join('use').attr('href', '#star4').attr('class', 'mk').attr('width', 20).attr('height', 22);
+      const mk = svg.append('g').selectAll('image').data(markers).join('image').attr('href', STAR_SRC).attr('class', 'mk').attr('width', 18).attr('height', 20);
       const draw = () => {
         proj.rotate(globe.rot);
         grat.attr('d', path); hits.attr('d', path); coast.attr('d', path); bord.attr('d', path);
@@ -684,7 +684,7 @@
         mk.each(function (p) {
           const vis = d3.geoDistance(p, center) < Math.PI / 2 - .05;
           const [x, y] = proj(p);
-          this.setAttribute('x', x - 10); this.setAttribute('y', y - 11);
+          this.setAttribute('x', x - 9); this.setAttribute('y', y - 10);
           this.style.display = vis ? '' : 'none';
         });
       };
