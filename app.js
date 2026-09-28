@@ -26,6 +26,7 @@
     mercato:      ['assets/icone/mercato.jpg', .489, .495, .10],
     gem:          ['assets/icone/stile.jpg', .491, .478, .055],
     wordmark:     ['assets/icone/logo.jpg', .4956, .5938, .169, .26],
+    star:         ['assets/icone/logo.jpg', .495, .4875, .145],
   };
   const crop = (name, extra = '') => {
     const [f, fx, fy, sz, ar = 1] = CROPS[name];
@@ -170,7 +171,9 @@
 
   /* ---------------- Shared fragments ---------------- */
   const rating = (v, size = 18) => {
-    const one = '<svg><use href="#star4"/></svg>';
+    // the red star is cropped from the logo drawing (assets/icone/logo.jpg), not redrawn
+    const [f, fx, fy, sz] = CROPS.star;
+    const one = `<span class="crop" style="--img:url('${f}');--fx:${fx};--fy:${fy};--sz:${sz}"></span>`;
     return `<span class="rating" style="--s:${size}px" role="img" aria-label="Valutazione ${String(v).replace('.', ',')} su 5"><span class="r-off">${one.repeat(5)}</span><span class="r-on" style="width:${v / 5 * 100}%">${one.repeat(5)}</span></span>`;
   };
   const heart = (w, withCount = false, cls = '') => {
@@ -421,13 +424,13 @@
   function postHtml(w) {
     const a = ARTISTS[w.a];
     return `<article class="post">
-      ${w.rating ? rating(w.rating) : '<span class="rating new-tag">Nuova</span>'}
+      <p class="post-title">${w.t}</p>
       <div class="post-side">${avatarRing(w.a)}<span class="post-by">${a.name.split(' ')[0]}<small>${agoText(w)}</small></span></div>
       <a class="frame" href="#vista/${w.id}" data-dbl="${w.id}" aria-label="${w.t} di ${a.name}">
         <span class="frame-inner ph-img">${img(w.thumb, w.t)}${mediaOverlay(w)}</span>
       </a>
-      <div class="post-actions">${heart(w)}${shareBtn(w)}${commentBtn(w)}${saveBtn(w)}<button class="act" data-act="more" data-id="${w.id}" aria-label="Altre azioni"><i class="ph-light ph-dots-three"></i></button></div>
-      <p class="post-title">${w.t}</p>
+      <div class="post-actions">${heart(w)}${commentBtn(w)}${shareBtn(w)}<button class="act" data-act="more" data-id="${w.id}" aria-label="Altre azioni"><i class="ph-light ph-dots-three"></i></button></div>
+      ${w.rating ? rating(w.rating, 22) : '<span class="rating new-tag">Nuova</span>'}
     </article>`;
   }
   function renderFeed() { $('#feed').innerHTML = [...MINE, ...FEED].map(postHtml).join(''); }

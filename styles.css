@@ -269,7 +269,7 @@ body[data-screen="invito"] .dock, body[data-screen="hub"] .dock { display: none;
 .rail {
   position: fixed; z-index: 20; top: 28vh; right: max(4px, calc(50% - 280px + 2px)); display: none; flex-direction: column; align-items: center; gap: 6px; color: var(--ink-2); font-size: 18px;
 }
-body[data-screen="scopri"] .rail, body[data-screen="disciplina"] .rail { display: flex; }
+body[data-screen="disciplina"] .rail { display: flex; }
 body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px)); }
 .rail-track { position: relative; width: 2px; height: 34vh; background-image: radial-gradient(circle, var(--ink-2) 1px, transparent 1.5px); background-size: 2px 14px; background-position: center; }
 .rail-dot { position: absolute; left: 50%; top: 0; width: 11px; height: 11px; margin-left: -5.5px; margin-top: -5.5px; border-radius: 50%; background: var(--ink); }
@@ -753,3 +753,18 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 
 /* labels stay above icons that overflow their ring (Galleria, Scopri) */
 .hub-label { position: relative; z-index: 1; }
+
+/* ---------- Rating: red stars cropped from the logo asset ---------- */
+.rating .crop { --w: var(--s, 18px); flex: none; }
+.rating .r-off .crop { filter: grayscale(1) brightness(2.2); opacity: .45; } /* grey, empty stars */
+
+/* ---------- Scopri post: title on top, stars under the frame ---------- */
+.post > .post-title { grid-column: 2; grid-row: 1; margin: 0 0 10px 14px; font-size: 15px; font-weight: 600; color: var(--ink); }
+.post > .post-side { grid-row: 2; }
+.post > .frame { grid-row: 2; }
+.post > .post-actions { grid-row: 2; }
+.post > .rating { grid-column: 2; grid-row: 3; margin: 12px 0 0 14px; }
+/* the picture is pinned to the frame's padding box: percent heights on an aspect-ratio box
+   don't resolve in every browser (Safari), which let tall pictures spill out at the bottom */
+.frame { overflow: hidden; }
+.frame-inner { position: absolute; inset: 8px; width: auto; height: auto; }
