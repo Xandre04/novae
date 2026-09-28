@@ -89,7 +89,7 @@ body[data-screen="impostazioni"] #sky { opacity: 0; }
 @keyframes twinkle { from { opacity: .12; } to { opacity: .6; } }
 
 /* ---------- Screens ---------- */
-#app { position: relative; } /* no z-index: crops must blend with the nebula behind */
+#app { position: relative; } /* no z-index: crops must blend with the sky behind */
 .screen {
   display: none;
   width: var(--col);
@@ -174,7 +174,7 @@ body[data-screen="impostazioni"] #sky { opacity: 0; }
 }
 .hub-core { position: absolute; left: 50%; top: var(--cy); transform: translate(-50%, -50%); }
 .hub-core .star-svg { width: calc(var(--hw) * .2); height: calc(var(--hw) * .215); }
-/* no transform here: a transform would isolate the crop's blend from the nebula behind it */
+/* no transform here: a transform would isolate the crop's blend from the background */
 .hub-wordmark { position: absolute; --w: calc(var(--hw) * .36); left: calc(50% - var(--w) / 2); top: calc(var(--cy) + var(--hw) * .158 - var(--w) * .13); }
 @media (prefers-reduced-motion: no-preference) {
   .hub-core .star-svg { animation: pulse 4s ease-in-out infinite; }
@@ -683,24 +683,6 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .cf-foot a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cf-foot .act small { font-size: 10px; }
 
-/* ---------- Shader effects (effects.js) ---------- */
-#nebula {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity 1.2s;
-  -webkit-mask-image: radial-gradient(60% 50% at 50% 46%, #000 20%, transparent 100%);
-  mask-image: radial-gradient(60% 50% at 50% 46%, #000 20%, transparent 100%);
-}
-#nebula > canvas, .fx-liquid > canvas { display: block; width: 100% !important; height: 100% !important; }
-body[data-screen="hub"] #nebula.on { opacity: .9; }
-body[data-screen="invito"] #nebula.on { opacity: .55; }
-.fx-liquid { position: absolute; inset: -26%; pointer-events: none; }
-.fx-host { position: relative; }
-.gate-star-host { width: 92px; height: 104px; }
-[data-fx="on"] > .star-svg, [data-fx="on"] > .gate-star { opacity: 0; }
-.hub-core[data-fx="on"] > .fx-liquid { filter: drop-shadow(0 0 22px rgba(214, 28, 64, .35)); }
-@media (prefers-reduced-motion: no-preference) {
-  .hub-core[data-fx="on"] > .fx-liquid, .gate-star-host[data-fx="on"] > .fx-liquid { animation: pulse 4s ease-in-out infinite; }
-}
-
 /* ---------- Liquid glass (web approximation: backdrop-filter + layered highlights, not Apple's material) ---------- */
 .hub-circle, .arc-circle, .sheet, .toast, .play-ico, .wallet {
   --glass-edge: rgba(255, 255, 255, .16);
@@ -727,3 +709,49 @@ body[data-screen="invito"] #nebula.on { opacity: .55; }
 @media (prefers-reduced-transparency: reduce) {
   .hub-circle, .arc-circle, .sheet, .toast, .play-ico, .wallet { background: #111113; -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
+
+/* ---------- QOL: save, publish, edit profile, action list, pull to refresh ---------- */
+.post-by small { display: block; margin-top: 2px; font-size: 9.5px; font-weight: 500; letter-spacing: .02em; text-transform: none; color: var(--ink-3); }
+.post .new-tag { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-hi); line-height: 18px; }
+.post-actions { gap: 4px; padding: 0; align-content: start; }
+.post-actions .act { font-size: 25px; width: 40px; height: 36px; place-items: center; }
+.vista-rail { gap: 16px; }
+.act.save.on { color: var(--ink); }
+.action-list { display: grid; border: var(--stroke) solid var(--line); border-radius: var(--wobble); overflow: hidden; }
+.action-list > * { display: flex; align-items: center; gap: 12px; padding: 14px 16px; font-size: 15px; text-align: left; border-bottom: var(--stroke) solid var(--line); transition: background .15s; }
+.action-list > :last-child { border-bottom: 0; }
+.action-list > :hover { background: rgba(255, 255, 255, .04); }
+.action-list i { font-size: 22px; color: var(--ink-2); }
+.action-list .danger, .action-list .danger i { color: #ff8a9c; }
+.sheet p + .action-list { margin-top: 16px; }
+.pub { display: grid; gap: 14px; }
+.pub .btn-accent { width: 100%; padding: 14px; }
+.pub-drop { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; border: var(--stroke) dashed var(--line-hi); border-radius: var(--wobble); overflow: hidden; cursor: pointer; color: var(--ink-2); transition: border-color .2s; }
+.pub-drop:hover, .pub-drop:focus-within { border-color: var(--ink-2); }
+.pub-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2; }
+.pub-drop span { display: grid; justify-items: center; gap: 6px; font-size: 14px; }
+.pub-drop span i { font-size: 34px; }
+.pub-drop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pub-drop.has { border-style: solid; }
+.pub-drop.has span { display: none; }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.field input, .field select, .field textarea {
+  background: var(--bg); border: var(--stroke) solid var(--line); border-radius: 12px; padding: 11px 14px;
+  color: var(--ink); font: inherit; font-size: 16px; outline: none; resize: vertical; transition: border-color .2s;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--line-hi); }
+.field ::placeholder { color: #75736e; }
+.pub-err { color: #ff8a9c; font-size: 13px; min-height: 1em; }
+.set-link { width: 100%; text-align: left; font: inherit; color: inherit; }
+.set-link i { color: var(--ink-3); font-size: 18px; }
+.ptr {
+  position: fixed; top: 10px; left: 50%; z-index: 29; width: 36px; height: 36px; margin-left: -18px; display: grid; place-items: center;
+  border-radius: 50%; border: var(--stroke) solid var(--line); background: var(--bg); opacity: 0; pointer-events: none;
+  transform: translateY(calc(var(--pull, 0px) - 30px)) rotate(calc(var(--pull, 0px) * 3));
+}
+.ptr svg { width: 16px; height: 18px; fill: var(--ink-3); }
+.ptr.ready svg, .ptr.spin svg { fill: var(--accent-hi); }
+.ptr.spin { opacity: 1 !important; transform: translateY(40px); transition: transform .2s; }
+@media (prefers-reduced-motion: no-preference) { .ptr.spin svg { animation: ptrspin .8s linear infinite; } }
+@keyframes ptrspin { to { transform: rotate(360deg); } }

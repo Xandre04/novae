@@ -14,6 +14,8 @@ Il social su invito dove ogni artista condivide le sue opere.
 - **Scopri**: globo interattivo con gli artisti nel mondo
 - **Seguiti**: le opere degli artisti che segui, filtrabili per artista
 - **Mercato (in crediti), Profilo, Messaggi, Impostazioni**
+- **Pubblica opera** (dal profilo): immagine, titolo, disciplina, descrizione. Resta salvata solo su questo dispositivo
+- **Salva** un'opera col segnalibro e ritrovala in Profilo > Salvate; **Modifica profilo** (nome, nome utente, bio)
 
 ## Scorciatoie
 
@@ -21,6 +23,7 @@ Il social su invito dove ogni artista condivide le sue opere.
 - `/`: cerca, `Esc`: chiudi
 - Vista a schermo intero: swipe o rotellina (su e giù) per cambiare opera
 - Scopri: frecce sinistra e destra per cambiare paese
+- Feed su telefono: trascina verso il basso dall'alto per aggiornare
 
 ## Avvio in locale
 
@@ -37,5 +40,4 @@ Poi apri http://localhost:5173
 - `index.html`: markup delle schermate
 - `styles.css`: stile (nero, linee a gesso, stella cremisi)
 - `app.js`: dati di prova, routing, interazioni
-- `effects.js`: effetti WebGL con [Paper Shaders](https://github.com/paper-design/shaders) (stella in metallo liquido, sfondo mesh gradient)
 - `IMG/`: bozzetti e icone disegnate a mano

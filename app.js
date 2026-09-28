@@ -54,7 +54,8 @@
     ananya: { name: 'Ananya Rao',       handle: 'ananya.rao',  country: 'India',      bio: 'Poesia visiva e tipografia.' },
   };
   const AIDS = Object.keys(ARTISTS);
-  const avatar = id => pic('av-' + id, 160, 160, true);
+  const avatar = id => id === 'me' ? ME_AVATAR : pic('av-' + id, 160, 160, true);
+  const ME_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#1a1a1b"/><circle cx="32" cy="25" r="11" fill="#eeede9"/><path d="M11 60c2-12 11-19 21-19s19 7 21 19z" fill="#eeede9"/></svg>');
 
   const DISCIPLINES = ['Cinematografia', 'Pittura', 'Fotografia', 'Musica', 'Illustrazione', 'Scultura', 'Poesia'];
 
@@ -78,6 +79,7 @@
       rating: Math.round((2.6 + r() * 2.4) * 10) / 10,
       year: 2024 + Math.floor(r() * 3),
       desc: DESCS[Math.floor(r() * DESCS.length)],
+      ago: 4 + Math.floor(r() * r() * 5000), // minutes since it was published
       ...o,
     };
     w.views = Math.floor(w.likes * (2.2 + r() * 4));
@@ -150,6 +152,22 @@
   let recent = readJSON('novae.recent', []);
   const addRecent = q => { q = q.trim(); if (q.length < 2) return; recent = [q, ...recent.filter(x => x.toLowerCase() !== q.toLowerCase())].slice(0, 6); store.set('novae.recent', JSON.stringify(recent)); };
   const buzz = () => { try { navigator.vibrate?.(12); } catch { /* unsupported */ } };
+  const saved = new Set(readJSON('novae.saved', []));
+  const saveSaved = () => store.set('novae.saved', JSON.stringify([...saved]));
+
+  // You: editable profile + the works you publish (images kept as compressed data URLs, on this device only)
+  const profile = Object.assign({ name: 'Il tuo nome', handle: 'tuonome', bio: 'Scrivi qui chi sei e cosa crei. Gli altri artisti lo leggeranno prima di seguirti.' }, readJSON('novae.profile', {}));
+  ARTISTS.me = { name: profile.name, handle: profile.handle, country: 'Italia', bio: profile.bio };
+  const MINE = readJSON('novae.mine', []);
+  MINE.forEach(w => { WORKS.unshift(w); byId[w.id] = w; });
+  function saveMine() {
+    try { localStorage.setItem('novae.mine', JSON.stringify(MINE)); return true; } catch { return false; }
+  }
+  const profileHref = aid => aid === 'me' ? '#profilo' : '#artista/' + aid;
+  const agoText = w => {
+    const m = w.ts ? Math.max(1, Math.round((Date.now() - w.ts) / 60000)) : w.ago;
+    return m < 60 ? `${m} min` : m < 1440 ? `${Math.round(m / 60)} h` : `${Math.round(m / 1440)} g`;
+  };
 
   /* ---------------- Shared fragments ---------------- */
   const rating = (v, size = 18) => {
@@ -162,7 +180,11 @@
   };
   const shareBtn = w => `<button class="act" data-act="share" data-id="${w.id}" aria-label="Condividi"><i class="ph-light ph-arrow-bend-up-right"></i></button>`;
   const commentBtn = w => `<button class="act" data-act="comments" data-id="${w.id}" aria-label="Commenti"><i class="ph-light ph-chat-circle"></i></button>`;
-  const avatarRing = (aid, cls = '') => `<a class="avatar-ring ${cls}" href="#artista/${aid}" aria-label="${ARTISTS[aid].name}">${img(avatar(aid), '')}</a>`;
+  const avatarRing = (aid, cls = '') => `<a class="avatar-ring ${cls}" href="${profileHref(aid)}" aria-label="${ARTISTS[aid].name}">${img(avatar(aid), '')}</a>`;
+  const saveBtn = w => {
+    const on = saved.has(w.id);
+    return `<button class="act save ${on ? 'on' : ''}" data-act="save" data-id="${w.id}" aria-pressed="${on}" aria-label="Salva"><i class="${on ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i></button>`;
+  };
   const wave = seed => { const r = rng(seed); return `<span class="wave">${Array.from({ length: 34 }, () => `<span style="--h:${Math.round(18 + r() * 82)}%"></span>`).join('')}</span>`; };
   const mediaOverlay = w => w.type === 'video' ? '<span class="play-ico"><i class="ph-fill ph-play"></i></span>'
     : w.type === 'audio' ? `<span class="audio-bar"><i class="ph-fill ph-play"></i>${wave(w.likes)}</span>` : '';
@@ -400,16 +422,16 @@
   function postHtml(w) {
     const a = ARTISTS[w.a];
     return `<article class="post">
-      ${rating(w.rating)}
-      <div class="post-side">${avatarRing(w.a)}<span class="post-by">${a.name.split(' ')[0]}</span></div>
+      ${w.rating ? rating(w.rating) : '<span class="rating new-tag">Nuova</span>'}
+      <div class="post-side">${avatarRing(w.a)}<span class="post-by">${a.name.split(' ')[0]}<small>${agoText(w)}</small></span></div>
       <a class="frame" href="#vista/${w.id}" data-dbl="${w.id}" aria-label="${w.t} di ${a.name}">
         <span class="frame-inner ph-img">${img(w.thumb, w.t)}${mediaOverlay(w)}</span>
       </a>
-      <div class="post-actions">${heart(w)}${shareBtn(w)}${commentBtn(w)}</div>
+      <div class="post-actions">${heart(w)}${shareBtn(w)}${commentBtn(w)}${saveBtn(w)}<button class="act" data-act="more" data-id="${w.id}" aria-label="Altre azioni"><i class="ph-light ph-dots-three"></i></button></div>
       <p class="post-title">${w.t}</p>
     </article>`;
   }
-  function renderFeed() { $('#feed').innerHTML = FEED.map(postHtml).join(''); }
+  function renderFeed() { $('#feed').innerHTML = [...MINE, ...FEED].map(postHtml).join(''); }
 
   /* ---------------- 4. Vista ---------------- */
   let vistaTimer;
@@ -429,6 +451,7 @@
         ${heart(w, true)}
         ${commentBtn(w)}
         ${shareBtn(w)}
+        ${saveBtn(w)}
         <button class="act" data-act="more" data-id="${w.id}" aria-label="Altro"><i class="ph-light ph-dots-three"></i></button>
         ${idx > -1 ? `<button class="act" data-act="vista-step" data-dir="-1" aria-label="Opera precedente"><i class="ph-light ph-caret-up"></i></button>
         <button class="act" data-act="vista-step" data-dir="1" aria-label="Opera successiva"><i class="ph-light ph-caret-down"></i></button>` : ''}
@@ -557,7 +580,7 @@
         ${w.type !== 'image' ? `<button class="vista-play" data-act="play" aria-label="Riproduci"><i class="ph-light ph-play"></i></button><div class="progress"><span></span></div>` : ''}
       </div>
       <div class="d-title">${avatarRing(w.a, 'sm')}<h1>${w.t}</h1>${rating(w.rating, 20)}</div>
-      <div class="d-actions">${heart(w, true)}<span class="grow"></span>${commentBtn(w)}${shareBtn(w)}<button class="act" data-act="more" data-id="${w.id}" aria-label="Altro"><i class="ph-light ph-dots-three"></i></button></div>
+      <div class="d-actions">${heart(w, true)}<span class="grow"></span>${commentBtn(w)}${shareBtn(w)}${saveBtn(w)}<button class="act" data-act="more" data-id="${w.id}" aria-label="Altro"><i class="ph-light ph-dots-three"></i></button></div>
       <div class="d-body">
         <div class="d-author">${avatarRing(w.a)}</div>
         <div class="d-desc">
@@ -685,34 +708,123 @@
   /* ---------------- 11. Profilo / artista ---------------- */
   let profTab = 'Opere';
   function renderProfile(aid) {
-    const other = aid && ARTISTS[aid];
-    const a = other || { name: 'Il tuo nome', handle: 'tuonome', country: 'Italia', bio: 'Scrivi qui chi sei e cosa crei. Gli altri artisti lo leggeranno prima di seguirti.' };
-    const works = other ? WORKS.filter(w => w.a === aid) : WORKS.filter(w => liked.has(w.id)).slice(0, 0);
-    const saved = WORKS.filter(w => liked.has(w.id));
-    const list = profTab === 'Opere' ? works : profTab === 'Salvate' ? saved : works.filter(w => w.rating >= 4);
+    const other = aid && aid !== 'me' && ARTISTS[aid];
+    const a = other || ARTISTS.me;
+    const works = WORKS.filter(w => w.a === (other ? aid : 'me'));
+    const savedList = WORKS.filter(w => saved.has(w.id));
+    const tabs = other ? ['Opere', 'Stelle'] : ['Opere', 'Salvate', 'Stelle'];
+    if (!tabs.includes(profTab)) profTab = 'Opere';
+    const list = profTab === 'Opere' ? works : profTab === 'Salvate' ? savedList : works.filter(w => w.rating >= 4);
     const empty = {
-      Opere: other ? ['Nessuna opera', `${a.name.split(' ')[0]} non ha ancora pubblicato.`] : ['La tua prima opera', 'Qui appariranno le opere che pubblichi. La pubblicazione arriva nella prossima alpha.'],
-      Salvate: ['Niente di salvato', 'Tocca il cuore su un\'opera e la ritrovi qui.'],
+      Opere: other ? ['Nessuna opera', `${a.name.split(' ')[0]} non ha ancora pubblicato.`] : ['La tua prima opera', 'Tocca "Pubblica opera" e condividila con chi ti segue.'],
+      Salvate: ['Niente di salvato', 'Tocca il segnalibro su un\'opera e la ritrovi qui.'],
       Stelle: ['Nessuna stella', 'Le opere con almeno 4 stelle finiscono qui.'],
     }[profTab];
+    const thumb = w => w.ts ? w.img : pic(w.id, 300, 300);
     $('#profile').innerHTML = `
       <div class="prof-top">
-        ${other ? `<span class="avatar-ring lg">${img(avatar(aid), '')}</span>` : `<span class="prof-ring">${crop('profilo')}<button class="edit" data-act="soon" aria-label="Cambia foto"><i class="ph-light ph-pencil-simple"></i></button></span>`}
+        ${other ? `<span class="avatar-ring lg">${img(avatar(aid), '')}</span>` : `<span class="prof-ring">${crop('profilo')}<button class="edit" data-act="edit-profile" aria-label="Modifica profilo"><i class="ph-light ph-pencil-simple"></i></button></span>`}
         <h1>${a.name}</h1>
         <span class="handle">@${a.handle}, ${a.country}</span>
         <p class="bio">${a.bio}</p>
         <div class="stats">
           <div><strong>${works.length}</strong><span>opere</span></div>
-          <div><strong>${other ? fmt(works.reduce((s, w) => s + likeCount(w), 0)) : saved.length}</strong><span>${other ? 'cuori' : 'salvate'}</span></div>
-          <div><strong>${other ? fmt(120 + works.length * 37) : '1.240'}</strong><span>${other ? 'seguaci' : 'crediti'}</span></div>
+          <div><strong>${other ? fmt(works.reduce((s, w) => s + likeCount(w), 0)) : savedList.length}</strong><span>${other ? 'cuori' : 'salvate'}</span></div>
+          <div><strong>${other ? fmt(120 + works.length * 37) : followed.size}</strong><span>${other ? 'seguaci' : 'seguiti'}</span></div>
         </div>
         <div class="prof-cta">${other
           ? `<button class="${followed.has(aid) ? 'btn-ghost' : 'btn-accent'}" data-act="follow" data-a="${aid}" aria-pressed="${followed.has(aid)}">${followed.has(aid) ? 'Segui già' : 'Segui'}</button><a class="btn-ghost" href="#messaggi/${aid}">Messaggio</a>`
-          : `<button class="btn-accent" data-act="soon">Pubblica opera</button><a class="btn-ghost" href="#impostazioni">Modifica</a>`}</div>
+          : `<button class="btn-accent" data-act="publish">Pubblica opera</button><button class="btn-ghost" data-act="edit-profile">Modifica</button>`}</div>
       </div>
-      <div class="seg" role="tablist">${['Opere', 'Salvate', 'Stelle'].map(t => `<button role="tab" aria-selected="${t === profTab}" data-act="ptab" data-v="${t}" data-a="${aid || ''}">${t}</button>`).join('')}</div>
-      ${list.length ? `<div class="grid3">${list.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(pic(w.id, 300, 300), w.t)}</a>`).join('')}</div>`
-        : `<div class="empty">${starSvg()}<strong>${empty[0]}</strong><p>${empty[1]}</p></div>`}`;
+      <div class="seg" role="tablist" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(t => `<button role="tab" aria-selected="${t === profTab}" data-act="ptab" data-v="${t}" data-a="${aid || ''}">${t}</button>`).join('')}</div>
+      ${list.length ? `<div class="grid3">${list.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumb(w), w.t)}</a>`).join('')}</div>`
+        : `<div class="empty">${starSvg()}<strong>${empty[0]}</strong><p>${empty[1]}</p>${!other && profTab === 'Opere' ? '<button class="btn-accent" data-act="publish">Pubblica opera</button>' : ''}</div>`}`;
+  }
+
+  /* ---------------- Publish + edit profile (local only, this device) ---------------- */
+  function compressImage(file, max = 1080) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file);
+      const im = new Image();
+      im.onload = () => {
+        const k = Math.min(1, max / Math.max(im.width, im.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        res({ data: c.toDataURL('image/jpeg', .8), w: c.width, h: c.height });
+      };
+      im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('image')); };
+      im.src = url;
+    });
+  }
+  function openPublish() {
+    openSheet(`<h3>Nuova opera</h3>
+      <form class="pub" id="pubForm" novalidate>
+        <label class="pub-drop" id="pubDrop"><input type="file" accept="image/*" id="pubFile" aria-label="Immagine dell'opera"><img id="pubPrev" alt="" hidden><span><i class="ph-light ph-image-square"></i>Scegli un'immagine</span></label>
+        <div class="field"><label for="pubT">Titolo</label><input id="pubT" maxlength="60" placeholder="Come si chiama?" autocomplete="off"></div>
+        <div class="field"><label for="pubDisc">Disciplina</label><select id="pubDisc">${DISCIPLINES.map(d => `<option>${d}</option>`).join('')}</select></div>
+        <div class="field"><label for="pubDesc">Descrizione</label><textarea id="pubDesc" maxlength="400" rows="3" placeholder="Racconta com'è nata (facoltativo)"></textarea></div>
+        <p class="pub-err" id="pubErr" role="alert"></p>
+        <button class="btn-accent" type="submit">Pubblica</button>
+      </form>`);
+  }
+  async function onPubFile(file) {
+    if (!file) return;
+    try {
+      const r = await compressImage(file);
+      const f = $('#pubForm');
+      Object.assign(f.dataset, { img: r.data, w: r.w, h: r.h });
+      $('#pubPrev').src = r.data; $('#pubPrev').hidden = false;
+      $('#pubDrop').classList.add('has');
+      $('#pubErr').textContent = '';
+    } catch { $('#pubErr').textContent = 'Non riesco a leggere questa immagine. Prova con un JPG o PNG.'; }
+  }
+  function submitPublish(f) {
+    const t = $('#pubT').value.trim();
+    if (!f.dataset.img) { $('#pubErr').textContent = 'Scegli prima un\'immagine.'; return; }
+    if (!t) { $('#pubErr').textContent = 'Dai un titolo alla tua opera.'; $('#pubT').focus(); return; }
+    const w = {
+      id: 'u' + Date.now(), t, a: 'me', type: 'image', disc: $('#pubDisc').value, desc: $('#pubDesc').value.trim() || 'Appena pubblicata.',
+      img: f.dataset.img, thumb: f.dataset.img, w: +f.dataset.w, h: +f.dataset.h,
+      likes: 0, rating: 0, views: 0, comments: 0, price: 0, year: new Date().getFullYear(), ts: Date.now(),
+    };
+    MINE.unshift(w);
+    if (!saveMine()) { MINE.shift(); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: elimina una tua opera e riprova.'; return; }
+    WORKS.unshift(w); byId[w.id] = w;
+    closeSheet(); toast('Opera pubblicata'); buzz();
+    if (location.hash === '#novae') renderFeed(); else location.hash = '#novae';
+  }
+  function deleteMine(id) {
+    const i = MINE.findIndex(w => w.id === id);
+    if (i < 0) return;
+    MINE.splice(i, 1); saveMine();
+    const wi = WORKS.findIndex(w => w.id === id);
+    if (wi > -1) WORKS.splice(wi, 1);
+    delete byId[id];
+    saved.delete(id); saveSaved();
+    closeSheet(); toast('Opera eliminata');
+    if (location.hash.includes(id)) location.hash = '#profilo'; else refresh();
+  }
+  function openEditProfile() {
+    const q = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    openSheet(`<h3>Modifica profilo</h3>
+      <form class="pub" id="profForm" novalidate>
+        <div class="field"><label for="pfName">Nome</label><input id="pfName" maxlength="40" value="${q(profile.name)}" autocomplete="name"></div>
+        <div class="field"><label for="pfHandle">Nome utente</label><input id="pfHandle" maxlength="24" value="${q(profile.handle)}" autocomplete="username" spellcheck="false"></div>
+        <div class="field"><label for="pfBio">Bio</label><textarea id="pfBio" maxlength="160" rows="3">${q(profile.bio)}</textarea></div>
+        <p class="pub-err" id="pfErr" role="alert"></p>
+        <button class="btn-accent" type="submit">Salva</button>
+      </form>`);
+  }
+  function submitProfile() {
+    const name = $('#pfName').value.trim(), handle = $('#pfHandle').value.trim().replace(/^@/, '').toLowerCase();
+    if (!name) { $('#pfErr').textContent = 'Il nome non può essere vuoto.'; return; }
+    if (!/^[a-z0-9._]{3,24}$/.test(handle)) { $('#pfErr').textContent = 'Nome utente: 3-24 caratteri tra lettere, numeri, punto e trattino basso.'; return; }
+    Object.assign(profile, { name, handle, bio: $('#pfBio').value.trim() || profile.bio });
+    Object.assign(ARTISTS.me, { name, handle, bio: profile.bio });
+    store.set('novae.profile', JSON.stringify(profile));
+    closeSheet(); toast('Profilo aggiornato'); refresh();
   }
 
   /* ---------------- 12. Messaggi ---------------- */
@@ -750,6 +862,7 @@
     $('#settings').innerHTML = `
       <div class="set-head">${crop('impostazioni')}<h1>Impostazioni</h1></div>
       <div class="set-group"><h2>Account</h2>
+        <button class="set-row set-link" data-act="edit-profile"><span>Modifica profilo<small>${ARTISTS.me.name}, @${ARTISTS.me.handle}</small></span><i class="ph-light ph-caret-right"></i></button>
         ${sw('priv', 'Profilo privato', 'Solo chi segui vede le tue opere')}
         <div class="set-row"><span>Lingua<small>Interfaccia</small></span><select aria-label="Lingua"><option>Italiano</option><option>English</option><option>ไทย</option></select></div>
       </div>
@@ -789,14 +902,25 @@
   }
 
   /* ---------------- Sheet + toast ---------------- */
+  let sheetT, sheetOpener = null;
   function openSheet(html) {
+    clearTimeout(sheetT); // a pending close must not hide the sheet we are opening now
+    if (!$('#sheet').classList.contains('open')) sheetOpener = document.activeElement;
     $('#sheetBody').innerHTML = html;
     $('#sheet').hidden = false;
-    requestAnimationFrame(() => { $('#sheet').classList.add('open'); $('#sheetScrim').classList.add('open'); });
+    requestAnimationFrame(() => {
+      $('#sheet').classList.add('open'); $('#sheetScrim').classList.add('open');
+      // with a mouse/keyboard, focus the first field so you can type right away (on phones, don't pop the keyboard unasked)
+      const field = $('#sheetBody input:not([type=file]), #sheetBody textarea');
+      if (field && matchMedia('(hover: hover)').matches) field.focus({ preventScroll: true });
+    });
   }
   function closeSheet() {
+    if (!$('#sheet').classList.contains('open')) return;
     $('#sheet').classList.remove('open'); $('#sheetScrim').classList.remove('open');
-    setTimeout(() => { $('#sheet').hidden = true; }, 400);
+    sheetT = setTimeout(() => { $('#sheet').hidden = true; }, 400);
+    sheetOpener?.focus?.({ preventScroll: true }); // give focus back to what opened it
+    sheetOpener = null;
   }
   let toastT;
   function toast(msg) {
@@ -847,12 +971,49 @@
     document.body.dataset.screen = screen;
     document.title = name === 'hub' ? 'NOVAE' : `${TITLES[name] || ''} | NOVAE`;
     if (HUB.some(h => h.k === name)) { prefs.lastHub = name; savePrefs(); }
+    cur = { name, param };
     RENDER[name](param);
-    document.dispatchEvent(new CustomEvent('novae:screen', { detail: screen })); // effects.js hooks in here
     const y = scrollMemo.get(curHash) || 0;
     window.scrollTo(0, 0);
     if (y) requestAnimationFrame(() => window.scrollTo(0, y));
   }
+  let cur = { name: '', param: '' };
+  // Re-render the current screen in place (after follow, publish, edits...), keeping the scroll position
+  function refresh() {
+    const y = window.scrollY;
+    RENDER[cur.name]?.(cur.param);
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  }
+  // Pull to refresh on the feed (touch): pull down from the top, release to get a fresh order
+  (() => {
+    let y0 = null, dy = 0, busy = false;
+    const ptr = $('#ptr');
+    const reset = () => { ptr.classList.remove('ready', 'spin'); ptr.style.removeProperty('--pull'); ptr.style.opacity = ''; };
+    window.addEventListener('touchstart', e => {
+      if (cur.name !== 'novae' || window.scrollY > 0 || busy) return;
+      y0 = e.touches[0].clientY; dy = 0;
+    }, { passive: true });
+    window.addEventListener('touchmove', e => {
+      if (y0 === null) return;
+      dy = Math.max(0, e.touches[0].clientY - y0);
+      ptr.style.setProperty('--pull', Math.min(dy, 110) + 'px');
+      ptr.style.opacity = Math.min(1, dy / 70);
+      ptr.classList.toggle('ready', dy > 70);
+    }, { passive: true });
+    window.addEventListener('touchend', () => {
+      if (y0 === null) return;
+      y0 = null;
+      if (dy <= 70) { reset(); return; }
+      busy = true; buzz();
+      ptr.classList.add('spin');
+      setTimeout(() => {
+        for (let i = FEED.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [FEED[i], FEED[j]] = [FEED[j], FEED[i]]; }
+        renderFeed(); reset(); busy = false;
+        toast('Feed aggiornato');
+      }, 900);
+    });
+  })();
+
   function goBack(fallback) {
     if (trail.length > 1) history.back(); else location.hash = fallback;
   }
@@ -930,18 +1091,50 @@
         break;
       }
       case 'comments':
-        openSheet(`<h3>${fmt(w.comments)} commenti</h3>${COMMENTS.map(([id, t]) => `<div class="comment">${avatarRing(id, 'sm')}<div><strong>${ARTISTS[id].name}</strong><p>${t}</p></div></div>`).join('')}
+        openSheet(`<h3>${fmt(w.comments)} commenti</h3>${w.comments ? COMMENTS.map(([id, t]) => `<div class="comment">${avatarRing(id, 'sm')}<div><strong>${ARTISTS[id].name}</strong><p>${t}</p></div></div>`).join('') : '<p>Ancora nessun commento. Scrivi il primo.</p>'}
           <form class="composer" data-comment="${w.id}"><input placeholder="Aggiungi un commento" aria-label="Commento" autocomplete="off"><button aria-label="Invia"><i class="ph-light ph-paper-plane-right"></i></button></form>`);
         break;
       case 'info':
         openSheet(`<h3>${w.t}</h3>${rating(w.rating, 18)}<p style="margin-top:12px">${w.desc}</p><p style="margin-top:8px;color:var(--ink-3)">${ARTISTS[w.a].name}, ${w.disc.toLowerCase()}, ${w.year}</p><a class="btn-ghost" href="#opera/${w.id}">Scheda completa</a>`);
         break;
       case 'more':
-        openSheet(`<h3>${w.t}</h3><div style="display:grid;gap:10px">
-          <button class="btn-ghost" data-act="soon">Salva nella raccolta</button>
-          <a class="btn-ghost" href="#artista/${w.a}">Vai a ${ARTISTS[w.a].name}</a>
-          <button class="btn-ghost danger" data-act="soon">Segnala</button></div>`);
+        openSheet(`<h3>${w.t}</h3><div class="action-list">
+          <button data-act="save" data-id="${w.id}"><i class="ph-light ph-bookmark-simple"></i>${saved.has(w.id) ? 'Rimuovi dai salvati' : 'Salva'}</button>
+          <button data-act="copy-link" data-id="${w.id}"><i class="ph-light ph-link-simple"></i>Copia link</button>
+          <a href="${profileHref(w.a)}"><i class="ph-light ph-user"></i>${w.a === 'me' ? 'Vai al tuo profilo' : 'Vai a ' + ARTISTS[w.a].name}</a>
+          ${w.a === 'me'
+            ? `<button class="danger" data-act="delete" data-id="${w.id}"><i class="ph-light ph-trash"></i>Elimina opera</button>`
+            : `<button class="danger" data-act="report"><i class="ph-light ph-flag"></i>Segnala</button>`}
+        </div>`);
         break;
+      case 'save': {
+        const on = !saved.has(w.id);
+        on ? saved.add(w.id) : saved.delete(w.id);
+        saveSaved();
+        $$(`.act[data-act="save"][data-id="${w.id}"]`).forEach(b => {
+          b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+          b.querySelector('i').className = `${on ? 'ph-fill' : 'ph-light'} ph-bookmark-simple`;
+        });
+        if (el.closest('.sheet')) closeSheet();
+        toast(on ? 'Salvata nel tuo profilo' : 'Rimossa dai salvati');
+        if (on) buzz();
+        break;
+      }
+      case 'copy-link': {
+        const url = location.href.split('#')[0] + '#opera/' + w.id;
+        navigator.clipboard?.writeText(url).then(() => toast('Link copiato'), () => toast(url));
+        closeSheet();
+        break;
+      }
+      case 'report': closeSheet(); toast('Grazie, la controlleremo'); break;
+      case 'delete':
+        openSheet(`<h3>Eliminare "${w.t}"?</h3><p>Sparisce dal feed e dal tuo profilo. Non si può annullare.</p>
+          <div class="action-list"><button class="danger" data-act="delete-yes" data-id="${w.id}"><i class="ph-light ph-trash"></i>Elimina</button>
+          <button data-act="sheet-close"><i class="ph-light ph-x"></i>Annulla</button></div>`);
+        break;
+      case 'delete-yes': deleteMine(el.dataset.id); break;
+      case 'publish': openPublish(); break;
+      case 'edit-profile': openEditProfile(); break;
       case 'play': {
         const box = el.closest('.vista, .player');
         const playing = !box.classList.contains('playing');
@@ -973,7 +1166,8 @@
         followed.has(id) ? followed.delete(id) : followed.add(id);
         saveFollowed();
         toast(followed.has(id) ? `Ora segui ${ARTISTS[id].name}` : `Non segui più ${ARTISTS[id].name}`);
-        renderProfile(id);
+        if (followed.has(id)) buzz();
+        refresh();
         break;
       }
       case 'buy': toast('Acquisto in crediti disponibile a breve'); break;
@@ -990,6 +1184,8 @@
 
   document.addEventListener('submit', e => {
     const f = e.target;
+    if (f.id === 'pubForm') { e.preventDefault(); submitPublish(f); return; }
+    if (f.id === 'profForm') { e.preventDefault(); submitProfile(); return; }
     if (f.classList.contains('composer')) {
       e.preventDefault();
       const input = f.querySelector('input');
@@ -1008,6 +1204,7 @@
   });
 
   document.addEventListener('change', e => {
+    if (e.target.id === 'pubFile') { onPubFile(e.target.files[0]); return; }
     const k = e.target.dataset.toggle;
     if (!k) return;
     const t = store.get('novae.toggles') ? JSON.parse(store.get('novae.toggles')) : { priv: false, notif: true, auto: true, rate: true };
