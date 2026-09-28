@@ -768,3 +768,55 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
    don't resolve in every browser (Safari), which let tall pictures spill out at the bottom */
 .frame { overflow: hidden; }
 .frame-inner { position: absolute; inset: 8px; width: auto; height: auto; }
+
+/* ---------- Scopri: X-style feed (from the feed sketch) ---------- */
+#feed.xfeed { display: block; padding: 0; }
+.xpost { display: grid; grid-template-columns: 58px minmax(0, 1fr); column-gap: 14px; padding: 18px 14px 8px 12px; border-bottom: var(--stroke) solid var(--line-hi); cursor: pointer; transition: background .15s; }
+.xpost:hover { background: rgba(255, 255, 255, .018); }
+.xpost.open { cursor: default; border-bottom-color: var(--line); }
+.xpost.open:hover { background: none; }
+.x-ava .avatar-ring { width: 58px; height: 58px; padding: 3px; }
+.x-body { min-width: 0; }
+.x-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.x-meta { min-width: 0; font-size: 13px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-top: 2px; }
+.x-name { font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+.x-name:hover { text-decoration: underline; }
+.x-time { color: var(--ink-3); font-weight: 500; letter-spacing: .06em; }
+.x-head .rating { flex: none; margin-top: 1px; }
+.x-head .new-tag { flex: none; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-hi); }
+.x-title { margin-top: 6px; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+.x-desc { margin-top: 5px; font-size: 14px; line-height: 1.45; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.x-desc.open { -webkit-line-clamp: unset; display: block; font-size: 15px; color: var(--ink); }
+/* the frame follows the work's shape (aspect-ratio and width are set per post) */
+.x-media { position: relative; display: block; margin-top: 12px; border: var(--stroke) solid var(--line-hi); border-radius: 14px; overflow: hidden; background: var(--bg-2); max-width: 100%; }
+.x-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.x-media .play-ico { width: 54px; height: 54px; font-size: 22px; }
+.x-actions { display: flex; align-items: center; justify-content: space-between; margin: 8px -6px 0 -10px; }
+.x-actions .act { display: flex; align-items: center; gap: 5px; height: 40px; padding: 0 8px; font-size: 22px; color: var(--ink-2); border-radius: 999px; transition: color .15s, background .15s; }
+.x-actions .act:hover { color: var(--ink); background: rgba(255, 255, 255, .05); }
+.x-actions .act small { font-size: 12.5px; color: var(--ink-3); font-family: var(--sans); }
+.x-actions .act.like.on, .x-actions .act.like.on small { color: var(--accent-hi); }
+.x-actions .act.repost.on, .x-actions .act.repost.on small { color: #3ecf8e; }
+.x-actions .grow { flex: 1; }
+.x-actions [data-act="more"] { min-width: 0; }
+.x-actions.big .act { font-size: 25px; }
+.x-actions.big .act small { display: none; }
+/* comments page */
+.screen[data-screen="post"] .x-top { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 8px 8px; background: rgba(3, 3, 3, .88); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: var(--stroke) solid var(--line); }
+.x-top h1 { font-size: 18px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+.x-stats { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 14px; padding: 12px 0; border-top: var(--stroke) solid var(--line); border-bottom: var(--stroke) solid var(--line); font-size: 13px; color: var(--ink-3); }
+.x-stats strong { color: var(--ink); font-weight: 600; }
+.x-compose { display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: var(--stroke) solid var(--line); }
+.x-compose .x-me { width: 40px; height: 40px; border-radius: 50%; }
+.x-compose input { min-width: 0; background: none; border: 0; outline: none; color: var(--ink); font: inherit; font-size: 16px; padding: 8px 0; }
+.x-compose input::placeholder { color: #75736e; }
+.x-compose .btn-accent { padding: 9px 18px; font-size: 14px; }
+.x-reply { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; padding: 14px 14px; border-bottom: var(--stroke) solid var(--line); }
+.x-reply .avatar-ring.sm { width: 42px; height: 42px; }
+.x-text { margin-top: 3px; font-size: 15px; line-height: 1.45; }
+.x-reply-likes { margin-top: 6px; font-size: 12px; color: var(--ink-3); display: flex; align-items: center; gap: 5px; }
+.x-none { padding: 30px 14px; text-align: center; color: var(--ink-3); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* toast with an undo button */
+.toast.has-act { pointer-events: auto; display: flex; align-items: center; gap: 14px; }
+.toast-act { font-weight: 700; color: var(--accent); text-decoration: underline; }

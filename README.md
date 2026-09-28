@@ -32,7 +32,7 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 
 ## Schermate
 
-| Invito | Menu principale | Scopri (feed) |
+| Invito | Menu principale | Scopri (feed stile X) |
 |:---:|:---:|:---:|
 | <img src="docs/screenshots/01-invito.jpg" width="220" alt="Schermata d'invito con QR"> | <img src="docs/screenshots/02-menu.jpg" width="220" alt="Menu principale a raggiera"> | <img src="docs/screenshots/03-feed.jpg" width="220" alt="Feed delle opere"> |
 | **Ruota delle sezioni** | **Cinematografia** | **Novae (il pianeta)** |
@@ -50,7 +50,7 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 - **Opere a schermo intero**: come Reels e TikTok, scorri su e giù per passare alla prossima. Tocca per mettere in pausa, doppio tocco per il mi piace.
 - **Scheda opera**: player, descrizione completa e opere correlate.
 - **Galleria**: le discipline (Cinematografia, Pittura, Fotografia...). In **Cinematografia**: serie, film e classifica, con le righe a gradini per genere (Novae, Thriller, Storico).
-- **Scopri**: il feed delle opere, con valutazione a stelle, mi piace, commenti, condivisione e salvataggi.
+- **Scopri**: il feed veloce in stile X. Tocca l'opera per la modalità reels, tocca il resto del post o il fumetto per i commenti; mi piace, ripubblica, condividi e tre puntini (Salva, Segnala, Non mi interessa). Il riquadro segue la forma dell'opera.
 - **Stile**: per ora, le opere degli artisti che segui, filtrabili per artista.
 - **Mercato**: opere in vendita, con prezzi in crediti.
 - **Profilo, Messaggi, Impostazioni**.

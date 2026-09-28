@@ -431,20 +431,118 @@
     }, { passive: false });
   })();
 
-  /* ---------------- 3. Feed ---------------- */
-  function postHtml(w) {
+  /* ---------------- 3. Scopri: X-style feed ----------------
+     Tap the picture: reels. Tap anywhere else on the post (the black sides) or the comment
+     button: the post's comments page (#post/id), like on X. */
+  const reposted = new Set(readJSON('novae.reposted', []));
+  const hidden = new Set(readJSON('novae.hidden', [])); // "Non mi interessa"
+  const REPLIES_MINE = readJSON('novae.replies', {}); // your replies, per work
+  const repostCount = w => Math.floor(w.likes / 11) + (reposted.has(w.id) ? 1 : 0);
+  // short counts like X: 842, 4,2K, 242K, 1,3M
+  const short = n => n < 1000 ? String(n) : n < 1e6 ? `${(n / 1e3).toFixed(n < 1e4 ? 1 : 0).replace('.', ',').replace(',0', '')}K` : `${(n / 1e6).toFixed(1).replace('.', ',').replace(',0', '')}M`;
+  const replyCount = w => w.comments + (REPLIES_MINE[w.id]?.length || 0);
+  const xActions = (w, big = false) => {
+    const on = liked.has(w.id), rp = reposted.has(w.id);
+    return `<div class="x-actions ${big ? 'big' : ''}">
+      <button class="act like ${on ? 'on' : ''}" data-act="like" data-id="${w.id}" aria-pressed="${on}" aria-label="Mi piace"><i class="${on ? 'ph-fill' : 'ph-light'} ph-heart"></i><small data-count="${w.id}" data-short="1">${short(likeCount(w))}</small></button>
+      <button class="act" data-act="thread" data-id="${w.id}" aria-label="Commenti"><i class="ph-light ph-chat-circle"></i><small>${short(replyCount(w))}</small></button>
+      <button class="act repost ${rp ? 'on' : ''}" data-act="repost" data-id="${w.id}" aria-pressed="${rp}" aria-label="Ripubblica"><i class="ph-light ph-repeat"></i><small data-rp="${w.id}" data-short="1">${short(repostCount(w))}</small></button>
+      ${shareBtn(w)}
+      <button class="act" data-act="more" data-id="${w.id}" aria-label="Altre azioni"><i class="ph-light ph-dots-three"></i></button>
+    </div>`;
+  };
+  // the frame takes the work's own shape: wide works are wide, tall works are tall and narrower
+  const mediaFrame = w => {
+    const ratio = Math.max(.56, Math.min(1.91, (w.w || 1200) / (w.h || 900)));
+    const width = ratio < 1 ? Math.round(56 + ratio * 30) : 100; // portrait: ~73% at 3:4, ~73-85% range
+    return `<a class="x-media ph-img" href="#vista/${w.id}" data-dbl="${w.id}" style="aspect-ratio:${ratio.toFixed(3)};width:${width}%" aria-label="Apri ${w.t} a schermo intero">${img(w.ts ? w.img : w.thumb, w.t)}${mediaOverlay(w)}</a>`;
+  };
+  function postX(w) {
     const a = ARTISTS[w.a];
-    return `<article class="post">
-      <p class="post-title">${w.t}</p>
-      <div class="post-side">${avatarRing(w.a)}<span class="post-by">${a.name.split(' ')[0]}<small>${agoText(w)}</small></span></div>
-      <a class="frame" href="#vista/${w.id}" data-dbl="${w.id}" aria-label="${w.t} di ${a.name}">
-        <span class="frame-inner ph-img">${img(w.thumb, w.t)}${mediaOverlay(w)}</span>
-      </a>
-      <div class="post-actions">${heart(w)}${commentBtn(w)}${shareBtn(w)}<button class="act" data-act="more" data-id="${w.id}" aria-label="Altre azioni"><i class="ph-light ph-dots-three"></i></button></div>
-      ${w.rating ? rating(w.rating, 22) : '<span class="rating new-tag">Nuova</span>'}
+    return `<article class="xpost" data-thread="${w.id}">
+      <div class="x-ava">${avatarRing(w.a)}</div>
+      <div class="x-body">
+        <div class="x-head">
+          <p class="x-meta"><a class="x-name" href="${profileHref(w.a)}">${a.name}</a> <span class="x-time">· ${agoText(w)}</span></p>
+          ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
+        </div>
+        <p class="x-title">${w.t}</p>
+        <p class="x-desc">${w.desc}</p>
+        ${mediaFrame(w)}
+        ${xActions(w)}
+      </div>
     </article>`;
   }
-  function renderFeed() { $('#feed').innerHTML = [...MINE, ...FEED].map(postHtml).join(''); }
+  function renderFeed() {
+    const list = [...MINE, ...FEED].filter(w => !hidden.has(w.id));
+    $('#feed').className = 'xfeed';
+    $('#feed').innerHTML = list.length ? list.map(postX).join('')
+      : `<div class="empty">${starSvg()}<strong>Hai nascosto tutto</strong><p>Le opere che segni "Non mi interessa" spariscono da qui.</p><button class="btn-ghost" data-act="unhide-all">Mostrale di nuovo</button></div>`;
+  }
+
+  /* ---------------- Post comments page (#post/id), like an X thread ---------------- */
+  const REPLY_TEXTS = [
+    'Il taglio di luce al minuto due. Come hai fatto?', 'Questo mi ha fatto venire voglia di tornare a dipingere.',
+    'Cinque stelle, senza pensarci.', 'La composizione è pazzesca, ci ho messo un po\' a capirla.',
+    'Lo guardo da dieci minuti. Grazie.', 'Mi ricorda casa, in un modo che non so spiegare.',
+    'Quando esce la serie completa?', 'Il suono è perfetto con le cuffie.', 'Colori incredibili. Che pellicola usi?',
+  ];
+  const mockReplies = w => {
+    const r = rng(w.likes || 7);
+    const ids = AIDS.filter(id => id !== w.a);
+    return Array.from({ length: w.ts ? 0 : 6 }, (_, i) => ({
+      a: ids[Math.floor(r() * ids.length)], text: REPLY_TEXTS[Math.floor(r() * REPLY_TEXTS.length)],
+      ago: 3 + i * 17 + Math.floor(r() * 40), likes: Math.floor(r() * 900),
+    }));
+  };
+  const replyHtml = rp => `<div class="x-reply">
+      <div class="x-ava">${avatarRing(rp.a, 'sm')}</div>
+      <div><p class="x-meta"><a class="x-name" href="${profileHref(rp.a)}">${ARTISTS[rp.a].name}</a> <span class="x-time">· ${rp.ts ? agoText(rp) : agoText({ ago: rp.ago })}</span></p>
+        <p class="x-text">${rp.text}</p>
+        ${rp.likes ? `<p class="x-reply-likes"><i class="ph-light ph-heart"></i> ${fmt(rp.likes)}</p>` : ''}</div>
+    </div>`;
+  function renderThread(id) {
+    const w = byId[id];
+    const root = $('#thread');
+    if (!w) { root.innerHTML = `<div class="empty">${starSvg()}<strong>Post non trovato</strong><p>Forse è stato eliminato.</p><a class="btn-ghost" href="#scopri">Torna a Scopri</a></div>`; return; }
+    const a = ARTISTS[w.a];
+    const mine = (REPLIES_MINE[w.id] || []).map(t => ({ a: 'me', text: t.text, ts: t.ts }));
+    root.innerHTML = `
+      <header class="x-top"><button class="icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-arrow-left"></i></button><h1>Post</h1></header>
+      <article class="xpost open">
+        <div class="x-ava">${avatarRing(w.a)}</div>
+        <div class="x-body">
+          <div class="x-head">
+            <p class="x-meta"><a class="x-name" href="${profileHref(w.a)}">${a.name}</a> <span class="x-time">· ${agoText(w)}</span></p>
+            ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
+          </div>
+          <p class="x-title">${w.t}</p>
+          <p class="x-desc open">${w.desc}</p>
+          ${mediaFrame(w)}
+          <p class="x-stats"><span><strong data-rp="${w.id}">${fmt(repostCount(w))}</strong> ripubblicazioni</span><span><strong data-count="${w.id}">${fmt(likeCount(w))}</strong> mi piace</span><span><strong>${fmt(w.views)}</strong> visualizzazioni</span></p>
+          ${xActions(w, true)}
+        </div>
+      </article>
+      <form class="x-compose" data-reply="${w.id}">
+        <img class="x-me" src="${avatar('me')}" alt="">
+        <label for="replyInput" class="sr-only">La tua risposta</label>
+        <input id="replyInput" placeholder="Scrivi la tua risposta" autocomplete="off" maxlength="280">
+        <button class="btn-accent" type="submit">Rispondi</button>
+      </form>
+      <div class="x-replies">${[...mine.reverse(), ...mockReplies(w)].map(replyHtml).join('') || '<p class="x-none">Ancora nessuna risposta. Scrivi la prima.</p>'}</div>`;
+    if (focusReply) { focusReply = false; requestAnimationFrame(() => $('#replyInput')?.focus({ preventScroll: true })); }
+  }
+  let focusReply = false; // set by the comment button, so you can type right away
+  function submitReply(f) {
+    const input = f.querySelector('input');
+    const text = input.value.trim();
+    if (!text) { input.focus(); return; }
+    const id = f.dataset.reply;
+    (REPLIES_MINE[id] ||= []).push({ text: text.replace(/&/g, '&amp;').replace(/</g, '&lt;'), ts: Date.now() });
+    store.set('novae.replies', JSON.stringify(REPLIES_MINE));
+    renderThread(id);
+    toast('Risposta pubblicata');
+  }
 
   /* ---------------- 4. Vista: full-screen vertical feed, like Reels / TikTok ----------------
      Native scroll-snap does the swiping; an IntersectionObserver tracks the reel on screen. */
@@ -474,7 +572,7 @@
     </section>`;
   }
   function renderVista(id) {
-    const all = [...MINE, ...FEED];
+    const all = [...MINE, ...FEED].filter(w => !hidden.has(w.id) || w.id === id);
     const start = byId[id] || all[0];
     const list = all.includes(start) ? all : [start, ...all]; // e.g. a film opened from Cinematografia
     const root = $('#vista');
@@ -956,10 +1054,19 @@
     sheetOpener = null;
   }
   let toastT;
-  function toast(msg) {
+  // toast(msg) or toast(msg, { label, fn }) for an undo-style action button
+  function toast(msg, action) {
     const t = $('#toast');
-    t.textContent = msg; t.classList.add('show');
-    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
+    t.textContent = msg;
+    if (action) {
+      const b = document.createElement('button');
+      b.className = 'toast-act'; b.textContent = action.label;
+      b.onclick = () => { action.fn(); t.classList.remove('show'); };
+      t.append(b);
+    }
+    t.classList.toggle('has-act', !!action);
+    t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), action ? 4500 : 2200);
   }
   const COMMENTS = [['kitti', 'Il taglio di luce al minuto due. Come hai fatto?'], ['mara', 'Questo mi ha fatto venire voglia di registrare il mare.'], ['ananya', 'Cinque stelle, senza pensarci.']];
 
@@ -968,6 +1075,7 @@
     invito: () => drawQR(),
     hub: renderHub,
     scopri: renderFeed,
+    post: renderThread,
     vista: renderVista,
     galleria: renderStile,
     stile: renderSeguiti,
@@ -981,7 +1089,7 @@
     impostazioni: renderSettings,
   };
   const TITLES = {
-    invito: 'Invito', scopri: 'Scopri', vista: 'Opera', galleria: 'Galleria', stile: 'Stile', disciplina: 'Cinematografia', opera: 'Opera',
+    invito: 'Invito', scopri: 'Scopri', post: 'Post', vista: 'Opera', galleria: 'Galleria', stile: 'Stile', disciplina: 'Cinematografia', opera: 'Opera',
     novae: 'Novae', mercato: 'Mercato', profilo: 'Profilo', artista: 'Artista', messaggi: 'Messaggi', impostazioni: 'Impostazioni',
   };
   const scrollMemo = new Map(); // hash -> scrollY, so "back" lands where you left
@@ -1061,7 +1169,7 @@
       b.querySelector('i').className = `${on ? 'ph-fill' : 'ph-light'} ph-heart`;
       b.classList.remove('pop'); void b.offsetWidth; if (on) b.classList.add('pop');
     });
-    $$(`[data-count="${w.id}"]`).forEach(s => s.textContent = fmt(likeCount(w)));
+    $$(`[data-count="${w.id}"]`).forEach(s => s.textContent = s.dataset.short ? short(likeCount(w)) : fmt(likeCount(w)));
     if (on) buzz();
   }
   function burst(host, e) {
@@ -1110,10 +1218,41 @@
       return;
     }
     const el = e.target.closest('[data-act]');
-    if (!el) return;
+    if (!el) {
+      // a tap on the post's empty/black area (not the picture, a link or a button) opens its comments
+      const xp = e.target.closest('.xpost[data-thread]');
+      if (xp && !e.target.closest('a, button, input, [data-dbl]') && !getSelection().toString()) location.hash = '#post/' + xp.dataset.thread;
+      return;
+    }
     const act = el.dataset.act;
     const w = byId[el.dataset.id];
     switch (act) {
+      case 'thread':
+        if (cur.name === 'post' && cur.param === w.id) { $('#replyInput')?.focus(); break; }
+        focusReply = true;
+        location.hash = '#post/' + w.id;
+        break;
+      case 'repost': {
+        const on = !reposted.has(w.id);
+        on ? reposted.add(w.id) : reposted.delete(w.id);
+        store.set('novae.reposted', JSON.stringify([...reposted]));
+        $$(`[data-act="repost"][data-id="${w.id}"]`).forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+        $$(`[data-rp="${w.id}"]`).forEach(s => s.textContent = s.dataset.short ? short(repostCount(w)) : fmt(repostCount(w)));
+        toast(on ? 'Ripubblicata per chi ti segue' : 'Ripubblicazione annullata');
+        if (on) buzz();
+        break;
+      }
+      case 'not-interested': {
+        hidden.add(w.id);
+        store.set('novae.hidden', JSON.stringify([...hidden]));
+        closeSheet();
+        const undo = () => { hidden.delete(w.id); store.set('novae.hidden', JSON.stringify([...hidden])); if (cur.name === 'scopri') refresh(); };
+        toast('Non vedrai più questa opera', { label: 'Annulla', fn: undo });
+        if (cur.name === 'scopri') refresh();
+        else if (cur.name === 'post') location.hash = '#scopri';
+        break;
+      }
+      case 'unhide-all': hidden.clear(); store.del('novae.hidden'); refresh(); break;
       case 'arc': setArc(el.getAttribute('aria-expanded') !== 'true'); break;
       case 'arc-close': setArc(false); break;
       case 'search': openSearch(); break;
@@ -1137,13 +1276,13 @@
         openSheet(`<h3>${w.t}</h3>${rating(w.rating, 18)}<p style="margin-top:12px">${w.desc}</p><p style="margin-top:8px;color:var(--ink-3)">${ARTISTS[w.a].name}, ${w.disc.toLowerCase()}, ${w.year}</p><a class="btn-ghost" href="#opera/${w.id}">Scheda completa</a>`);
         break;
       case 'more':
+        // three dots: Salva, Segnala, Non mi interessa (your own works: Salva, Elimina)
         openSheet(`<h3>${w.t}</h3><div class="action-list">
-          <button data-act="save" data-id="${w.id}"><i class="ph-light ph-bookmark-simple"></i>${saved.has(w.id) ? 'Rimuovi dai salvati' : 'Salva'}</button>
-          <button data-act="copy-link" data-id="${w.id}"><i class="ph-light ph-link-simple"></i>Copia link</button>
-          <a href="${profileHref(w.a)}"><i class="ph-light ph-user"></i>${w.a === 'me' ? 'Vai al tuo profilo' : 'Vai a ' + ARTISTS[w.a].name}</a>
+          <button data-act="save" data-id="${w.id}"><i class="${saved.has(w.id) ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i>${saved.has(w.id) ? 'Rimuovi dai salvati' : 'Salva'}</button>
           ${w.a === 'me'
             ? `<button class="danger" data-act="delete" data-id="${w.id}"><i class="ph-light ph-trash"></i>Elimina opera</button>`
-            : `<button class="danger" data-act="report"><i class="ph-light ph-flag"></i>Segnala</button>`}
+            : `<button data-act="report"><i class="ph-light ph-flag"></i>Segnala</button>
+               <button data-act="not-interested" data-id="${w.id}"><i class="ph-light ph-eye-slash"></i>Non mi interessa</button>`}
         </div>`);
         break;
       case 'save': {
@@ -1225,6 +1364,7 @@
   document.addEventListener('submit', e => {
     const f = e.target;
     if (f.id === 'pubForm') { e.preventDefault(); submitPublish(f); return; }
+    if (f.dataset.reply) { e.preventDefault(); submitReply(f); return; }
     if (f.id === 'profForm') { e.preventDefault(); submitProfile(); return; }
     if (f.classList.contains('composer')) {
       e.preventDefault();
