@@ -247,29 +247,156 @@
     $('.hub-core', hub).animate([{ transform: 'translate(-50%,-50%) scale(.4) rotate(-45deg)', opacity: 0 }, { transform: 'translate(-50%,-50%)', opacity: 1 }], { duration: 800, easing: 'cubic-bezier(.16,1,.3,1)' });
   }
 
-  /* ---------------- Dock arc ---------------- */
-  const ARC = [
-    { k: 'impostazioni', l: 'Impostazioni', a: 180 },
-    { k: 'seguiti', l: 'Seguiti', a: 135 },
-    { k: 'stile', l: 'Stile', a: 90 },
-    { k: 'novae', l: 'Novae', a: 45 },
-    { k: 'scopri', l: 'Scopri', a: 0 },
-  ];
+  /* ---------------- Dock spin wheel ----------------
+     All hub sections on a ring around the dock star, same clockwise order as the hub.
+     wheel.rot is in degrees; the item whose angle ends up at 12 o'clock is the selected one. */
+  const WHEEL = HUB;
+  const STEP = 360 / WHEEL.length, R = 128;
+  const wheel = { rot: 0, vel: 0, raf: 0, drag: null, sel: -1, live: false, snapT: 0 };
+  const norm = a => ((a % 360) + 540) % 360 - 180; // -> [-180, 180), 0 = top
+  const selIndex = () => ((Math.round(-wheel.rot / STEP) % WHEEL.length) + WHEEL.length) % WHEEL.length;
+  const snapRot = r => Math.round(r / STEP) * STEP;
+  const rotFor = k => { const base = -k * STEP; return base + Math.round((wheel.rot - base) / 360) * 360; };
+
   function renderArc() {
-    const R = 118;
-    $('#arc').innerHTML = ARC.map((it, i) => {
-      const rad = it.a * Math.PI / 180;
-      return `<a class="arc-item" data-k="${it.k}" href="#${it.k}" style="--i:${i};--tx:${(Math.cos(rad) * R).toFixed(1)}px;--ty:${(-Math.sin(rad) * R - 30).toFixed(1)}px" tabindex="-1"><span class="arc-circle i-${it.k}">${icon(it.k)}</span><span class="arc-label">${it.l}</span></a>`;
-    }).join('');
+    $('#arc').innerHTML = `
+      <div class="wheel-hit"></div>
+      <svg class="wheel-ring" viewBox="-160 -160 320 320" aria-hidden="true"><circle r="${R}"/><g id="wheelTicks">${WHEEL.map((_, i) => `<line x1="0" y1="${-R - 5}" x2="0" y2="${-R + 5}" transform="rotate(${i * STEP + STEP / 2})"/>`).join('')}</g></svg>
+      <svg class="wheel-mark" aria-hidden="true"><use href="#star4"/></svg>
+      <div class="wheel-label" id="wheelLabel" aria-live="polite"></div>
+      ${WHEEL.map((it, i) => `<a class="arc-item" data-k="${it.k}" data-i="${i}" href="#${it.k}" tabindex="-1" aria-label="${it.l.replace('<br>', ' ')}"><span class="arc-circle i-${it.k}">${icon(it.k)}</span></a>`).join('')}`;
+  }
+  function layoutWheel() {
+    $$('.arc-item').forEach((el, i) => {
+      const a = norm(i * STEP + wheel.rot);
+      const rad = a * Math.PI / 180, abs = Math.abs(a);
+      const s = 1 - .3 * Math.min(1, abs / 110);
+      const o = abs > 118 ? 0 : Math.min(1, 1 - (abs - 80) / 38);
+      el.style.transform = `translate(calc(-50% + ${(R * Math.sin(rad)).toFixed(1)}px), calc(-50% + ${(-R * Math.cos(rad)).toFixed(1)}px)) scale(${s.toFixed(3)})`;
+      el.style.opacity = o.toFixed(2);
+      el.style.pointerEvents = o > .3 ? '' : 'none';
+      el.classList.toggle('sel', abs < STEP / 2);
+    });
+    $('#wheelTicks').setAttribute('transform', `rotate(${wheel.rot.toFixed(2)})`);
+    $('#dockStar svg').style.transform = `rotate(${(wheel.rot * .5).toFixed(2)}deg) scale(.9)`;
+    const sel = selIndex();
+    if (sel !== wheel.sel) {
+      wheel.sel = sel;
+      $('#wheelLabel').textContent = WHEEL[sel].l.replace('<br>', ' ');
+      if (wheel.live) { try { navigator.vibrate?.(4); } catch { /* unsupported */ } }
+    }
+  }
+  function spinTo(target, dur, done) {
+    cancelAnimationFrame(wheel.raf);
+    const from = wheel.rot, t0 = performance.now();
+    if (reduceMotion || dur <= 0) { wheel.rot = target; layoutWheel(); done?.(); return; }
+    const step = now => {
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      wheel.rot = from + (target - from) * e;
+      layoutWheel();
+      if (k < 1) wheel.raf = requestAnimationFrame(step); else done?.();
+    };
+    wheel.raf = requestAnimationFrame(step);
+  }
+  function coast() { // momentum after a flick, then snap onto the nearest section
+    if (reduceMotion) { spinTo(snapRot(wheel.rot), 0); return; }
+    const step = () => {
+      wheel.vel *= .95;
+      wheel.rot += wheel.vel;
+      layoutWheel();
+      if (Math.abs(wheel.vel) > .3) wheel.raf = requestAnimationFrame(step);
+      else spinTo(snapRot(wheel.rot), 280);
+    };
+    wheel.raf = requestAnimationFrame(step);
+  }
+  function wheelGo(i) {
+    const open = () => { setArc(false); location.hash = '#' + WHEEL[i].k; };
+    if (i === selIndex() && Math.abs(norm(wheel.rot - snapRot(wheel.rot))) < 1) open();
+    else spinTo(rotFor(i), 340, () => setTimeout(open, 90));
   }
   function setArc(open) {
+    const arc = $('#arc');
+    const was = arc.classList.contains('open');
     const cur = document.body.dataset.screen === 'disciplina' ? 'stile' : document.body.dataset.screen;
     $$('.arc-item').forEach(a => a.classList.toggle('current', a.dataset.k === cur));
-    $('#arc').classList.toggle('open', open);
+    arc.classList.toggle('open', open);
     $('#scrim').classList.toggle('open', open);
     $('#dockStar').setAttribute('aria-expanded', open);
+    $('#dockStar').setAttribute('aria-label', open ? 'Chiudi ruota' : 'Apri ruota delle sezioni');
     $$('.arc-item').forEach(a => a.tabIndex = open ? 0 : -1);
+    $('#dock').classList.toggle('spinning', open);
+    if (open && !was) {
+      // start on the section you're in, and spin in to it
+      const k = Math.max(0, WHEEL.findIndex(h => h.k === cur));
+      wheel.live = false;
+      wheel.rot = -k * STEP + (reduceMotion ? 0 : 150);
+      wheel.sel = -1;
+      layoutWheel();
+      spinTo(-k * STEP, 750, () => { wheel.live = true; });
+    }
+    if (!open && was) {
+      cancelAnimationFrame(wheel.raf);
+      wheel.drag = null;
+      arc.classList.remove('dragging');
+      $('#dockStar svg').style.transform = '';
+    }
   }
+
+  // Drag to spin: angle of the pointer around the star centre drives the rotation
+  (() => {
+    const arc = $('#arc');
+    const angleAt = (e, c) => Math.atan2(e.clientX - c.x, -(e.clientY - c.y)) * 180 / Math.PI;
+    arc.addEventListener('pointerdown', e => {
+      if (!arc.classList.contains('open') || e.button > 0) return;
+      cancelAnimationFrame(wheel.raf);
+      const r = arc.getBoundingClientRect();
+      const c = { x: r.left, y: r.top };
+      wheel.drag = { c, a: angleAt(e, c), moved: 0, t: performance.now(), item: e.target.closest('.arc-item') };
+      wheel.vel = 0;
+      wheel.live = true;
+      arc.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    arc.addEventListener('pointermove', e => {
+      const d = wheel.drag;
+      if (!d) return;
+      const a = angleAt(e, d.c);
+      const delta = norm(a - d.a);
+      const now = performance.now();
+      d.a = a;
+      d.moved += Math.abs(delta);
+      if (d.moved > 3) arc.classList.add('dragging');
+      wheel.rot += delta;
+      wheel.vel = delta / Math.max(8, now - d.t) * 16; // degrees per frame
+      d.t = now;
+      layoutWheel();
+    });
+    const end = () => {
+      const d = wheel.drag;
+      if (!d) return;
+      wheel.drag = null;
+      arc.classList.remove('dragging');
+      if (d.moved < 4) { // a tap, not a spin
+        if (d.item) wheelGo(+d.item.dataset.i);
+        else spinTo(snapRot(wheel.rot), 200);
+        return;
+      }
+      if (performance.now() - d.t > 90) wheel.vel = 0; // held still before releasing: no fling
+      coast();
+    };
+    arc.addEventListener('pointerup', end);
+    arc.addEventListener('pointercancel', end);
+    arc.addEventListener('wheel', e => {
+      if (!arc.classList.contains('open')) return;
+      e.preventDefault();
+      cancelAnimationFrame(wheel.raf);
+      wheel.live = true;
+      wheel.rot -= (Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX) * .25;
+      layoutWheel();
+      clearTimeout(wheel.snapT);
+      wheel.snapT = setTimeout(() => spinTo(snapRot(wheel.rot), 240), 140);
+    }, { passive: false });
+  })();
 
   /* ---------------- 3. Feed ---------------- */
   function postHtml(w) {
@@ -778,11 +905,13 @@
       return;
     }
     if (e.target.closest('.sr')) addRecent($('#q').value);
-    const el = e.target.closest('[data-act]');
-    if (!el) {
-      if (e.target.closest('.arc-item')) setArc(false);
+    if (e.target.closest('#arc')) {
+      // pointer taps are handled by the wheel (spin, then open); keyboard Enter (detail 0) follows the link
+      if (e.detail === 0 && e.target.closest('.arc-item')) setArc(false); else e.preventDefault();
       return;
     }
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
     const act = el.dataset.act;
     const w = byId[el.dataset.id];
     switch (act) {
@@ -895,6 +1024,11 @@
     const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
     const scr = document.body.dataset.screen;
     if (e.key === 'Escape') { setArc(false); closeSheet(); $('#search').hidden = true; return; }
+    if ($('#arc').classList.contains('open')) {
+      const dir = { ArrowRight: -1, ArrowDown: -1, ArrowLeft: 1, ArrowUp: 1 }[e.key];
+      if (dir) { e.preventDefault(); wheel.live = true; spinTo(snapRot(wheel.rot) + dir * STEP, 260); return; }
+      if (e.key === 'Enter' && !e.target.closest?.('.arc-item')) { e.preventDefault(); wheelGo(selIndex()); return; }
+    }
     if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === '/' && store.get('novae.in')) { e.preventDefault(); openSearch(); }
     if (scr === 'vista' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); stepVista(e.key === 'ArrowDown' ? 1 : -1); }
