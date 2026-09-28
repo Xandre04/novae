@@ -49,9 +49,9 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 - **Novae**: il pianeta con le stelle. Giralo e scopri gli artisti di ogni paese.
 - **Opere a schermo intero**: come Reels e TikTok, scorri su e giù per passare alla prossima. Tocca per mettere in pausa, doppio tocco per il mi piace.
 - **Scheda opera**: player, descrizione completa e opere correlate.
-- **Stile → Cinematografia**: serie, film e classifica, con le righe a gradini per genere (Novae, Thriller, Storico).
+- **Galleria**: le discipline (Cinematografia, Pittura, Fotografia...). In **Cinematografia**: serie, film e classifica, con le righe a gradini per genere (Novae, Thriller, Storico).
 - **Scopri**: il feed delle opere, con valutazione a stelle, mi piace, commenti, condivisione e salvataggi.
-- **Galleria**: le opere degli artisti che segui, filtrabili per artista.
+- **Stile**: per ora, le opere degli artisti che segui, filtrabili per artista.
 - **Mercato**: opere in vendita, con prezzi in crediti.
 - **Profilo, Messaggi, Impostazioni**.
 
@@ -67,7 +67,7 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 | Gesto o tasto | Cosa fa |
 |---|---|
 | Doppio tocco su un'opera | Mi piace |
-| Trascinare la ruota della stella | Scegliere la sezione (anche con rotellina o frecce ← →) |
+| Trascinare la ruota della stella | Scegliere la sezione (anche con rotellina o frecce ← →); ripremere la stella la richiude |
 | Scorrere su e giù nelle opere a schermo intero | Opera precedente o successiva (anche rotellina o frecce ↑ ↓) |
 | Tocco su un'opera a schermo intero | Pausa e ripresa di video e audio |
 | Trascinare giù il feed dall'alto | Aggiornare il feed |

@@ -276,7 +276,8 @@
      wheel.rot is in degrees; the item whose angle ends up at 12 o'clock is the selected one. */
   const WHEEL = HUB;
   const STEP = 360 / WHEEL.length, R = 128;
-  const wheel = { rot: 0, vel: 0, raf: 0, drag: null, sel: -1, live: false, snapT: 0 };
+  const wheel = { rot: 0, r: 0, vel: 0, raf: 0, drag: null, sel: -1, live: false, snapT: 0 }; // r: current radius (0 = tucked into the star)
+  const FADE_FROM = 45, HIDE_AT = 70; // degrees from 12 o'clock: buttons fade out before they could reach the bar
   const norm = a => ((a % 360) + 540) % 360 - 180; // -> [-180, 180), 0 = top
   const selIndex = () => ((Math.round(-wheel.rot / STEP) % WHEEL.length) + WHEEL.length) % WHEEL.length;
   const snapRot = r => Math.round(r / STEP) * STEP;
@@ -285,17 +286,17 @@
   function renderArc() {
     $('#arc').innerHTML = `
       <div class="wheel-hit"></div>
-      <svg class="wheel-mark" aria-hidden="true"><use href="#star4"/></svg>
       <div class="wheel-label" id="wheelLabel" aria-live="polite"></div>
       ${WHEEL.map((it, i) => `<a class="arc-item" data-k="${it.k}" data-i="${i}" href="#${it.k}" tabindex="-1" aria-label="${it.l.replace('<br>', ' ')}"><span class="arc-circle i-${it.k}">${icon(it.k)}</span></a>`).join('')}`;
   }
   function layoutWheel() {
+    const k = wheel.r / R; // 0 while tucked into the star, 1 when fully out
     $$('.arc-item').forEach((el, i) => {
       const a = norm(i * STEP + wheel.rot);
       const rad = a * Math.PI / 180, abs = Math.abs(a);
-      const s = 1 - .3 * Math.min(1, abs / 110);
-      const o = abs > 100 ? 0 : Math.min(1, 1 - (abs - 55) / 45); // side slots fade so they don't crowd the dock icons
-      el.style.transform = `translate(calc(-50% + ${(R * Math.sin(rad)).toFixed(1)}px), calc(-50% + ${(-R * Math.cos(rad)).toFixed(1)}px)) scale(${s.toFixed(3)})`;
+      const s = (1 - .3 * Math.min(1, abs / 110)) * (.3 + .7 * k);
+      const o = (abs >= HIDE_AT ? 0 : Math.min(1, (HIDE_AT - abs) / (HIDE_AT - FADE_FROM))) * k;
+      el.style.transform = `translate(calc(-50% + ${(wheel.r * Math.sin(rad)).toFixed(1)}px), calc(-50% + ${(-wheel.r * Math.cos(rad)).toFixed(1)}px)) scale(${s.toFixed(3)})`;
       el.style.opacity = o.toFixed(2);
       el.style.pointerEvents = o > .3 ? '' : 'none';
       el.classList.toggle('sel', abs < STEP / 2);
@@ -308,18 +309,21 @@
       if (wheel.live) { try { navigator.vibrate?.(4); } catch { /* unsupported */ } }
     }
   }
-  function spinTo(target, dur, done) {
+  // Animate rotation and radius together (opening, closing, snapping)
+  function animateWheel(toRot, toR, dur, done, easeIn = false) {
     cancelAnimationFrame(wheel.raf);
-    const from = wheel.rot, t0 = performance.now();
-    if (reduceMotion || dur <= 0) { wheel.rot = target; layoutWheel(); done?.(); return; }
+    const fromRot = wheel.rot, fromR = wheel.r, t0 = performance.now();
+    if (reduceMotion || dur <= 0) { wheel.rot = toRot; wheel.r = toR; layoutWheel(); done?.(); return; }
     const step = now => {
-      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-      wheel.rot = from + (target - from) * e;
+      const k = Math.min(1, (now - t0) / dur), e = easeIn ? k * k * k : 1 - Math.pow(1 - k, 3);
+      wheel.rot = fromRot + (toRot - fromRot) * e;
+      wheel.r = fromR + (toR - fromR) * e;
       layoutWheel();
       if (k < 1) wheel.raf = requestAnimationFrame(step); else done?.();
     };
     wheel.raf = requestAnimationFrame(step);
   }
+  const spinTo = (target, dur, done) => animateWheel(target, wheel.r, dur, done);
   function coast() { // momentum after a flick, then snap onto the nearest section
     if (reduceMotion) { spinTo(snapRot(wheel.rot), 0); return; }
     const step = () => {
@@ -338,29 +342,36 @@
   }
   function setArc(open) {
     const arc = $('#arc');
-    const was = arc.classList.contains('open');
-    const cur = document.body.dataset.screen === 'disciplina' ? 'stile' : document.body.dataset.screen;
+    const was = arc.classList.contains('open') && !arc.classList.contains('closing');
+    const cur = document.body.dataset.screen === 'disciplina' ? 'galleria' : document.body.dataset.screen;
     $$('.arc-item').forEach(a => a.classList.toggle('current', a.dataset.k === cur));
-    arc.classList.toggle('open', open);
     $('#scrim').classList.toggle('open', open);
     $('#dockStar').setAttribute('aria-expanded', open);
     $('#dockStar').setAttribute('aria-label', open ? 'Chiudi ruota' : 'Apri ruota delle sezioni');
     $$('.arc-item').forEach(a => a.tabIndex = open ? 0 : -1);
     $('#dock').classList.toggle('spinning', open);
     if (open && !was) {
-      // start on the section you're in, and spin in to it
+      // the buttons come out of the star, spinning in to the section you're in
       const k = Math.max(0, WHEEL.findIndex(h => h.k === cur));
+      arc.classList.remove('closing');
+      arc.classList.add('open');
       wheel.live = false;
+      wheel.r = 0;
       wheel.rot = -k * STEP + (reduceMotion ? 0 : 150);
       wheel.sel = -1;
       layoutWheel();
-      spinTo(-k * STEP, 750, () => { wheel.live = true; });
+      animateWheel(-k * STEP, R, 700, () => { wheel.live = true; });
     }
     if (!open && was) {
-      cancelAnimationFrame(wheel.raf);
+      // the buttons go back into the star, spinning the other way, then the wheel closes
       wheel.drag = null;
+      wheel.live = false;
       arc.classList.remove('dragging');
-      $('#dockStar svg').style.transform = '';
+      arc.classList.add('closing');
+      animateWheel(wheel.rot + 90, 0, 360, () => {
+        arc.classList.remove('open', 'closing');
+        $('#dockStar svg').style.transform = '';
+      }, true);
     }
   }
 
@@ -369,7 +380,7 @@
     const arc = $('#arc');
     const angleAt = (e, c) => Math.atan2(e.clientX - c.x, -(e.clientY - c.y)) * 180 / Math.PI;
     arc.addEventListener('pointerdown', e => {
-      if (!arc.classList.contains('open') || e.button > 0) return;
+      if (!arc.classList.contains('open') || arc.classList.contains('closing') || e.button > 0) return;
       cancelAnimationFrame(wheel.raf);
       const r = arc.getBoundingClientRect();
       const c = { x: r.left, y: r.top };
@@ -409,7 +420,7 @@
     arc.addEventListener('pointerup', end);
     arc.addEventListener('pointercancel', end);
     arc.addEventListener('wheel', e => {
-      if (!arc.classList.contains('open')) return;
+      if (!arc.classList.contains('open') || arc.classList.contains('closing')) return;
       e.preventDefault();
       cancelAnimationFrame(wheel.raf);
       wheel.live = true;
@@ -517,7 +528,7 @@
     $('#disciplines').innerHTML = DISCIPLINES.map((d, i) => {
       const ws = WORKS.filter(w => w.disc === d);
       const thumbs = (ws.length ? ws : WORKS.slice(i * 2)).slice(0, 3);
-      return `<a class="disc ${i === 0 ? 'active' : ''}" href="#stile/${d.toLowerCase()}">
+      return `<a class="disc ${i === 0 ? 'active' : ''}" href="#galleria/${d.toLowerCase()}">
         <div><h2>${d}</h2><p>${ws.length ? `${ws.length} opere` : 'In arrivo'}</p></div>
         <div class="disc-thumbs">${thumbs.map((w, k) => `<img src="${pic(w.id, 120, 150)}" alt="" loading="lazy" style="--r:${(k - 1) * 7}deg">`).join('')}</div>
       </a>`;
@@ -544,14 +555,14 @@
     const name = DISCIPLINES.find(d => d.toLowerCase() === (slug || '').toLowerCase()) || 'Cinematografia';
     const root = $('#cine');
     if (name !== 'Cinematografia') {
-      root.innerHTML = `<button class="cine-back icon-btn" data-act="back" data-fallback="#stile" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
+      root.innerHTML = `<button class="cine-back icon-btn" data-act="back" data-fallback="#galleria" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
         <h1 class="cine-title">${name}</h1>
         <div class="empty">${starSvg()}<strong>Sala in allestimento</strong><p>La sezione ${name.toLowerCase()} apre nella prossima alpha. Intanto trovi nuove opere in Scopri.</p><a class="btn-ghost" href="#scopri">Apri Scopri</a></div>`;
       return;
     }
     const tabs = ['Serie', 'Film', 'Classifica', 'Ordina per'];
     root.innerHTML = `
-      <button class="cine-back icon-btn" data-act="back" data-fallback="#stile" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
+      <button class="cine-back icon-btn" data-act="back" data-fallback="#galleria" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
       <h1 class="cine-title">${name}</h1>
       <div class="tabs" role="tablist">${tabs.map(t => `<button class="tab" role="tab" data-act="ctab" data-v="${t}" aria-selected="${t === cineState.tab || (t === 'Ordina per' && cineState.sortOpen)}">${t}</button>`).join('')}</div>
       ${cineState.sortOpen ? `<div class="sortmenu" role="menu" style="top:${0}px">${[['recenti', 'Più recenti'], ['stelle', 'Più stelle'], ['visti', 'Più visti']].map(([v, l]) => `<button role="menuitemradio" aria-checked="${cineState.sort === v}" data-act="csort" data-v="${v}">${l}</button>`).join('')}</div>` : ''}
@@ -958,8 +969,8 @@
     hub: renderHub,
     scopri: renderFeed,
     vista: renderVista,
-    galleria: renderSeguiti,
-    stile: renderStile,
+    galleria: renderStile,
+    stile: renderSeguiti,
     disciplina: renderCine,
     opera: renderDetail,
     novae: initGlobe,
@@ -981,10 +992,10 @@
     curHash = location.hash;
     if (trail.length > 1 && trail[trail.length - 2] === curHash) trail.pop(); else trail.push(curHash);
     let [name, param] = decodeURIComponent(location.hash.slice(1)).split('/');
-    if (name === 'seguiti') name = 'galleria'; // old links
+    if (name === 'seguiti') name = 'stile'; // old link to the followed-artists works
     if (!store.get('novae.in')) name = 'invito';
     else if (!name || name === 'invito' || !(name in RENDER)) name = 'hub';
-    if (name === 'stile' && param) name = 'disciplina';
+    if (name === 'galleria' && param) name = 'disciplina';
     const screen = name === 'artista' ? 'profilo' : name;
     setArc(false);
     closeSheet();
@@ -1249,7 +1260,7 @@
     const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
     const scr = document.body.dataset.screen;
     if (e.key === 'Escape') { setArc(false); closeSheet(); $('#search').hidden = true; return; }
-    if ($('#arc').classList.contains('open')) {
+    if ($('#arc').classList.contains('open') && !$('#arc').classList.contains('closing')) {
       const dir = { ArrowRight: -1, ArrowDown: -1, ArrowLeft: 1, ArrowUp: 1 }[e.key];
       if (dir) { e.preventDefault(); wheel.live = true; spinTo(snapRot(wheel.rot) + dir * STEP, 260); return; }
       if (e.key === 'Enter' && !e.target.closest?.('.arc-item')) { e.preventDefault(); wheelGo(selIndex()); return; }

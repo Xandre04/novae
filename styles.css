@@ -238,19 +238,19 @@ body[data-screen="invito"] .dock, body[data-screen="hub"] .dock { display: none;
 .arc { position: absolute; left: 50%; top: 42px; width: 0; height: 0; pointer-events: none; }
 .arc.open { pointer-events: auto; }
 .wheel-hit {
-  position: absolute; left: -190px; top: -200px; width: 380px; height: 222px; border-radius: 190px 190px 0 0;
+  position: absolute; left: -190px; top: -200px; width: 380px; height: 160px; border-radius: 190px 190px 0 0; /* ends above the star, so the star stays tappable */
   touch-action: none; cursor: grab;
 }
 .arc.dragging .wheel-hit, .arc.dragging .arc-item { cursor: grabbing; }
 .arc:not(.open) .wheel-hit { display: none; }
-.wheel-mark { position: absolute; left: 0; top: -172px; width: 14px; height: 16px; transform: translate(-50%, -50%) scale(.4); fill: var(--accent-hi); opacity: 0; transition: opacity .3s, transform .5s var(--ease); pointer-events: none; }
-.arc.open .wheel-mark { opacity: 1; transform: translate(-50%, -50%); }
 .wheel-label {
   position: absolute; left: 0; top: -70px; transform: translate(-50%, -50%); pointer-events: none;
   font-weight: 700; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; white-space: nowrap;
   text-shadow: 0 0 8px #000, 0 0 14px #000; opacity: 0; transition: opacity .3s;
 }
 .arc.open .wheel-label { opacity: 1; }
+.arc.closing, .arc.closing * { pointer-events: none !important; }
+.arc.closing .wheel-label { opacity: 0; }
 .arc-item {
   position: absolute; left: 0; top: 0; display: grid; place-items: center; opacity: 0;
   transform: translate(-50%, -50%) scale(.3); will-change: transform, opacity; touch-action: none;
