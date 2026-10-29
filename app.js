@@ -874,34 +874,36 @@
       <div><p class="x-title">${r.w.t}</p>${r.rating ? rating(r.rating, 13) : ''}<p class="review-text">${r.text}</p></div></a>`;
   /* Costellazioni: collections of works an artist publishes, drawn as stars joined by a line */
   const thumbOf = w => w.ts ? w.img : pic(w.id, 300, 300);
-  const sampleCol = (id, a, name, desc) => ({ id, a, name, desc, works: WORKS.filter(w => w.a === a).slice(0, 5).map(w => w.id) });
+  // sample constellations: a slice of the artist's works (from..to), so picking one changes the grid
+  const sampleCol = (id, a, name, desc, from, to) => ({ id, a, name, desc, works: WORKS.filter(w => w.a === a).slice(from, to).map(w => w.id) });
   const COLLECTIONS = [
-    sampleCol('c-aiko', 'aiko', 'Mestieri che scompaiono', 'Corti sulle mani che lavorano, girati in tre inverni.'),
-    sampleCol('c-livia', 'livia', 'Pellicola scaduta', 'Tutto girato con rullini oltre la data di scadenza.'),
-    sampleCol('c-nicolo', 'nicolo', 'Porti del sud', 'Olio su tela, dal 2024.'),
+    sampleCol('c-aiko', 'aiko', 'Mestieri che scompaiono', 'Corti sulle mani che lavorano, girati in tre inverni.', 0, 3),
+    sampleCol('c-aiko2', 'aiko', 'Inverni', 'Solo neve, solo luce bassa.', 2, 4),
+    sampleCol('c-livia', 'livia', 'Pellicola scaduta', 'Tutto girato con rullini oltre la data di scadenza.', 0, 3),
+    sampleCol('c-nicolo', 'nicolo', 'Porti del sud', 'Olio su tela, dal 2024.', 0, 2),
   ];
   const MY_COLS = readJSON('novae.collections', []);
   const saveCols = () => store.set('novae.collections', JSON.stringify(MY_COLS));
   const colsOf = aid => aid === 'me' ? MY_COLS : COLLECTIONS.filter(c => c.a === aid);
-  const colById = id => MY_COLS.find(c => c.id === id) || COLLECTIONS.find(c => c.id === id);
   const colWorks = c => c.works.map(id => byId[id]).filter(w => w && canSee(w));
-  function colHtml(c) {
-    const ws = colWorks(c).slice(0, 5), r = rng([...c.id].reduce((s, ch) => s + ch.charCodeAt(0), 0));
-    const pts = ws.map((_, i) => [Math.round(10 + i * (80 / Math.max(1, ws.length - 1))), Math.round(22 + r() * 52)]);
-    return `<button class="col-card" data-act="open-col" data-col="${c.id}">
-      <span class="col-sky" aria-hidden="true">
+  // A constellation chip in the Opere strip: up to 4 works as stars joined by a dashed line
+  function colChip(c, on) {
+    const ws = colWorks(c).slice(0, 4), r = rng([...c.id].reduce((s, ch) => s + ch.charCodeAt(0), 0));
+    const pts = ws.map((_, i) => [Math.round(18 + i * (64 / Math.max(1, ws.length - 1))), Math.round(26 + r() * 48)]);
+    return `<button class="col-chip ${on ? 'on' : ''}" data-act="pick-col" data-col="${c.id}" aria-pressed="${on}">
+      <span class="col-mini" aria-hidden="true">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${pts.map(p => p.join(',')).join(' ')}"/></svg>
-        ${ws.map((w, i) => `<img class="col-star" src="${thumbOf(w)}" alt="" style="left:${pts[i][0]}%;top:${pts[i][1]}%">`).join('')}
+        ${ws.map((w, i) => `<img src="${thumbOf(w)}" alt="" style="left:${pts[i][0]}%;top:${pts[i][1]}%">`).join('')}
       </span>
-      <span class="col-info"><strong>${c.name}</strong><small>${colWorks(c).length} opere</small></span>
+      <span class="col-name">${c.name}</span>
     </button>`;
   }
-  function openCol(c) {
-    const ws = colWorks(c), mine = MY_COLS.includes(c);
-    openSheet(`<h3>${c.name}</h3>${c.desc ? `<p>${c.desc}</p>` : ''}
-      <div class="grid3 col-grid">${ws.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumbOf(w), w.t)}</a>`).join('')}</div>
-      ${mine ? `<div class="action-list"><button class="danger" data-act="del-col" data-col="${c.id}"><i class="ph-light ph-trash"></i>Elimina costellazione</button></div>` : ''}`);
-  }
+  // The strip above the works: "Tutte", each constellation, and "+" on your own profile
+  const colStrip = (cols, sel, mine) => `<div class="col-strip" role="toolbar" aria-label="Costellazioni">
+      ${mine ? `<button class="col-chip add" data-act="new-col"><span class="col-mini" aria-hidden="true"><i class="ph-light ph-plus"></i></span><span class="col-name">Nuova</span></button>` : ''}
+      <button class="col-chip all ${sel ? '' : 'on'}" data-act="pick-col" data-col="" aria-pressed="${!sel}"><span class="col-mini" aria-hidden="true"><img class="col-logo" src="${STAR_SRC}" alt=""></span><span class="col-name">Tutte</span></button>
+      ${cols.map(c => colChip(c, sel === c)).join('')}
+    </div>`;
   function openNewCol() {
     // you can join your own works and the ones you saved
     const pool = [...WORKS.filter(w => w.a === 'me'), ...WORKS.filter(w => saved.has(w.id) && w.a !== 'me')];
@@ -922,10 +924,11 @@
     if (picked.length < 2) { $('#colErr').textContent = 'Scegli almeno due opere.'; return; }
     MY_COLS.unshift({ id: 'c' + Date.now(), name: esc(name), desc: esc($('#colDesc').value.trim()), works: picked });
     saveCols(); closeSheet(); toast('Costellazione pubblicata'); buzz();
-    profTab = 'Costellazioni'; refresh();
+    profTab = 'Opere'; profCol = MY_COLS[0].id; refresh();
   }
 
   let profSort = 'recenti'; // Opere filter: recenti / stelle
+  let profCol = null, profColOf = null; // constellation picked in the Opere strip, and whose profile it belongs to
   const byRecent = (x, y) => (y.ts || 0) - (x.ts || 0) || x.ago - y.ago;
   // sample reposts for other profiles; yours are the works you reposted
   const repostsOf = aid => aid === 'me' ? WORKS.filter(w => reposted.has(w.id) && canSee(w))
@@ -936,12 +939,17 @@
     const a = ARTISTS[id];
     const type = typeOf(id), T = TYPES[type];
     const locked = other && type === 'utente' && !followed.has(aid); // a user's works: followers only
-    const works = locked ? [] : WORKS.filter(w => w.a === id).sort(profSort === 'stelle' ? (x, y) => y.rating - x.rating : byRecent);
+    const sortFn = profSort === 'stelle' ? (x, y) => y.rating - x.rating : byRecent;
+    const cols = type === 'artista' ? colsOf(id) : [];
+    if (profColOf !== id) { profCol = null; profColOf = id; } // a new profile starts on "Tutte"
+    const col = cols.find(c => c.id === profCol) || null;
+    // Opere and Costellazioni are one view: the strip picks which works the grid shows
+    const works = locked ? [] : (col ? colWorks(col) : WORKS.filter(w => w.a === id)).slice().sort(sortFn);
+    const own = WORKS.filter(w => w.a === id); // stats always count all works, whatever the strip shows
     const savedList = WORKS.filter(w => saved.has(w.id));
     const reviews = type === 'critico' ? reviewsOf(id) : [];
-    const cols = type === 'artista' ? colsOf(id) : [];
     const tabs = {
-      artista: ['Opere', 'Costellazioni', 'Repost'],
+      artista: ['Opere', 'Repost'],
       critico: ['Recensioni', 'Repost'], // a critic's reviews take the place of posts
       utente: ['Opere', 'Repost'],
     }[type].concat(other ? [] : ['Salvate']);
@@ -955,15 +963,19 @@
       Salvate: ['Niente di salvato', 'Tocca i tre puntini su un\'opera e scegli Salva.'],
       Repost: other ? ['Nessun repost', `${first} non ha ancora ripubblicato opere.`] : ['Nessun repost', 'Tocca le frecce sotto un\'opera in Scopri per ripubblicarla qui.'],
       Recensioni: other ? ['Nessuna recensione', 'Non ha ancora recensito opere.'] : ['La tua prima recensione', 'Apri un\'opera in Scopri, scegli le stelle e scrivi cosa ne pensi.'],
-      Costellazioni: other ? ['Nessuna costellazione', `${first} non ha ancora raccolto opere in costellazioni.`] : ['La tua prima costellazione', 'Raccogli più opere sotto un nome: diventano una costellazione sul tuo profilo.'],
     }[profTab];
     const emptyBtn = locked ? `<button class="btn-accent" data-act="follow" data-a="${aid}">Segui</button>`
-      : !other && profTab === 'Opere' ? `<button class="btn-accent" data-act="publish">${type === 'utente' ? 'Pubblica per i follower' : 'Pubblica opera'}</button>`
-      : !other && profTab === 'Costellazioni' ? '<button class="btn-accent" data-act="new-col">Nuova costellazione</button>' : '';
+      : !other && profTab === 'Opere' ? `<button class="btn-accent" data-act="publish">${type === 'utente' ? 'Pubblica per i follower' : 'Pubblica opera'}</button>` : '';
+    const showStrip = profTab === 'Opere' && type === 'artista' && (cols.length || !other);
+    const colHead = col ? `<div class="col-head">
+        <p class="col-title"><img src="${STAR_SRC}" alt="" aria-hidden="true">${col.name}<small>${works.length} opere</small></p>
+        ${col.desc ? `<p class="col-desc">${col.desc}</p>` : ''}
+        ${MY_COLS.includes(col) ? `<button class="link-btn" data-act="del-col" data-col="${col.id}">Elimina costellazione</button>` : ''}
+      </div>` : '';
     const banner = other ? pic('banner-' + aid, 1200, 420) : profile.banner;
     const thumb = thumbOf;
     const stats = {
-      artista: [[works.length, 'opere'], [other ? fmt(works.reduce((s, w) => s + likeCount(w), 0)) : savedList.length, other ? 'cuori' : 'salvate'], [other ? fmt(120 + works.length * 37) : followed.size, other ? 'seguaci' : 'seguiti']],
+      artista: [[own.length, 'opere'], [other ? fmt(own.reduce((s, w) => s + likeCount(w), 0)) : savedList.length, other ? 'cuori' : 'salvate'], [other ? fmt(120 + works.length * 37) : followed.size, other ? 'seguaci' : 'seguiti']],
       critico: [[reviews.length, 'recensioni'], [other ? fmt(860) : savedList.length, other ? 'lettori' : 'salvate'], [other ? fmt(412) : followed.size, other ? 'seguaci' : 'seguiti']],
       utente: [[other ? fmt(214) : liked.size, 'mi piace'], [other ? fmt(37) : savedList.length, other ? 'seguaci' : 'salvate'], [other ? fmt(64) : followed.size, 'seguiti']],
     }[type];
@@ -983,10 +995,10 @@
           : `${type === 'artista' ? '<button class="btn-accent" data-act="publish">Pubblica opera</button>' : type === 'critico' ? '<a class="btn-accent" href="#scopri">Scrivi una recensione</a>' : '<button class="btn-accent" data-act="publish">Pubblica per i follower</button>'}<button class="btn-ghost" data-act="edit-profile">Modifica profilo</button>`}</div>
       </div>
       <div class="seg" role="tablist" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(t => `<button role="tab" aria-selected="${t === profTab}" data-act="ptab" data-v="${t}" data-a="${aid || ''}">${t}</button>`).join('')}</div>
+      ${showStrip ? colStrip(cols, col, !other) : ''}
+      ${colHead}
       ${profTab === 'Opere' && works.length > 1 ? `<div class="prof-sort" role="radiogroup" aria-label="Ordina le opere">${[['recenti', 'Recenti'], ['stelle', 'Stelle']].map(([v, l]) => `<button role="radio" aria-checked="${profSort === v}" data-act="psort" data-v="${v}" data-a="${aid || ''}">${l}</button>`).join('')}</div>` : ''}
-      ${profTab === 'Costellazioni' && !other && cols.length ? '<div class="col-new"><button class="btn-ghost" data-act="new-col"><i class="ph-light ph-plus"></i> Nuova costellazione</button></div>' : ''}
       ${profTab === 'Recensioni' && reviews.length ? `<div class="reviews">${reviews.map(reviewHtml).join('')}</div>`
-        : profTab === 'Costellazioni' && cols.length ? `<div class="cols">${cols.map(colHtml).join('')}</div>`
         : list.length ? `<div class="grid3">${list.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumb(w), w.t)}${w.audience === 'followers' ? '<i class="ph-fill ph-lock-simple grid-lock" aria-label="Solo follower"></i>' : ''}</a>`).join('')}</div>`
         : `<div class="empty">${starSvg()}<strong>${empty[0]}</strong><p>${empty[1]}</p>${emptyBtn}</div>`}`;
   }
@@ -1501,9 +1513,9 @@
       case 'country-next': selectCountry(globe.idx + 1); break;
       case 'ptab': profTab = el.dataset.v; renderProfile(el.dataset.a || undefined); break;
       case 'psort': profSort = el.dataset.v; renderProfile(el.dataset.a || undefined); break;
-      case 'open-col': openCol(colById(el.dataset.col)); break;
+      case 'pick-col': profCol = el.dataset.col || null; refresh(); break;
       case 'new-col': openNewCol(); break;
-      case 'del-col': { const i = MY_COLS.findIndex(c => c.id === el.dataset.col); if (i > -1) { MY_COLS.splice(i, 1); saveCols(); } closeSheet(); toast('Costellazione eliminata'); refresh(); break; }
+      case 'del-col': { const i = MY_COLS.findIndex(c => c.id === el.dataset.col); if (i > -1) { MY_COLS.splice(i, 1); saveCols(); } profCol = null; toast('Costellazione eliminata'); refresh(); break; }
       case 'follow': {
         const id = el.dataset.a;
         followed.has(id) ? followed.delete(id) : followed.add(id);
