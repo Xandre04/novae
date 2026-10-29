@@ -238,7 +238,11 @@
     store.set('novae.in', v.toUpperCase());
     const gate = $('.gate');
     gate.classList.add('leaving');
-    setTimeout(() => { gate.classList.remove('leaving'); location.hash = '#hub'; }, reduceMotion ? 0 : 750);
+    setTimeout(() => {
+      gate.classList.remove('leaving');
+      // if the URL is already #hub (a link or reload while logged out) no hashchange fires: route by hand
+      if (location.hash === '#hub') route(); else location.hash = '#hub';
+    }, reduceMotion ? 0 : 750);
   });
 
   /* ---------------- 2. Hub ---------------- */
