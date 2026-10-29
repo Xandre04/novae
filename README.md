@@ -57,8 +57,13 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 
 **Cose che puoi fare**
 
-- **Scegliere il tipo di profilo**: artista (pubblica opere), critico (scrive recensioni) o utente (guarda, salva e vota). Ogni tipo ha il suo badge e le sue schede.
-- **Pubblicare un'opera** dal profilo (se sei artista): immagine, titolo, disciplina e descrizione. Poi puoi modificarla o eliminarla dai tre puntini.
+- **Scegliere il tipo di profilo**, ognuno con il suo badge:
+  - **artista**: pubblica opere e le raccoglie in **costellazioni** (raccolte con un nome, disegnate come stelle unite da una linea);
+  - **critico**: è l'unico che può dare le **stelle**. Le sue recensioni (testo e stelle, scritti sotto un'opera) prendono il posto dei post sul profilo;
+  - **utente**: può pubblicare, ma le sue opere le vede **solo chi lo segue** (lucchetto "Follower").
+- **Nei commenti** un'etichetta colorata dice chi scrive: oro per i critici, rosso con la stella per gli artisti.
+- **Nel profilo**: schede Opere (con filtro Recenti / Stelle), Costellazioni, Recensioni, Repost e Salvate, secondo il tipo.
+- **Pubblicare un'opera** dal profilo: immagine, titolo, disciplina e descrizione. Poi puoi modificarla o eliminarla dai tre puntini.
 - **Personalizzare il profilo**: banner, nome, nome utente e bio.
 - **Salvare** un'opera dai tre puntini e ritrovarla in *Profilo → Salvate*.
 - **Seguire** gli artisti e scrivere loro nei messaggi.

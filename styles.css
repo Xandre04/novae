@@ -868,3 +868,50 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 
 /* Galleria and Scopri icons as transparent PNGs, sized like the crops (--w) */
 .icon-png { display: block; width: var(--w); height: var(--w); object-fit: contain; user-select: none; }
+
+/* ---------- Comments: who wrote it (critics gold, artists red) ---------- */
+.who-tag { display: inline-flex; align-items: center; gap: 4px; margin-left: 4px; padding: 1px 7px; border-radius: 999px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; vertical-align: 1px; }
+.who-tag img { width: 9px; height: 10px; object-fit: contain; }
+.who-tag i { font-size: 10px; }
+.who-tag.t-critico { color: #e8c37a; background: rgba(232, 195, 122, .12); border: 1px solid rgba(232, 195, 122, .4); }
+.who-tag.t-artista { color: var(--accent-hi); background: rgba(150, 1, 37, .14); border: 1px solid rgba(214, 28, 64, .4); }
+.x-reply.is-critic { background: linear-gradient(90deg, rgba(232, 195, 122, .06), transparent 60%); box-shadow: inset 2px 0 0 rgba(232, 195, 122, .55); }
+.x-reply-rating { margin: 4px 0 2px; }
+.x-meta .who-tag { letter-spacing: .08em; }
+/* stars only for critics */
+.x-compose { grid-template-rows: auto auto; }
+.x-compose .star-pick, .x-compose .x-note { grid-column: 2 / -1; }
+.star-pick { display: flex; gap: 4px; }
+.star-pick button { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; transition: transform .15s var(--ease); }
+.star-pick button:active { transform: scale(.88); }
+.star-pick img { width: 22px; height: 22px; object-fit: contain; filter: grayscale(1) brightness(3); opacity: .35; transition: filter .15s, opacity .15s; }
+.star-pick button.on img { filter: none; opacity: 1; }
+.x-note { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
+/* followers-only works */
+.aud-tag { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line-hi); font-size: 10px; font-weight: 600; letter-spacing: .08em; color: var(--ink-2); vertical-align: 2px; }
+.grid3 a { position: relative; }
+.grid-lock { position: absolute; right: 6px; top: 6px; font-size: 14px; color: #fff; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .7)); }
+.pub-note { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; border: var(--stroke) solid var(--line); font-size: 13px; color: var(--ink-2); }
+/* profile: works filter */
+.prof-sort { display: flex; justify-content: center; gap: 8px; margin: 0 0 14px; }
+.prof-sort button { padding: 6px 16px; border-radius: 999px; border: var(--stroke) solid var(--line); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.prof-sort button[aria-checked="true"] { color: var(--ink); border-color: var(--accent-hi); background: rgba(214, 28, 64, .1); }
+/* costellazioni */
+.cols { display: grid; gap: 14px; padding: 0 14px; }
+.col-new { display: flex; justify-content: center; margin: 0 0 14px; }
+.col-card { display: block; width: 100%; text-align: left; border: var(--stroke) solid var(--line); border-radius: var(--wobble); overflow: hidden; transition: border-color .2s; }
+.col-card:hover { border-color: var(--line-hi); }
+.col-sky { position: relative; display: block; height: 150px; background: radial-gradient(120% 120% at 50% 100%, rgba(150, 1, 37, .18), transparent 60%), #040405; }
+.col-sky svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.col-sky polyline { fill: none; stroke: rgba(236, 235, 230, .45); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.col-star { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; object-fit: cover; border: 2px solid var(--ink); box-shadow: 0 0 0 4px rgba(3, 3, 3, .9), 0 0 18px rgba(214, 28, 64, .35); }
+.col-info { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 12px 14px; border-top: var(--stroke) solid var(--line); }
+.col-info strong { font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+.col-info small { font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+.col-grid { margin-top: 14px; padding: 0; }
+.sheet .col-grid + .action-list { margin-top: 16px; }
+.col-pick { display: grid; gap: 6px; max-height: 260px; overflow-y: auto; }
+.col-pick label { display: grid; grid-template-columns: 22px 44px 1fr; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; border: var(--stroke) solid var(--line); cursor: pointer; font-size: 14px; }
+.col-pick input { accent-color: var(--accent); width: 18px; height: 18px; }
+.col-pick img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+.col-pick label:has(input:checked) { border-color: var(--accent-hi); background: rgba(214, 28, 64, .08); }

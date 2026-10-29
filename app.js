@@ -124,6 +124,9 @@
     { t: 'Porto di Catania, ore 6', a: 'nicolo', type: 'image', disc: 'Pittura', w: 1200, h: 850 },
     { t: 'Neon su Rua Augusta', a: 'thiago', type: 'video', disc: 'Cinematografia' },
     { t: 'Soglia', a: 'ines', type: 'image', disc: 'Scultura', w: 850, h: 1200 },
+    // a "utente": publishes only for followers
+    { t: 'Quaderno di Lione', a: 'teo', type: 'image', disc: 'Illustrazione', audience: 'followers' },
+    { t: 'Finestra, martedì', a: 'teo', type: 'image', disc: 'Fotografia', w: 900, h: 1200, audience: 'followers' },
   ];
   const FEED = FEED_SRC.map(addWork);
   // interleave a few films into the feed
@@ -474,6 +477,16 @@
     const width = ratio < 1 ? Math.round(56 + ratio * 30) : 100; // portrait: ~73% at 3:4, ~73-85% range
     return `<a class="x-media ph-img" href="#vista/${w.id}" data-dbl="${w.id}" style="aspect-ratio:${ratio.toFixed(3)};width:${width}%" aria-label="Apri ${w.t} a schermo intero">${img(w.ts ? w.img : w.thumb, w.t)}${mediaOverlay(w)}</a>`;
   };
+  // who can see a work: a "utente" publishes only for followers
+  const canSee = w => w.audience !== 'followers' || w.a === 'me' || followed.has(w.a);
+  const audTag = w => w.audience === 'followers' ? '<span class="aud-tag" title="Visibile solo a chi segue l\'autore"><i class="ph-light ph-lock-simple"></i>Follower</span>' : '';
+  // comment tag: colour + star by profile type (critics gold, artists red, users plain)
+  const whoTag = aid => {
+    const t = typeOf(aid);
+    if (t === 'critico') return '<span class="who-tag t-critico"><i class="ph-fill ph-star-four"></i>Critico</span>';
+    if (t === 'artista') return `<span class="who-tag t-artista"><img src="${STAR_SRC}" alt="">Artista</span>`;
+    return '';
+  };
   function postX(w) {
     const a = ARTISTS[w.a];
     return `<article class="xpost" data-thread="${w.id}">
@@ -483,7 +496,7 @@
           <p class="x-meta"><a class="x-name" href="${profileHref(w.a)}">${a.name}</a> <span class="x-time">· ${agoText(w)}</span></p>
           ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
         </div>
-        <p class="x-title">${w.t}</p>
+        <p class="x-title">${w.t} ${audTag(w)}</p>
         <p class="x-desc">${w.desc}</p>
         ${mediaFrame(w)}
         ${xActions(w)}
@@ -491,7 +504,7 @@
     </article>`;
   }
   function renderFeed() {
-    const list = [...MINE, ...FEED].filter(w => !hidden.has(w.id));
+    const list = [...MINE, ...FEED].filter(w => !hidden.has(w.id) && canSee(w));
     $('#feed').className = 'xfeed';
     $('#feed').innerHTML = list.length ? list.map(postX).join('')
       : `<div class="empty">${starSvg()}<strong>Hai nascosto tutto</strong><p>Le opere che segni "Non mi interessa" spariscono da qui.</p><button class="btn-ghost" data-act="unhide-all">Mostrale di nuovo</button></div>`;
@@ -507,23 +520,31 @@
   const mockReplies = w => {
     const r = rng(w.likes || 7);
     const ids = AIDS.filter(id => id !== w.a);
-    return Array.from({ length: w.ts ? 0 : 6 }, (_, i) => ({
-      a: ids[Math.floor(r() * ids.length)], text: REPLY_TEXTS[Math.floor(r() * REPLY_TEXTS.length)],
-      ago: 3 + i * 17 + Math.floor(r() * 40), likes: Math.floor(r() * 900),
-    }));
+    const out = Array.from({ length: w.ts ? 0 : 6 }, (_, i) => {
+      const a = ids[Math.floor(r() * ids.length)];
+      return { a, text: REPLY_TEXTS[Math.floor(r() * REPLY_TEXTS.length)], ago: 3 + i * 17 + Math.floor(r() * 40), likes: Math.floor(r() * 900),
+        rating: typeOf(a) === 'critico' ? 3 + Math.floor(r() * 3) : 0 }; // only critics give stars
+    });
+    if (!w.ts && !out.some(rp => typeOf(rp.a) === 'critico')) out.splice(1, 0, { a: 'giulia', text: REVIEW_TEXTS[(w.likes || 0) % REVIEW_TEXTS.length], ago: 22, likes: 341, rating: Math.max(3, Math.round(w.rating || 4)) });
+    return out;
   };
-  const replyHtml = rp => `<div class="x-reply">
+  const replyHtml = rp => `<div class="x-reply ${typeOf(rp.a) === 'critico' ? 'is-critic' : ''}">
       <div class="x-ava">${avatarRing(rp.a, 'sm')}</div>
-      <div><p class="x-meta"><a class="x-name" href="${profileHref(rp.a)}">${ARTISTS[rp.a].name}</a> <span class="x-time">· ${rp.ts ? agoText(rp) : agoText({ ago: rp.ago })}</span></p>
+      <div><p class="x-meta"><a class="x-name" href="${profileHref(rp.a)}">${ARTISTS[rp.a].name}</a> ${whoTag(rp.a)} <span class="x-time">· ${rp.ts ? agoText(rp) : agoText({ ago: rp.ago })}</span></p>
+        ${rp.rating ? `<div class="x-reply-rating">${rating(rp.rating, 14)}</div>` : ''}
         <p class="x-text">${rp.text}</p>
         ${rp.likes ? `<p class="x-reply-likes"><i class="ph-light ph-heart"></i> ${fmt(rp.likes)}</p>` : ''}</div>
     </div>`;
+  // star picker for critics (the only ones who can give stars)
+  const starPicker = n => `<div class="star-pick" role="radiogroup" aria-label="Le tue stelle">${[1, 2, 3, 4, 5].map(i => `<button type="button" role="radio" aria-checked="${i === n}" aria-label="${i} ${i === 1 ? 'stella' : 'stelle'}" data-act="pick-star" data-v="${i}" class="${i <= n ? 'on' : ''}"><img src="${STAR_SRC}" alt=""></button>`).join('')}</div>`;
   function renderThread(id) {
     const w = byId[id];
     const root = $('#thread');
     if (!w) { root.innerHTML = `<div class="empty">${starSvg()}<strong>Post non trovato</strong><p>Forse è stato eliminato.</p><a class="btn-ghost" href="#scopri">Torna a Scopri</a></div>`; return; }
     const a = ARTISTS[w.a];
-    const mine = (REPLIES_MINE[w.id] || []).map(t => ({ a: 'me', text: t.text, ts: t.ts }));
+    if (!canSee(w)) { root.innerHTML = `<header class="x-top"><button class="icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-arrow-left"></i></button><h1>Post</h1></header><div class="empty">${starSvg()}<strong>Solo per i follower</strong><p>${a.name} condivide le sue opere solo con i suoi follower.</p><button class="btn-accent" data-act="follow" data-a="${w.a}">Segui</button></div>`; return; }
+    const mine = (REPLIES_MINE[w.id] || []).map(t => ({ a: 'me', text: t.text, ts: t.ts, rating: t.rating || 0 }));
+    const critic = typeOf('me') === 'critico';
     root.innerHTML = `
       <header class="x-top"><button class="icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-arrow-left"></i></button><h1>Post</h1></header>
       <article class="xpost open">
@@ -533,18 +554,19 @@
             <p class="x-meta"><a class="x-name" href="${profileHref(w.a)}">${a.name}</a> <span class="x-time">· ${agoText(w)}</span></p>
             ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
           </div>
-          <p class="x-title">${w.t}</p>
+          <p class="x-title">${w.t} ${audTag(w)}</p>
           <p class="x-desc open">${w.desc}</p>
           ${mediaFrame(w)}
           <p class="x-stats"><span><strong data-rp="${w.id}">${fmt(repostCount(w))}</strong> ripubblicazioni</span><span><strong data-count="${w.id}">${fmt(likeCount(w))}</strong> mi piace</span><span><strong>${fmt(w.views)}</strong> visualizzazioni</span></p>
           ${xActions(w, true)}
         </div>
       </article>
-      <form class="x-compose" data-reply="${w.id}">
+      <form class="x-compose ${critic ? 'critic' : ''}" data-reply="${w.id}" data-stars="0">
         <img class="x-me" src="${avatar('me')}" alt="">
-        <label for="replyInput" class="sr-only">La tua risposta</label>
-        <input id="replyInput" placeholder="Scrivi la tua risposta" autocomplete="off" maxlength="280">
-        <button class="btn-accent" type="submit">Rispondi</button>
+        <label for="replyInput" class="sr-only">${critic ? 'La tua recensione' : 'La tua risposta'}</label>
+        <input id="replyInput" placeholder="${critic ? 'Scrivi la tua recensione' : 'Scrivi la tua risposta'}" autocomplete="off" maxlength="280">
+        <button class="btn-accent" type="submit">${critic ? 'Pubblica' : 'Rispondi'}</button>
+        ${critic ? starPicker(0) : '<p class="x-note"><i class="ph-light ph-star-four"></i>Solo i critici possono dare le stelle.</p>'}
       </form>
       <div class="x-replies">${[...mine.reverse(), ...mockReplies(w)].map(replyHtml).join('') || '<p class="x-none">Ancora nessuna risposta. Scrivi la prima.</p>'}</div>`;
     if (focusReply) { focusReply = false; requestAnimationFrame(() => $('#replyInput')?.focus({ preventScroll: true })); }
@@ -555,10 +577,11 @@
     const text = input.value.trim();
     if (!text) { input.focus(); return; }
     const id = f.dataset.reply;
-    (REPLIES_MINE[id] ||= []).push({ text: text.replace(/&/g, '&amp;').replace(/</g, '&lt;'), ts: Date.now() });
+    const stars = typeOf('me') === 'critico' ? +f.dataset.stars || 0 : 0; // only critics can give stars
+    (REPLIES_MINE[id] ||= []).push({ text: text.replace(/&/g, '&amp;').replace(/</g, '&lt;'), ts: Date.now(), rating: stars });
     store.set('novae.replies', JSON.stringify(REPLIES_MINE));
     renderThread(id);
-    toast('Risposta pubblicata');
+    toast(stars ? `Recensione pubblicata con ${stars} ${stars === 1 ? 'stella' : 'stelle'}` : 'Risposta pubblicata');
   }
 
   /* ---------------- 4. Vista: full-screen vertical feed, like Reels / TikTok ----------------
@@ -589,7 +612,7 @@
     </section>`;
   }
   function renderVista(id) {
-    const all = [...MINE, ...FEED].filter(w => !hidden.has(w.id) || w.id === id);
+    const all = [...MINE, ...FEED].filter(w => (!hidden.has(w.id) && canSee(w)) || w.id === id);
     const start = byId[id] || all[0];
     const list = all.includes(start) ? all : [start, ...all]; // e.g. a film opened from Cinematografia
     const root = $('#vista');
@@ -845,33 +868,100 @@
   ];
   // a critic's reviews: yours are the replies you wrote; others' are sample ones
   const reviewsOf = aid => aid === 'me'
-    ? Object.entries(REPLIES_MINE).flatMap(([id, rs]) => byId[id] ? rs.map(r => ({ w: byId[id], text: r.text, rating: 0 })) : []).reverse()
+    ? Object.entries(REPLIES_MINE).flatMap(([id, rs]) => byId[id] ? rs.map(r => ({ w: byId[id], text: r.text, rating: r.rating || 0 })) : []).reverse()
     : FEED.slice(1, 5).map((w, i) => ({ w, text: REVIEW_TEXTS[i % REVIEW_TEXTS.length], rating: Math.max(3, Math.round(w.rating)) }));
   const reviewHtml = r => `<a class="review" href="#post/${r.w.id}">${img(r.w.ts ? r.w.img : pic(r.w.id, 200, 200), '')}
       <div><p class="x-title">${r.w.t}</p>${r.rating ? rating(r.rating, 13) : ''}<p class="review-text">${r.text}</p></div></a>`;
+  /* Costellazioni: collections of works an artist publishes, drawn as stars joined by a line */
+  const thumbOf = w => w.ts ? w.img : pic(w.id, 300, 300);
+  const sampleCol = (id, a, name, desc) => ({ id, a, name, desc, works: WORKS.filter(w => w.a === a).slice(0, 5).map(w => w.id) });
+  const COLLECTIONS = [
+    sampleCol('c-aiko', 'aiko', 'Mestieri che scompaiono', 'Corti sulle mani che lavorano, girati in tre inverni.'),
+    sampleCol('c-livia', 'livia', 'Pellicola scaduta', 'Tutto girato con rullini oltre la data di scadenza.'),
+    sampleCol('c-nicolo', 'nicolo', 'Porti del sud', 'Olio su tela, dal 2024.'),
+  ];
+  const MY_COLS = readJSON('novae.collections', []);
+  const saveCols = () => store.set('novae.collections', JSON.stringify(MY_COLS));
+  const colsOf = aid => aid === 'me' ? MY_COLS : COLLECTIONS.filter(c => c.a === aid);
+  const colById = id => MY_COLS.find(c => c.id === id) || COLLECTIONS.find(c => c.id === id);
+  const colWorks = c => c.works.map(id => byId[id]).filter(w => w && canSee(w));
+  function colHtml(c) {
+    const ws = colWorks(c).slice(0, 5), r = rng([...c.id].reduce((s, ch) => s + ch.charCodeAt(0), 0));
+    const pts = ws.map((_, i) => [Math.round(10 + i * (80 / Math.max(1, ws.length - 1))), Math.round(22 + r() * 52)]);
+    return `<button class="col-card" data-act="open-col" data-col="${c.id}">
+      <span class="col-sky" aria-hidden="true">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${pts.map(p => p.join(',')).join(' ')}"/></svg>
+        ${ws.map((w, i) => `<img class="col-star" src="${thumbOf(w)}" alt="" style="left:${pts[i][0]}%;top:${pts[i][1]}%">`).join('')}
+      </span>
+      <span class="col-info"><strong>${c.name}</strong><small>${colWorks(c).length} opere</small></span>
+    </button>`;
+  }
+  function openCol(c) {
+    const ws = colWorks(c), mine = MY_COLS.includes(c);
+    openSheet(`<h3>${c.name}</h3>${c.desc ? `<p>${c.desc}</p>` : ''}
+      <div class="grid3 col-grid">${ws.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumbOf(w), w.t)}</a>`).join('')}</div>
+      ${mine ? `<div class="action-list"><button class="danger" data-act="del-col" data-col="${c.id}"><i class="ph-light ph-trash"></i>Elimina costellazione</button></div>` : ''}`);
+  }
+  function openNewCol() {
+    // you can join your own works and the ones you saved
+    const pool = [...WORKS.filter(w => w.a === 'me'), ...WORKS.filter(w => saved.has(w.id) && w.a !== 'me')];
+    openSheet(`<h3>Nuova costellazione</h3>
+      <form class="pub" id="colForm" novalidate>
+        <div class="field"><label for="colName">Nome</label><input id="colName" maxlength="40" placeholder="Es. Notti d'inverno" autocomplete="off"></div>
+        <div class="field"><label for="colDesc">Descrizione</label><textarea id="colDesc" maxlength="200" rows="2" placeholder="Cosa tiene insieme queste opere? (facoltativo)"></textarea></div>
+        <div class="field"><span class="field-label">Opere (almeno 2)</span>
+          ${pool.length ? `<div class="col-pick">${pool.map(w => `<label><input type="checkbox" value="${w.id}"><img src="${thumbOf(w)}" alt=""><span>${w.t}</span></label>`).join('')}</div>`
+            : '<p class="x-note">Pubblica o salva almeno due opere per creare una costellazione.</p>'}</div>
+        <p class="pub-err" id="colErr" role="alert"></p>
+        <button class="btn-accent" type="submit" ${pool.length < 2 ? 'disabled' : ''}>Crea costellazione</button>
+      </form>`);
+  }
+  function submitCol() {
+    const name = $('#colName').value.trim(), picked = $$('#colForm .col-pick input:checked').map(i => i.value);
+    if (!name) { $('#colErr').textContent = 'Dai un nome alla costellazione.'; $('#colName').focus(); return; }
+    if (picked.length < 2) { $('#colErr').textContent = 'Scegli almeno due opere.'; return; }
+    MY_COLS.unshift({ id: 'c' + Date.now(), name: esc(name), desc: esc($('#colDesc').value.trim()), works: picked });
+    saveCols(); closeSheet(); toast('Costellazione pubblicata'); buzz();
+    profTab = 'Costellazioni'; refresh();
+  }
+
+  let profSort = 'recenti'; // Opere filter: recenti / stelle
+  const byRecent = (x, y) => (y.ts || 0) - (x.ts || 0) || x.ago - y.ago;
+  // sample reposts for other profiles; yours are the works you reposted
+  const repostsOf = aid => aid === 'me' ? WORKS.filter(w => reposted.has(w.id) && canSee(w))
+    : FEED.filter(w => w.a !== aid && canSee(w)).filter((_, i) => (i + aid.length) % 4 === 0).slice(0, 6);
   function renderProfile(aid) {
     const other = aid && aid !== 'me' && ARTISTS[aid];
     const id = other ? aid : 'me';
     const a = ARTISTS[id];
     const type = typeOf(id), T = TYPES[type];
-    const works = WORKS.filter(w => w.a === id);
+    const locked = other && type === 'utente' && !followed.has(aid); // a user's works: followers only
+    const works = locked ? [] : WORKS.filter(w => w.a === id).sort(profSort === 'stelle' ? (x, y) => y.rating - x.rating : byRecent);
     const savedList = WORKS.filter(w => saved.has(w.id));
     const reviews = type === 'critico' ? reviewsOf(id) : [];
+    const cols = type === 'artista' ? colsOf(id) : [];
     const tabs = {
-      artista: other ? ['Opere', 'Stelle'] : ['Opere', 'Salvate', 'Stelle'],
-      critico: other ? ['Recensioni'] : ['Recensioni', 'Salvate'],
-      utente: other ? ['Salvate'] : ['Salvate'],
-    }[type];
+      artista: ['Opere', 'Costellazioni', 'Repost'],
+      critico: ['Recensioni', 'Repost'], // a critic's reviews take the place of posts
+      utente: ['Opere', 'Repost'],
+    }[type].concat(other ? [] : ['Salvate']);
     if (!tabs.includes(profTab)) profTab = tabs[0];
-    const list = profTab === 'Opere' ? works : profTab === 'Salvate' ? (other ? [] : savedList) : profTab === 'Stelle' ? works.filter(w => w.rating >= 4) : [];
+    const list = profTab === 'Opere' ? works : profTab === 'Salvate' ? savedList : profTab === 'Repost' ? repostsOf(id) : [];
+    const first = a.name.split(' ')[0];
     const empty = {
-      Opere: other ? ['Nessuna opera', `${a.name.split(' ')[0]} non ha ancora pubblicato.`] : ['La tua prima opera', 'Tocca "Pubblica opera" e condividila con chi ti segue.'],
-      Salvate: other ? ['Raccolta privata', `Le opere salvate da ${a.name.split(' ')[0]} restano private.`] : ['Niente di salvato', 'Tocca i tre puntini su un\'opera e scegli Salva.'],
-      Stelle: ['Nessuna stella', 'Le opere con almeno 4 stelle finiscono qui.'],
-      Recensioni: other ? ['Nessuna recensione', 'Non ha ancora recensito opere.'] : ['La tua prima recensione', 'Apri un\'opera in Scopri e scrivi cosa ne pensi: le tue risposte diventano recensioni.'],
+      Opere: locked ? ['Solo per i follower', `${first} condivide le sue opere solo con i suoi follower.`]
+        : other ? ['Nessuna opera', `${first} non ha ancora pubblicato.`]
+        : type === 'utente' ? ['La tua prima opera', 'Pubblicala: la vedranno solo le persone che ti seguono.'] : ['La tua prima opera', 'Tocca "Pubblica opera" e condividila con chi ti segue.'],
+      Salvate: ['Niente di salvato', 'Tocca i tre puntini su un\'opera e scegli Salva.'],
+      Repost: other ? ['Nessun repost', `${first} non ha ancora ripubblicato opere.`] : ['Nessun repost', 'Tocca le frecce sotto un\'opera in Scopri per ripubblicarla qui.'],
+      Recensioni: other ? ['Nessuna recensione', 'Non ha ancora recensito opere.'] : ['La tua prima recensione', 'Apri un\'opera in Scopri, scegli le stelle e scrivi cosa ne pensi.'],
+      Costellazioni: other ? ['Nessuna costellazione', `${first} non ha ancora raccolto opere in costellazioni.`] : ['La tua prima costellazione', 'Raccogli più opere sotto un nome: diventano una costellazione sul tuo profilo.'],
     }[profTab];
+    const emptyBtn = locked ? `<button class="btn-accent" data-act="follow" data-a="${aid}">Segui</button>`
+      : !other && profTab === 'Opere' ? `<button class="btn-accent" data-act="publish">${type === 'utente' ? 'Pubblica per i follower' : 'Pubblica opera'}</button>`
+      : !other && profTab === 'Costellazioni' ? '<button class="btn-accent" data-act="new-col">Nuova costellazione</button>' : '';
     const banner = other ? pic('banner-' + aid, 1200, 420) : profile.banner;
-    const thumb = w => w.ts ? w.img : pic(w.id, 300, 300);
+    const thumb = thumbOf;
     const stats = {
       artista: [[works.length, 'opere'], [other ? fmt(works.reduce((s, w) => s + likeCount(w), 0)) : savedList.length, other ? 'cuori' : 'salvate'], [other ? fmt(120 + works.length * 37) : followed.size, other ? 'seguaci' : 'seguiti']],
       critico: [[reviews.length, 'recensioni'], [other ? fmt(860) : savedList.length, other ? 'lettori' : 'salvate'], [other ? fmt(412) : followed.size, other ? 'seguaci' : 'seguiti']],
@@ -890,12 +980,15 @@
         <div class="stats">${stats.map(([n, l]) => `<div><strong>${n}</strong><span>${l}</span></div>`).join('')}</div>
         <div class="prof-cta">${other
           ? `<button class="${followed.has(aid) ? 'btn-ghost' : 'btn-accent'}" data-act="follow" data-a="${aid}" aria-pressed="${followed.has(aid)}">${followed.has(aid) ? 'Segui già' : 'Segui'}</button><a class="btn-ghost" href="#messaggi/${aid}">Messaggio</a>`
-          : `${type === 'artista' ? '<button class="btn-accent" data-act="publish">Pubblica opera</button>' : type === 'critico' ? '<a class="btn-accent" href="#scopri">Scrivi una recensione</a>' : ''}<button class="btn-ghost" data-act="edit-profile">Modifica profilo</button>`}</div>
+          : `${type === 'artista' ? '<button class="btn-accent" data-act="publish">Pubblica opera</button>' : type === 'critico' ? '<a class="btn-accent" href="#scopri">Scrivi una recensione</a>' : '<button class="btn-accent" data-act="publish">Pubblica per i follower</button>'}<button class="btn-ghost" data-act="edit-profile">Modifica profilo</button>`}</div>
       </div>
       <div class="seg" role="tablist" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(t => `<button role="tab" aria-selected="${t === profTab}" data-act="ptab" data-v="${t}" data-a="${aid || ''}">${t}</button>`).join('')}</div>
+      ${profTab === 'Opere' && works.length > 1 ? `<div class="prof-sort" role="radiogroup" aria-label="Ordina le opere">${[['recenti', 'Recenti'], ['stelle', 'Stelle']].map(([v, l]) => `<button role="radio" aria-checked="${profSort === v}" data-act="psort" data-v="${v}" data-a="${aid || ''}">${l}</button>`).join('')}</div>` : ''}
+      ${profTab === 'Costellazioni' && !other && cols.length ? '<div class="col-new"><button class="btn-ghost" data-act="new-col"><i class="ph-light ph-plus"></i> Nuova costellazione</button></div>' : ''}
       ${profTab === 'Recensioni' && reviews.length ? `<div class="reviews">${reviews.map(reviewHtml).join('')}</div>`
-        : list.length ? `<div class="grid3">${list.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumb(w), w.t)}</a>`).join('')}</div>`
-        : `<div class="empty">${starSvg()}<strong>${empty[0]}</strong><p>${empty[1]}</p>${!other && profTab === 'Opere' ? '<button class="btn-accent" data-act="publish">Pubblica opera</button>' : ''}</div>`}`;
+        : profTab === 'Costellazioni' && cols.length ? `<div class="cols">${cols.map(colHtml).join('')}</div>`
+        : list.length ? `<div class="grid3">${list.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumb(w), w.t)}${w.audience === 'followers' ? '<i class="ph-fill ph-lock-simple grid-lock" aria-label="Solo follower"></i>' : ''}</a>`).join('')}</div>`
+        : `<div class="empty">${starSvg()}<strong>${empty[0]}</strong><p>${empty[1]}</p>${emptyBtn}</div>`}`;
   }
 
   /* ---------------- Publish + edit profile (local only, this device) ---------------- */
@@ -920,6 +1013,7 @@
   function openPublish(w) {
     openSheet(`<h3>${w ? 'Modifica opera' : 'Nuova opera'}</h3>
       <form class="pub" id="pubForm" novalidate ${w ? `data-edit="${w.id}" data-img="${w.img}" data-w="${w.w}" data-h="${w.h}"` : ''}>
+        ${!w && typeOf('me') === 'utente' ? '<p class="pub-note"><i class="ph-light ph-lock-simple"></i>Come utente, le tue opere le vede solo chi ti segue.</p>' : ''}
         <label class="pub-drop ${w ? 'has' : ''}" id="pubDrop"><input type="file" accept="image/*" id="pubFile" aria-label="Immagine dell'opera"><img id="pubPrev" alt="" ${w ? `src="${w.img}"` : 'hidden'}><span><i class="ph-light ph-image-square"></i>Scegli un'immagine</span>${w ? '<em class="pub-change">Cambia immagine</em>' : ''}</label>
         <div class="field"><label for="pubT">Titolo</label><input id="pubT" maxlength="60" placeholder="Come si chiama?" autocomplete="off" value="${w ? esc(w.t) : ''}"></div>
         <div class="field"><label for="pubDisc">Disciplina</label><select id="pubDisc">${DISCIPLINES.map(d => `<option ${w?.disc === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
@@ -954,6 +1048,7 @@
       id: 'u' + Date.now(), t, a: 'me', type: 'image', disc: $('#pubDisc').value, desc: $('#pubDesc').value.trim() || 'Appena pubblicata.',
       img: f.dataset.img, thumb: f.dataset.img, w: +f.dataset.w, h: +f.dataset.h,
       likes: 0, rating: 0, views: 0, comments: 0, price: 0, year: new Date().getFullYear(), ts: Date.now(),
+      audience: typeOf('me') === 'utente' ? 'followers' : 'public', // users publish only for their followers
     };
     MINE.unshift(w);
     if (!saveMine()) { MINE.shift(); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: elimina una tua opera e riprova.'; return; }
@@ -1120,7 +1215,7 @@
     t.classList.add('show');
     clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), action ? 4500 : 2200);
   }
-  const COMMENTS = [['kitti', 'Il taglio di luce al minuto due. Come hai fatto?'], ['mara', 'Questo mi ha fatto venire voglia di registrare il mare.'], ['ananya', 'Cinque stelle, senza pensarci.']];
+  const COMMENTS = [['giulia', 'Regia sicura, fotografia notevole. Il finale resta addosso.'], ['kitti', 'Il taglio di luce al minuto due. Come hai fatto?'], ['mara', 'Questo mi ha fatto venire voglia di registrare il mare.'], ['ananya', 'Cinque stelle, senza pensarci.']];
 
   /* ---------------- Router ---------------- */
   const RENDER = {
@@ -1321,7 +1416,7 @@
         break;
       }
       case 'comments':
-        openSheet(`<h3>${fmt(w.comments)} commenti</h3>${w.comments ? COMMENTS.map(([id, t]) => `<div class="comment">${avatarRing(id, 'sm')}<div><strong>${ARTISTS[id].name}</strong><p>${t}</p></div></div>`).join('') : '<p>Ancora nessun commento. Scrivi il primo.</p>'}
+        openSheet(`<h3>${fmt(w.comments)} commenti</h3>${w.comments ? COMMENTS.map(([id, t]) => `<div class="comment">${avatarRing(id, 'sm')}<div><strong>${ARTISTS[id].name}</strong> ${whoTag(id)}${typeOf(id) === 'critico' ? `<div class="x-reply-rating">${rating(4.5, 13)}</div>` : ''}<p>${t}</p></div></div>`).join('') : '<p>Ancora nessun commento. Scrivi il primo.</p>'}
           <form class="composer" data-comment="${w.id}"><input placeholder="Aggiungi un commento" aria-label="Commento" autocomplete="off"><button aria-label="Invia"><i class="ph-light ph-paper-plane-right"></i></button></form>`);
         break;
       case 'info':
@@ -1376,6 +1471,12 @@
       }
       case 'vista-step': stepVista(+el.dataset.dir); break;
       case 'edit-work': openPublish(w); break;
+      case 'pick-star': {
+        const f = el.closest('form'), n = +el.dataset.v;
+        f.dataset.stars = f.dataset.stars == n ? 0 : n; // tap the same star again to clear
+        $$('[data-act="pick-star"]', f).forEach(b => { b.classList.toggle('on', +b.dataset.v <= +f.dataset.stars); b.setAttribute('aria-checked', +b.dataset.v === +f.dataset.stars); });
+        break;
+      }
       case 'banner-clear': {
         $('#profForm').dataset.banner = '';
         $('#bnDrop').style.backgroundImage = ''; $('#bnDrop').classList.remove('has');
@@ -1399,6 +1500,10 @@
       case 'country-prev': selectCountry(globe.idx - 1); break;
       case 'country-next': selectCountry(globe.idx + 1); break;
       case 'ptab': profTab = el.dataset.v; renderProfile(el.dataset.a || undefined); break;
+      case 'psort': profSort = el.dataset.v; renderProfile(el.dataset.a || undefined); break;
+      case 'open-col': openCol(colById(el.dataset.col)); break;
+      case 'new-col': openNewCol(); break;
+      case 'del-col': { const i = MY_COLS.findIndex(c => c.id === el.dataset.col); if (i > -1) { MY_COLS.splice(i, 1); saveCols(); } closeSheet(); toast('Costellazione eliminata'); refresh(); break; }
       case 'follow': {
         const id = el.dataset.a;
         followed.has(id) ? followed.delete(id) : followed.add(id);
@@ -1425,6 +1530,7 @@
     if (f.id === 'pubForm') { e.preventDefault(); submitPublish(f); return; }
     if (f.dataset.reply) { e.preventDefault(); submitReply(f); return; }
     if (f.id === 'profForm') { e.preventDefault(); submitProfile(); return; }
+    if (f.id === 'colForm') { e.preventDefault(); submitCol(); return; }
     if (f.classList.contains('composer')) {
       e.preventDefault();
       const input = f.querySelector('input');
