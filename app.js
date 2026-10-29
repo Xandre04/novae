@@ -301,8 +301,8 @@
       el.style.pointerEvents = o > .3 ? '' : 'none';
       el.classList.toggle('sel', abs < STEP / 2);
     });
-    // 2x the wheel: one 45° step = 90°, so the four-point star is upright whenever the wheel settles
-    $('#dockStar img').style.transform = `rotate(${(wheel.rot * 2).toFixed(2)}deg) scale(.9)`;
+    // 4x the wheel: one 45° step = a 180° turn, so the star is upright whenever the wheel settles
+    $('#dockStar img').style.transform = `rotate(${(wheel.rot * 4).toFixed(2)}deg) scale(.9)`;
     const sel = selIndex();
     if (sel !== wheel.sel) {
       wheel.sel = sel;
