@@ -192,16 +192,11 @@ body[data-screen="impostazioni"] #sky { opacity: 0; }
 .hub-circle .star-svg { width: 48%; height: 52%; }
 .hub-circle.i-stile { --w: calc(var(--hw) * .115); }
 .hub-circle.i-mercato { --w: calc(var(--hw) * .158); }
-/* Galleria and Scopri: the drawing is bigger than the ring and crosses it, as in the menu sketch
-   (needle out at the bottom left; flame touching the top, tail out at the bottom left) */
+/* Galleria and Scopri: centred, and bigger than the ring so the drawing crosses it, as in the menu sketch */
 .hub-circle.i-galleria { --w: calc(var(--hw) * .177); }
-.hub-circle.i-galleria .crop { transform: translate(calc(var(--hw) * -.0144), calc(var(--hw) * .0226)); }
 .hub-circle.i-scopri { --w: calc(var(--hw) * .183); }
-.hub-circle.i-scopri .crop { transform: translate(calc(var(--hw) * .0063), calc(var(--hw) * .0081)); }
-/* Profilo: the drawing is symmetric but ends in a rounded, top-like base; cut it flat at the
-   shoulders' widest point (29.75% from the bottom of the crop) and centre what remains */
-.hub-circle.i-profilo { --w: calc(var(--hw) * .154); }
-.i-profilo .crop { clip-path: inset(0 0 29.75% 0); transform: translateY(9.75%); }
+.hub-circle.i-profilo { --w: calc(var(--hw) * .126); } /* whole silhouette, as on the Profilo screen (84px crop in a 124px ring) */
+
 .hub-label {
   font-family: var(--hand); font-weight: 700; font-size: clamp(9px, calc(var(--hw) * .026), 12px); line-height: 1.15;
   letter-spacing: .04em; text-transform: uppercase; text-align: center; white-space: nowrap;
@@ -679,7 +674,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .arc-circle { border-color: #5a5957; background: #050505; }
 .arc-label { font-weight: 700; font-size: 9.5px; letter-spacing: .05em; }
 .arc-item.current .arc-circle { border-color: var(--accent-hi); }
-.arc-circle.i-profilo { --w: 50px; }
+.arc-circle.i-profilo { --w: 41px; }
 #globe .sphere { stroke: #6b6a67; stroke-width: 1.5; }
 #globe .land { stroke: #cfcdc8; stroke-width: 1; }
 
@@ -788,7 +783,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .x-desc { margin-top: 5px; font-size: 14px; line-height: 1.45; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .x-desc.open { -webkit-line-clamp: unset; display: block; font-size: 15px; color: var(--ink); }
 /* the frame follows the work's shape (aspect-ratio and width are set per post) */
-.x-media { position: relative; display: block; margin-top: 12px; border: var(--stroke) solid var(--line-hi); border-radius: 14px; overflow: hidden; background: var(--bg-2); max-width: 100%; }
+.x-media { position: relative; display: block; margin: 12px auto 0; border: var(--stroke) solid var(--line-hi); border-radius: 14px; overflow: hidden; background: var(--bg-2); max-width: 100%; }
 .x-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .x-media .play-ico { width: 54px; height: 54px; font-size: 22px; }
 .x-actions { display: flex; align-items: center; justify-content: space-between; margin: 8px -6px 0 -10px; }
@@ -823,3 +818,53 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 
 /* Stile ruby: no contrast filter, so its red stays the logo star's red (#960125-ish), as drawn */
 .i-stile .crop { filter: none; }
+
+/* ---------- Profile: banner, type badge, reviews ---------- */
+.prof-banner {
+  position: relative; height: 150px; margin: 0 0 -62px; background-size: cover; background-position: center;
+  background-image: radial-gradient(120% 140% at 50% 120%, rgba(150, 1, 37, .35), transparent 60%), linear-gradient(180deg, #0d0d0e, #050505);
+  border-bottom: var(--stroke) solid var(--line);
+}
+.prof-banner.has::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(3, 3, 3, .75)); }
+.banner-edit { position: absolute; right: 10px; top: 10px; z-index: 1; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 19px; background: rgba(3, 3, 3, .6); border: var(--stroke) solid var(--line-hi); }
+.banner-edit:hover { background: rgba(3, 3, 3, .85); }
+.prof-banner + .prof-top { position: relative; z-index: 1; padding-top: 0; }
+.prof-banner + .prof-top .prof-ring, .prof-banner + .prof-top .avatar-ring.lg { background: var(--bg); }
+.type-badge { display: inline-flex; align-items: center; gap: 6px; margin: 8px 0 4px; padding: 4px 12px; border-radius: 999px; border: var(--stroke) solid var(--line-hi); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.type-badge i { font-size: 15px; }
+.type-badge.t-artista { color: var(--accent-hi); border-color: rgba(214, 28, 64, .5); }
+.type-badge.t-critico { color: #e8c37a; border-color: rgba(232, 195, 122, .45); }
+.type-badge.t-utente { color: var(--ink-2); }
+.reviews { display: grid; padding: 0 14px; }
+.review { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 14px 0; border-bottom: var(--stroke) solid var(--line); }
+.review > img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; }
+.review .x-title { margin: 0 0 4px; }
+.review-text { margin-top: 6px; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+/* edit profile: banner picker and profile type */
+.field-label { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.banner-drop { position: relative; display: grid; place-items: center; height: 96px; border: var(--stroke) dashed var(--line-hi); border-radius: var(--wobble); background: var(--bg) center / cover no-repeat; cursor: pointer; color: var(--ink-2); overflow: hidden; }
+.banner-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.banner-drop span { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.banner-drop span i { font-size: 22px; }
+.banner-drop.has { border-style: solid; }
+.banner-drop.has span { padding: 6px 12px; border-radius: 999px; background: rgba(3, 3, 3, .65); }
+.link-btn { justify-self: start; font-size: 13px; color: var(--ink-3); text-decoration: underline; }
+.type-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.type-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.type-pick span { display: grid; justify-items: center; gap: 3px; padding: 12px 6px; border: var(--stroke) solid var(--line); border-radius: 12px; font-size: 13px; font-weight: 600; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+.type-pick span i { font-size: 22px; }
+.type-pick span small { font-size: 10.5px; font-weight: 400; color: var(--ink-3); line-height: 1.25; }
+.type-pick input:checked + span { border-color: var(--accent-hi); background: rgba(214, 28, 64, .1); }
+.type-pick input:focus-visible + span { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
+.pub-change { position: absolute; right: 10px; bottom: 10px; z-index: 1; padding: 5px 12px; border-radius: 999px; background: rgba(3, 3, 3, .7); font-size: 12px; font-style: normal; color: var(--ink); pointer-events: none; }
+
+/* ---------- Stile: coming soon ---------- */
+.soon { min-height: calc(100dvh - var(--dock-h) - 32px); display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; text-align: center; }
+.soon-gem { --w: 110px; filter: none; margin-bottom: 10px; }
+.soon h1 { font-size: clamp(26px, 8vw, 38px); font-weight: 300; letter-spacing: .3em; text-transform: uppercase; }
+.soon-tag { padding: 6px 16px; border-radius: 999px; border: var(--stroke) solid rgba(214, 28, 64, .5); color: var(--accent-hi); font-size: 12px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+.soon-text { max-width: 30ch; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
+.soon .btn-ghost { margin-top: 8px; }
+
+/* Galleria and Scopri icons as transparent PNGs, sized like the crops (--w) */
+.icon-png { display: block; width: var(--w); height: var(--w); object-fit: contain; user-select: none; }

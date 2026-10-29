@@ -51,16 +51,17 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 - **Scheda opera**: player, descrizione completa e opere correlate.
 - **Galleria**: le discipline (Cinematografia, Pittura, Fotografia...). In **Cinematografia**: serie, film e classifica, con le righe a gradini per genere (Novae, Thriller, Storico).
 - **Scopri**: il feed veloce in stile X. Tocca l'opera per la modalità reels, tocca il resto del post o il fumetto per i commenti; mi piace, ripubblica, condividi e tre puntini (Salva, Segnala, Non mi interessa). Il riquadro segue la forma dell'opera.
-- **Stile**: per ora, le opere degli artisti che segui, filtrabili per artista.
+- **Stile**: coming soon.
 - **Mercato**: opere in vendita, con prezzi in crediti.
 - **Profilo, Messaggi, Impostazioni**.
 
 **Cose che puoi fare**
 
-- **Pubblicare un'opera** dal profilo: immagine, titolo, disciplina e descrizione. Puoi anche eliminarla.
-- **Salvare** un'opera col segnalibro e ritrovarla in *Profilo → Salvate*.
+- **Scegliere il tipo di profilo**: artista (pubblica opere), critico (scrive recensioni) o utente (guarda, salva e vota). Ogni tipo ha il suo badge e le sue schede.
+- **Pubblicare un'opera** dal profilo (se sei artista): immagine, titolo, disciplina e descrizione. Poi puoi modificarla o eliminarla dai tre puntini.
+- **Personalizzare il profilo**: banner, nome, nome utente e bio.
+- **Salvare** un'opera dai tre puntini e ritrovarla in *Profilo → Salvate*.
 - **Seguire** gli artisti e scrivere loro nei messaggi.
-- **Modificare il profilo**: nome, nome utente e bio.
 
 **Scorciatoie**
 

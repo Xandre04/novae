@@ -18,9 +18,7 @@
   /* ---------------- Icons cropped from the hand-drawn sources in assets/icone/ ---------------- */
   // [file, centerX, centerY, cropSize] all as fractions of the square source image, [aspect]
   const CROPS = {
-    galleria:     ['assets/icone/seguiti.jpg', .5053, .4853, .12],
     impostazioni: ['assets/icone/impostazioni.jpg', .480, .494, .085],
-    scopri:       ['assets/icone/scopri.jpg', .4919, .4685, .10],
     messaggi:     ['assets/icone/messaggi.jpg', .502, .4975, .13],
     profilo:      ['assets/icone/profilo.jpg', .5159, .4860, .10],
     mercato:      ['assets/icone/mercato.jpg', .489, .495, .10],
@@ -37,6 +35,8 @@
   const icon = key => {
     if (key === 'novae') return starSvg();
     if (key === 'stile') return crop('gem');
+    // these two drawings cross their ring: transparent PNGs, so no black box shows outside the circle
+    if (key === 'galleria' || key === 'scopri') return `<img class="icon-png" src="assets/icone/${key}.png" alt="" aria-hidden="true" draggable="false">`;
     return crop(key);
   };
   const coin = () => crop('mercato', 'coin');
@@ -53,10 +53,19 @@
     mara:   { name: 'Mara Delvecchio',  handle: 'maradv',      country: 'Francia',    bio: 'Musica elettronica e field recording.' },
     thiago: { name: 'Thiago Moreira',   handle: 'thiagomor',   country: 'Brasile',    bio: 'Thriller a basso budget, luci al neon.' },
     ananya: { name: 'Ananya Rao',       handle: 'ananya.rao',  country: 'India',      bio: 'Poesia visiva e tipografia.' },
+    giulia: { name: 'Giulia Ferri',     handle: 'giulia.critica', country: 'Italia',  bio: 'Critica. Scrivo di cinema indipendente e pittura contemporanea.', type: 'critico' },
+    teo:    { name: 'Teo Marini',       handle: 'teo.guarda',  country: 'Francia',    bio: 'Guardo, salvo, voto. Non creo (ancora).', type: 'utente' },
   };
   const AIDS = Object.keys(ARTISTS);
   const avatar = id => id === 'me' ? ME_AVATAR : pic('av-' + id, 160, 160, true);
-  const ME_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#1a1a1b"/><circle cx="32" cy="25" r="11" fill="#eeede9"/><path d="M11 60c2-12 11-19 21-19s19 7 21 19z" fill="#eeede9"/></svg>');
+  const ME_AVATAR = 'assets/icone/profilo-avatar.png'; // the hand-drawn profile silhouette, same as the Profilo screen
+  // Profile types: what each can do and what their profile shows
+  const TYPES = {
+    artista: { label: 'Artista', icon: 'paint-brush', hint: 'Pubblica opere' },
+    critico: { label: 'Critico', icon: 'pen-nib', hint: 'Scrive recensioni' },
+    utente:  { label: 'Utente',  icon: 'eye', hint: 'Guarda, salva e vota' },
+  };
+  const typeOf = aid => ARTISTS[aid]?.type || 'artista';
 
   const DISCIPLINES = ['Cinematografia', 'Pittura', 'Fotografia', 'Musica', 'Illustrazione', 'Scultura', 'Poesia'];
 
@@ -148,7 +157,7 @@
   const followed = new Set(readJSON('novae.followed', ['aiko', 'kitti', 'livia', 'ruben', 'ines']));
   const saveFollowed = () => store.set('novae.followed', JSON.stringify([...followed]));
   // UI preferences remembered between visits
-  const prefs = Object.assign({ seguiti: 'Tutti', cineTab: 'Film', cineSort: 'recenti', country: 0, lastHub: '' }, readJSON('novae.prefs', {}));
+  const prefs = Object.assign({ cineTab: 'Film', cineSort: 'recenti', country: 0, lastHub: '' }, readJSON('novae.prefs', {}));
   const savePrefs = () => store.set('novae.prefs', JSON.stringify(prefs));
   let recent = readJSON('novae.recent', []);
   const addRecent = q => { q = q.trim(); if (q.length < 2) return; recent = [q, ...recent.filter(x => x.toLowerCase() !== q.toLowerCase())].slice(0, 6); store.set('novae.recent', JSON.stringify(recent)); };
@@ -157,8 +166,8 @@
   const saveSaved = () => store.set('novae.saved', JSON.stringify([...saved]));
 
   // You: editable profile + the works you publish (images kept as compressed data URLs, on this device only)
-  const profile = Object.assign({ name: 'Il tuo nome', handle: 'tuonome', bio: 'Scrivi qui chi sei e cosa crei. Gli altri artisti lo leggeranno prima di seguirti.' }, readJSON('novae.profile', {}));
-  ARTISTS.me = { name: profile.name, handle: profile.handle, country: 'Italia', bio: profile.bio };
+  const profile = Object.assign({ name: 'Il tuo nome', handle: 'tuonome', bio: 'Scrivi qui chi sei e cosa crei. Gli altri artisti lo leggeranno prima di seguirti.', type: 'artista', banner: '' }, readJSON('novae.profile', {}));
+  ARTISTS.me = { name: profile.name, handle: profile.handle, country: 'Italia', bio: profile.bio, type: profile.type };
   const MINE = readJSON('novae.mine', []);
   MINE.forEach(w => { WORKS.unshift(w); byId[w.id] = w; });
   function saveMine() {
@@ -611,25 +620,7 @@
     if (reels) reels.scrollBy({ top: dir * reels.clientHeight, behavior: reduceMotion ? 'auto' : 'smooth' });
   }
 
-  /* ---------------- 5. Galleria: works by the artists you follow ---------------- */
-  function renderSeguiti() {
-    const ids = [...followed];
-    if (prefs.seguiti !== 'Tutti' && !followed.has(prefs.seguiti)) prefs.seguiti = 'Tutti';
-    $('#galleryPills').innerHTML = ids.length ? [`<button class="pill" role="tab" aria-selected="${prefs.seguiti === 'Tutti'}" data-act="gfilter" data-v="Tutti">Tutti</button>`,
-      ...ids.map(id => `<button class="pill" role="tab" aria-selected="${prefs.seguiti === id}" data-act="gfilter" data-v="${id}"><img src="${avatar(id)}" alt="">${ARTISTS[id].name.split(' ')[0]}</button>`)].join('') : '';
-    if (!ids.length) {
-      $('#masonry').innerHTML = `<div class="empty" style="column-span:all">${starSvg()}<strong>Non segui ancora nessuno</strong><p>Trova artisti in Novae, il pianeta, e tocca Segui sul loro profilo.</p><a class="btn-ghost" href="#novae">Apri Novae</a></div>`;
-      return;
-    }
-    const list = WORKS.filter(w => prefs.seguiti === 'Tutti' ? followed.has(w.a) : w.a === prefs.seguiti);
-    $('#masonry').innerHTML = list.length ? list.map(w => {
-      const h = Math.round(480 * (w.h || 900) / (w.w || 1200));
-      return `<a class="m-tile" href="#opera/${w.id}"><div class="m-img"><div class="ph-img" style="aspect-ratio:480/${h}">${img(w.thumb, w.t)}${w.type === 'video' ? mediaOverlay(w) : ''}</div></div>
-        <div class="m-cap"><strong>${w.t}</strong><span>${ARTISTS[w.a].name.split(' ')[0]}</span></div></a>`;
-    }).join('') : `<div class="empty" style="column-span:all">${starSvg()}<strong>Ancora vuoto</strong><p>${ARTISTS[prefs.seguiti]?.name || 'Questo artista'} non ha ancora pubblicato opere.</p></div>`;
-  }
-
-  /* ---------------- 6. Stile ---------------- */
+  /* ---------------- 5. Galleria: the disciplines ---------------- */
   function renderStile() {
     $('#disciplines').innerHTML = DISCIPLINES.map((d, i) => {
       const ws = WORKS.filter(w => w.disc === d);
@@ -846,37 +837,64 @@
 
   /* ---------------- 11. Profilo / artista ---------------- */
   let profTab = 'Opere';
+  const REVIEW_TEXTS = [
+    'Un lavoro maturo: la luce racconta più dei dialoghi. Il finale resta addosso.',
+    'Composizione rigorosa, palette trattenuta. Manca solo un po\' di coraggio nel secondo atto.',
+    'Raro vedere un esordio così controllato. Da tenere d\'occhio.',
+    'Tecnica impeccabile, emozione a tratti. Merita comunque la visione.',
+  ];
+  // a critic's reviews: yours are the replies you wrote; others' are sample ones
+  const reviewsOf = aid => aid === 'me'
+    ? Object.entries(REPLIES_MINE).flatMap(([id, rs]) => byId[id] ? rs.map(r => ({ w: byId[id], text: r.text, rating: 0 })) : []).reverse()
+    : FEED.slice(1, 5).map((w, i) => ({ w, text: REVIEW_TEXTS[i % REVIEW_TEXTS.length], rating: Math.max(3, Math.round(w.rating)) }));
+  const reviewHtml = r => `<a class="review" href="#post/${r.w.id}">${img(r.w.ts ? r.w.img : pic(r.w.id, 200, 200), '')}
+      <div><p class="x-title">${r.w.t}</p>${r.rating ? rating(r.rating, 13) : ''}<p class="review-text">${r.text}</p></div></a>`;
   function renderProfile(aid) {
     const other = aid && aid !== 'me' && ARTISTS[aid];
-    const a = other || ARTISTS.me;
-    const works = WORKS.filter(w => w.a === (other ? aid : 'me'));
+    const id = other ? aid : 'me';
+    const a = ARTISTS[id];
+    const type = typeOf(id), T = TYPES[type];
+    const works = WORKS.filter(w => w.a === id);
     const savedList = WORKS.filter(w => saved.has(w.id));
-    const tabs = other ? ['Opere', 'Stelle'] : ['Opere', 'Salvate', 'Stelle'];
-    if (!tabs.includes(profTab)) profTab = 'Opere';
-    const list = profTab === 'Opere' ? works : profTab === 'Salvate' ? savedList : works.filter(w => w.rating >= 4);
+    const reviews = type === 'critico' ? reviewsOf(id) : [];
+    const tabs = {
+      artista: other ? ['Opere', 'Stelle'] : ['Opere', 'Salvate', 'Stelle'],
+      critico: other ? ['Recensioni'] : ['Recensioni', 'Salvate'],
+      utente: other ? ['Salvate'] : ['Salvate'],
+    }[type];
+    if (!tabs.includes(profTab)) profTab = tabs[0];
+    const list = profTab === 'Opere' ? works : profTab === 'Salvate' ? (other ? [] : savedList) : profTab === 'Stelle' ? works.filter(w => w.rating >= 4) : [];
     const empty = {
       Opere: other ? ['Nessuna opera', `${a.name.split(' ')[0]} non ha ancora pubblicato.`] : ['La tua prima opera', 'Tocca "Pubblica opera" e condividila con chi ti segue.'],
-      Salvate: ['Niente di salvato', 'Tocca il segnalibro su un\'opera e la ritrovi qui.'],
+      Salvate: other ? ['Raccolta privata', `Le opere salvate da ${a.name.split(' ')[0]} restano private.`] : ['Niente di salvato', 'Tocca i tre puntini su un\'opera e scegli Salva.'],
       Stelle: ['Nessuna stella', 'Le opere con almeno 4 stelle finiscono qui.'],
+      Recensioni: other ? ['Nessuna recensione', 'Non ha ancora recensito opere.'] : ['La tua prima recensione', 'Apri un\'opera in Scopri e scrivi cosa ne pensi: le tue risposte diventano recensioni.'],
     }[profTab];
+    const banner = other ? pic('banner-' + aid, 1200, 420) : profile.banner;
     const thumb = w => w.ts ? w.img : pic(w.id, 300, 300);
+    const stats = {
+      artista: [[works.length, 'opere'], [other ? fmt(works.reduce((s, w) => s + likeCount(w), 0)) : savedList.length, other ? 'cuori' : 'salvate'], [other ? fmt(120 + works.length * 37) : followed.size, other ? 'seguaci' : 'seguiti']],
+      critico: [[reviews.length, 'recensioni'], [other ? fmt(860) : savedList.length, other ? 'lettori' : 'salvate'], [other ? fmt(412) : followed.size, other ? 'seguaci' : 'seguiti']],
+      utente: [[other ? fmt(214) : liked.size, 'mi piace'], [other ? fmt(37) : savedList.length, other ? 'seguaci' : 'salvate'], [other ? fmt(64) : followed.size, 'seguiti']],
+    }[type];
     $('#profile').innerHTML = `
+      <div class="prof-banner ${banner ? 'has' : ''}" ${banner ? `style="background-image:url('${banner}')"` : ''}>
+        ${other ? '' : `<button class="banner-edit" data-act="edit-profile" aria-label="Cambia banner"><i class="ph-light ph-image"></i></button>`}
+      </div>
       <div class="prof-top">
         ${other ? `<span class="avatar-ring lg">${img(avatar(aid), '')}</span>` : `<span class="prof-ring">${crop('profilo')}<button class="edit" data-act="edit-profile" aria-label="Modifica profilo"><i class="ph-light ph-pencil-simple"></i></button></span>`}
         <h1>${a.name}</h1>
+        <span class="type-badge t-${type}"><i class="ph-light ph-${T.icon}"></i>${T.label}</span>
         <span class="handle">@${a.handle}, ${a.country}</span>
         <p class="bio">${a.bio}</p>
-        <div class="stats">
-          <div><strong>${works.length}</strong><span>opere</span></div>
-          <div><strong>${other ? fmt(works.reduce((s, w) => s + likeCount(w), 0)) : savedList.length}</strong><span>${other ? 'cuori' : 'salvate'}</span></div>
-          <div><strong>${other ? fmt(120 + works.length * 37) : followed.size}</strong><span>${other ? 'seguaci' : 'seguiti'}</span></div>
-        </div>
+        <div class="stats">${stats.map(([n, l]) => `<div><strong>${n}</strong><span>${l}</span></div>`).join('')}</div>
         <div class="prof-cta">${other
           ? `<button class="${followed.has(aid) ? 'btn-ghost' : 'btn-accent'}" data-act="follow" data-a="${aid}" aria-pressed="${followed.has(aid)}">${followed.has(aid) ? 'Segui già' : 'Segui'}</button><a class="btn-ghost" href="#messaggi/${aid}">Messaggio</a>`
-          : `<button class="btn-accent" data-act="publish">Pubblica opera</button><button class="btn-ghost" data-act="edit-profile">Modifica</button>`}</div>
+          : `${type === 'artista' ? '<button class="btn-accent" data-act="publish">Pubblica opera</button>' : type === 'critico' ? '<a class="btn-accent" href="#scopri">Scrivi una recensione</a>' : ''}<button class="btn-ghost" data-act="edit-profile">Modifica profilo</button>`}</div>
       </div>
       <div class="seg" role="tablist" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(t => `<button role="tab" aria-selected="${t === profTab}" data-act="ptab" data-v="${t}" data-a="${aid || ''}">${t}</button>`).join('')}</div>
-      ${list.length ? `<div class="grid3">${list.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumb(w), w.t)}</a>`).join('')}</div>`
+      ${profTab === 'Recensioni' && reviews.length ? `<div class="reviews">${reviews.map(reviewHtml).join('')}</div>`
+        : list.length ? `<div class="grid3">${list.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumb(w), w.t)}</a>`).join('')}</div>`
         : `<div class="empty">${starSvg()}<strong>${empty[0]}</strong><p>${empty[1]}</p>${!other && profTab === 'Opere' ? '<button class="btn-accent" data-act="publish">Pubblica opera</button>' : ''}</div>`}`;
   }
 
@@ -897,15 +915,17 @@
       im.src = url;
     });
   }
-  function openPublish() {
-    openSheet(`<h3>Nuova opera</h3>
-      <form class="pub" id="pubForm" novalidate>
-        <label class="pub-drop" id="pubDrop"><input type="file" accept="image/*" id="pubFile" aria-label="Immagine dell'opera"><img id="pubPrev" alt="" hidden><span><i class="ph-light ph-image-square"></i>Scegli un'immagine</span></label>
-        <div class="field"><label for="pubT">Titolo</label><input id="pubT" maxlength="60" placeholder="Come si chiama?" autocomplete="off"></div>
-        <div class="field"><label for="pubDisc">Disciplina</label><select id="pubDisc">${DISCIPLINES.map(d => `<option>${d}</option>`).join('')}</select></div>
-        <div class="field"><label for="pubDesc">Descrizione</label><textarea id="pubDesc" maxlength="400" rows="3" placeholder="Racconta com'è nata (facoltativo)"></textarea></div>
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  // new work, or (with w) edit one of yours: same form, prefilled
+  function openPublish(w) {
+    openSheet(`<h3>${w ? 'Modifica opera' : 'Nuova opera'}</h3>
+      <form class="pub" id="pubForm" novalidate ${w ? `data-edit="${w.id}" data-img="${w.img}" data-w="${w.w}" data-h="${w.h}"` : ''}>
+        <label class="pub-drop ${w ? 'has' : ''}" id="pubDrop"><input type="file" accept="image/*" id="pubFile" aria-label="Immagine dell'opera"><img id="pubPrev" alt="" ${w ? `src="${w.img}"` : 'hidden'}><span><i class="ph-light ph-image-square"></i>Scegli un'immagine</span>${w ? '<em class="pub-change">Cambia immagine</em>' : ''}</label>
+        <div class="field"><label for="pubT">Titolo</label><input id="pubT" maxlength="60" placeholder="Come si chiama?" autocomplete="off" value="${w ? esc(w.t) : ''}"></div>
+        <div class="field"><label for="pubDisc">Disciplina</label><select id="pubDisc">${DISCIPLINES.map(d => `<option ${w?.disc === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+        <div class="field"><label for="pubDesc">Descrizione</label><textarea id="pubDesc" maxlength="400" rows="3" placeholder="Racconta com'è nata (facoltativo)">${w ? esc(w.desc) : ''}</textarea></div>
         <p class="pub-err" id="pubErr" role="alert"></p>
-        <button class="btn-accent" type="submit">Pubblica</button>
+        <button class="btn-accent" type="submit">${w ? 'Salva modifiche' : 'Pubblica'}</button>
       </form>`);
   }
   async function onPubFile(file) {
@@ -923,6 +943,13 @@
     const t = $('#pubT').value.trim();
     if (!f.dataset.img) { $('#pubErr').textContent = 'Scegli prima un\'immagine.'; return; }
     if (!t) { $('#pubErr').textContent = 'Dai un titolo alla tua opera.'; $('#pubT').focus(); return; }
+    if (f.dataset.edit) {
+      const w = byId[f.dataset.edit], before = { ...w };
+      Object.assign(w, { t, disc: $('#pubDisc').value, desc: $('#pubDesc').value.trim() || w.desc, img: f.dataset.img, thumb: f.dataset.img, w: +f.dataset.w, h: +f.dataset.h });
+      if (!saveMine()) { Object.assign(w, before); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: usa un\'immagine più leggera.'; return; }
+      closeSheet(); toast('Opera aggiornata'); refresh();
+      return;
+    }
     const w = {
       id: 'u' + Date.now(), t, a: 'me', type: 'image', disc: $('#pubDisc').value, desc: $('#pubDesc').value.trim() || 'Appena pubblicata.',
       img: f.dataset.img, thumb: f.dataset.img, w: +f.dataset.w, h: +f.dataset.h,
@@ -946,23 +973,40 @@
     if (location.hash.includes(id)) location.hash = '#profilo'; else refresh();
   }
   function openEditProfile() {
-    const q = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     openSheet(`<h3>Modifica profilo</h3>
-      <form class="pub" id="profForm" novalidate>
-        <div class="field"><label for="pfName">Nome</label><input id="pfName" maxlength="40" value="${q(profile.name)}" autocomplete="name"></div>
-        <div class="field"><label for="pfHandle">Nome utente</label><input id="pfHandle" maxlength="24" value="${q(profile.handle)}" autocomplete="username" spellcheck="false"></div>
-        <div class="field"><label for="pfBio">Bio</label><textarea id="pfBio" maxlength="160" rows="3">${q(profile.bio)}</textarea></div>
+      <form class="pub" id="profForm" novalidate data-banner="${profile.banner}">
+        <div class="field"><span class="field-label">Banner</span>
+          <label class="banner-drop ${profile.banner ? 'has' : ''}" id="bnDrop" ${profile.banner ? `style="background-image:url('${profile.banner}')"` : ''}><input type="file" accept="image/*" id="bnFile" aria-label="Immagine del banner"><span><i class="ph-light ph-image"></i>Scegli un banner</span></label>
+          <button type="button" class="link-btn" data-act="banner-clear" ${profile.banner ? '' : 'hidden'}>Togli il banner</button></div>
+        <div class="field"><span class="field-label">Tipo di profilo</span>
+          <div class="type-pick" role="radiogroup" aria-label="Tipo di profilo">${Object.entries(TYPES).map(([k, t]) => `<label><input type="radio" name="pfType" value="${k}" ${profile.type === k ? 'checked' : ''}><span><i class="ph-light ph-${t.icon}"></i>${t.label}<small>${t.hint}</small></span></label>`).join('')}</div></div>
+        <div class="field"><label for="pfName">Nome</label><input id="pfName" maxlength="40" value="${esc(profile.name)}" autocomplete="name"></div>
+        <div class="field"><label for="pfHandle">Nome utente</label><input id="pfHandle" maxlength="24" value="${esc(profile.handle)}" autocomplete="username" spellcheck="false"></div>
+        <div class="field"><label for="pfBio">Bio</label><textarea id="pfBio" maxlength="160" rows="3">${esc(profile.bio)}</textarea></div>
         <p class="pub-err" id="pfErr" role="alert"></p>
         <button class="btn-accent" type="submit">Salva</button>
       </form>`);
+  }
+  async function onBannerFile(file) {
+    if (!file) return;
+    try {
+      const r = await compressImage(file, 1200);
+      $('#profForm').dataset.banner = r.data;
+      $('#bnDrop').style.backgroundImage = `url('${r.data}')`; $('#bnDrop').classList.add('has');
+      $('[data-act="banner-clear"]').hidden = false;
+      $('#pfErr').textContent = '';
+    } catch { $('#pfErr').textContent = 'Non riesco a leggere questa immagine. Prova con un JPG o PNG.'; }
   }
   function submitProfile() {
     const name = $('#pfName').value.trim(), handle = $('#pfHandle').value.trim().replace(/^@/, '').toLowerCase();
     if (!name) { $('#pfErr').textContent = 'Il nome non può essere vuoto.'; return; }
     if (!/^[a-z0-9._]{3,24}$/.test(handle)) { $('#pfErr').textContent = 'Nome utente: 3-24 caratteri tra lettere, numeri, punto e trattino basso.'; return; }
-    Object.assign(profile, { name, handle, bio: $('#pfBio').value.trim() || profile.bio });
-    Object.assign(ARTISTS.me, { name, handle, bio: profile.bio });
-    store.set('novae.profile', JSON.stringify(profile));
+    const type = $('#profForm input[name="pfType"]:checked')?.value || profile.type;
+    const next = { ...profile, name, handle, type, bio: $('#pfBio').value.trim() || profile.bio, banner: $('#profForm').dataset.banner || '' };
+    try { localStorage.setItem('novae.profile', JSON.stringify(next)); }
+    catch { $('#pfErr').textContent = 'Spazio pieno su questo dispositivo: scegli un banner più leggero.'; return; }
+    Object.assign(profile, next);
+    Object.assign(ARTISTS.me, { name, handle, type, bio: profile.bio });
     closeSheet(); toast('Profilo aggiornato'); refresh();
   }
 
@@ -1086,7 +1130,7 @@
     post: renderThread,
     vista: renderVista,
     galleria: renderStile,
-    stile: renderSeguiti,
+    stile: () => {}, // static "coming soon" page
     disciplina: renderCine,
     opera: renderDetail,
     novae: initGlobe,
@@ -1288,7 +1332,8 @@
         openSheet(`<h3>${w.t}</h3><div class="action-list">
           <button data-act="save" data-id="${w.id}"><i class="${saved.has(w.id) ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i>${saved.has(w.id) ? 'Rimuovi dai salvati' : 'Salva'}</button>
           ${w.a === 'me'
-            ? `<button class="danger" data-act="delete" data-id="${w.id}"><i class="ph-light ph-trash"></i>Elimina opera</button>`
+            ? `<button data-act="edit-work" data-id="${w.id}"><i class="ph-light ph-pencil-simple"></i>Modifica opera</button>
+               <button class="danger" data-act="delete" data-id="${w.id}"><i class="ph-light ph-trash"></i>Elimina opera</button>`
             : `<button data-act="report"><i class="ph-light ph-flag"></i>Segnala</button>
                <button data-act="not-interested" data-id="${w.id}"><i class="ph-light ph-eye-slash"></i>Non mi interessa</button>`}
         </div>`);
@@ -1330,7 +1375,13 @@
         break;
       }
       case 'vista-step': stepVista(+el.dataset.dir); break;
-      case 'gfilter': prefs.seguiti = el.dataset.v; savePrefs(); renderSeguiti(); break;
+      case 'edit-work': openPublish(w); break;
+      case 'banner-clear': {
+        $('#profForm').dataset.banner = '';
+        $('#bnDrop').style.backgroundImage = ''; $('#bnDrop').classList.remove('has');
+        el.hidden = true;
+        break;
+      }
       case 'ctab':
         if (el.dataset.v === 'Ordina per') cineState.sortOpen = !cineState.sortOpen;
         else { cineState.tab = prefs.cineTab = el.dataset.v; cineState.sortOpen = false; cineState.expanded = null; savePrefs(); }
@@ -1393,6 +1444,7 @@
 
   document.addEventListener('change', e => {
     if (e.target.id === 'pubFile') { onPubFile(e.target.files[0]); return; }
+    if (e.target.id === 'bnFile') { onBannerFile(e.target.files[0]); return; }
     const k = e.target.dataset.toggle;
     if (!k) return;
     const t = store.get('novae.toggles') ? JSON.parse(store.get('novae.toggles')) : { priv: false, notif: true, auto: true, rate: true };
