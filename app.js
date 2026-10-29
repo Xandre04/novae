@@ -301,7 +301,8 @@
       el.style.pointerEvents = o > .3 ? '' : 'none';
       el.classList.toggle('sel', abs < STEP / 2);
     });
-    $('#dockStar img').style.transform = `rotate(${(wheel.rot * .5).toFixed(2)}deg) scale(.9)`;
+    // 2x the wheel: one 45° step = 90°, so the four-point star is upright whenever the wheel settles
+    $('#dockStar img').style.transform = `rotate(${(wheel.rot * 2).toFixed(2)}deg) scale(.9)`;
     const sel = selIndex();
     if (sel !== wheel.sel) {
       wheel.sel = sel;
@@ -349,7 +350,7 @@
     $('#dockStar').setAttribute('aria-expanded', open);
     $('#dockStar').setAttribute('aria-label', open ? 'Chiudi ruota' : 'Apri ruota delle sezioni');
     $$('.arc-item').forEach(a => a.tabIndex = open ? 0 : -1);
-    $('#dock').classList.toggle('spinning', open);
+    if (open) $('#dock').classList.add('spinning'); // no CSS transition on the star while the wheel drives it
     if (open && !was) {
       // the buttons come out of the star, spinning in to the section you're in
       const k = Math.max(0, WHEEL.findIndex(h => h.k === cur));
@@ -370,7 +371,10 @@
       arc.classList.add('closing');
       animateWheel(wheel.rot + 90, 0, 360, () => {
         arc.classList.remove('open', 'closing');
+        // the star ends on a multiple of 90°, i.e. upright: drop the rotation instantly, then give the transition back
         $('#dockStar img').style.transform = '';
+        void $('#dockStar img').offsetWidth;
+        $('#dock').classList.remove('spinning');
       }, true);
     }
   }
