@@ -922,3 +922,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .col-title small { font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: none; color: var(--ink-3); }
 .col-desc { max-width: 40ch; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .col-head .link-btn { justify-self: center; margin-top: 2px; }
+
+/* Galleria categories */
+.disc.empty-disc h2 { color: #8a8984; }
+.cat-count { margin: -6px 0 14px; color: var(--muted, #8a8984); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }

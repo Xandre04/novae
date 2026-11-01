@@ -67,7 +67,18 @@
   };
   const typeOf = aid => ARTISTS[aid]?.type || 'artista';
 
-  const DISCIPLINES = ['Cinematografia', 'Pittura', 'Fotografia', 'Musica', 'Illustrazione', 'Scultura', 'Poesia'];
+  // Galleria categories, in this order
+  const DISCIPLINES = [
+    'Pittura e illustrazione', 'Musica', 'Letteratura', 'Cinema e video', 'Fotografia', 'Design', 'Architettura',
+    'Moda', 'Scultura', 'Fumetto', 'Animazione', 'Teatro e performance', 'Danza', 'Street art', 'Artigianato',
+    'Installazione e arti ambientali', 'Arti digitali e tecnologiche', 'Videogiochi e arti interattive',
+    'Arti culinarie', 'Body art', 'Arte memetica',
+  ];
+  const CINEMA = 'Cinema e video'; // the category with its own page (rows of films by genre)
+  const slugOf = d => d.toLowerCase().replace(/\s+/g, '-');
+  // old category names (works published before the new list) -> new ones
+  const LEGACY_DISC = { Cinematografia: CINEMA, Pittura: 'Pittura e illustrazione', Illustrazione: 'Pittura e illustrazione', Poesia: 'Letteratura' };
+  const discOf = d => LEGACY_DISC[d] || d;
 
   const DESCS = [
     'Girato in tre notti con una sola lente. Il suono è registrato sul posto, senza doppiaggio.',
@@ -109,23 +120,23 @@
   };
   const filmArtists = ['livia', 'aiko', 'thiago', 'kitti', 'ruben', 'ploy', 'nicolo'];
   Object.entries(FILM).forEach(([genre, titles], gi) =>
-    titles.forEach((t, i) => addWork({ t, a: filmArtists[(i + gi * 2) % filmArtists.length], type: 'video', disc: 'Cinematografia', genre, kind: i % 3 === 0 ? 'Serie' : 'Film' })));
+    titles.forEach((t, i) => addWork({ t, a: filmArtists[(i + gi * 2) % filmArtists.length], type: 'video', disc: CINEMA, genre, kind: i % 3 === 0 ? 'Serie' : 'Film' })));
 
   const FEED_SRC = [
-    { t: 'Il rumore dei ciottoli', a: 'aiko', type: 'video', disc: 'Cinematografia' },
-    { t: 'Crepa n. 3', a: 'nicolo', type: 'image', disc: 'Pittura', w: 900, h: 1200 },
+    { t: 'Il rumore dei ciottoli', a: 'aiko', type: 'video', disc: CINEMA },
+    { t: 'Crepa n. 3', a: 'nicolo', type: 'image', disc: 'Pittura e illustrazione', w: 900, h: 1200 },
     { t: 'Notturno a Yaowarat', a: 'kitti', type: 'image', disc: 'Fotografia' },
     { t: 'Sale e ferro', a: 'mara', type: 'audio', disc: 'Musica' },
-    { t: 'Muro di via Allende', a: 'ruben', type: 'image', disc: 'Pittura', w: 1200, h: 800 },
+    { t: 'Muro di via Allende', a: 'ruben', type: 'image', disc: 'Pittura e illustrazione', w: 1200, h: 800 },
     { t: 'Testa di bullone', a: 'ines', type: 'image', disc: 'Scultura', w: 900, h: 1150 },
-    { t: 'Lettera senza vocali', a: 'ananya', type: 'image', disc: 'Poesia', w: 1000, h: 1000 },
-    { t: 'La volpe e il monsone', a: 'ploy', type: 'video', disc: 'Illustrazione' },
+    { t: 'Lettera senza vocali', a: 'ananya', type: 'image', disc: 'Letteratura', w: 1000, h: 1000 },
+    { t: 'La volpe e il monsone', a: 'ploy', type: 'video', disc: 'Animazione' },
     { t: 'Fischio di mezzanotte', a: 'mara', type: 'audio', disc: 'Musica' },
-    { t: 'Porto di Catania, ore 6', a: 'nicolo', type: 'image', disc: 'Pittura', w: 1200, h: 850 },
-    { t: 'Neon su Rua Augusta', a: 'thiago', type: 'video', disc: 'Cinematografia' },
+    { t: 'Porto di Catania, ore 6', a: 'nicolo', type: 'image', disc: 'Pittura e illustrazione', w: 1200, h: 850 },
+    { t: 'Neon su Rua Augusta', a: 'thiago', type: 'video', disc: 'Street art' },
     { t: 'Soglia', a: 'ines', type: 'image', disc: 'Scultura', w: 850, h: 1200 },
     // a "utente": publishes only for followers
-    { t: 'Quaderno di Lione', a: 'teo', type: 'image', disc: 'Illustrazione', audience: 'followers' },
+    { t: 'Quaderno di Lione', a: 'teo', type: 'image', disc: 'Pittura e illustrazione', audience: 'followers' },
     { t: 'Finestra, martedì', a: 'teo', type: 'image', disc: 'Fotografia', w: 900, h: 1200, audience: 'followers' },
   ];
   const FEED = FEED_SRC.map(addWork);
@@ -172,7 +183,7 @@
   const profile = Object.assign({ name: 'Il tuo nome', handle: 'tuonome', bio: 'Scrivi qui chi sei e cosa crei. Gli altri artisti lo leggeranno prima di seguirti.', type: 'artista', banner: '' }, readJSON('novae.profile', {}));
   ARTISTS.me = { name: profile.name, handle: profile.handle, country: 'Italia', bio: profile.bio, type: profile.type };
   const MINE = readJSON('novae.mine', []);
-  MINE.forEach(w => { WORKS.unshift(w); byId[w.id] = w; });
+  MINE.forEach(w => { w.disc = discOf(w.disc); WORKS.unshift(w); byId[w.id] = w; });
   function saveMine() {
     try { localStorage.setItem('novae.mine', JSON.stringify(MINE)); return true; } catch { return false; }
   }
@@ -614,7 +625,7 @@
   function renderVista(id) {
     const all = [...MINE, ...FEED].filter(w => (!hidden.has(w.id) && canSee(w)) || w.id === id);
     const start = byId[id] || all[0];
-    const list = all.includes(start) ? all : [start, ...all]; // e.g. a film opened from Cinematografia
+    const list = all.includes(start) ? all : [start, ...all]; // e.g. a film opened from Cinema e video
     const root = $('#vista');
     root.className = 'vista';
     root.innerHTML = `
@@ -645,12 +656,11 @@
 
   /* ---------------- 5. Galleria: the disciplines ---------------- */
   function renderStile() {
-    $('#disciplines').innerHTML = DISCIPLINES.map((d, i) => {
-      const ws = WORKS.filter(w => w.disc === d);
-      const thumbs = (ws.length ? ws : WORKS.slice(i * 2)).slice(0, 3);
-      return `<a class="disc ${i === 0 ? 'active' : ''}" href="#galleria/${d.toLowerCase()}">
-        <div><h2>${d}</h2><p>${ws.length ? `${ws.length} opere` : 'In arrivo'}</p></div>
-        <div class="disc-thumbs">${thumbs.map((w, k) => `<img src="${pic(w.id, 120, 150)}" alt="" loading="lazy" style="--r:${(k - 1) * 7}deg">`).join('')}</div>
+    $('#disciplines').innerHTML = DISCIPLINES.map(d => {
+      const ws = WORKS.filter(w => w.disc === d && canSee(w));
+      return `<a class="disc ${ws.length ? '' : 'empty-disc'}" href="#galleria/${slugOf(d)}">
+        <div><h2>${d}</h2><p>${ws.length ? `${ws.length} ${ws.length === 1 ? 'opera' : 'opere'}` : 'In arrivo'}</p></div>
+        <div class="disc-thumbs">${ws.slice(0, 3).map((w, k) => `<img src="${w.ts ? w.img : pic(w.id, 120, 150)}" alt="" loading="lazy" style="--r:${(k - 1) * 7}deg">`).join('')}</div>
       </a>`;
     }).join('');
   }
@@ -672,12 +682,16 @@
     return list;
   }
   function renderCine(slug) {
-    const name = DISCIPLINES.find(d => d.toLowerCase() === (slug || '').toLowerCase()) || 'Cinematografia';
+    const name = DISCIPLINES.find(d => slugOf(d) === slug) || CINEMA; // unknown or old links (#galleria/cinematografia) -> Cinema e video
     const root = $('#cine');
-    if (name !== 'Cinematografia') {
+    document.title = `${name} | NOVAE`;
+    if (name !== CINEMA) {
+      // every other category: its works in a grid, or "In arrivo" while it's empty
+      const ws = WORKS.filter(w => w.disc === name && canSee(w)).sort(byRecent);
       root.innerHTML = `<button class="cine-back icon-btn" data-act="back" data-fallback="#galleria" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
         <h1 class="cine-title">${name}</h1>
-        <div class="empty">${starSvg()}<strong>Sala in allestimento</strong><p>La sezione ${name.toLowerCase()} apre nella prossima alpha. Intanto trovi nuove opere in Scopri.</p><a class="btn-ghost" href="#scopri">Apri Scopri</a></div>`;
+        ${ws.length ? `<p class="cat-count">${ws.length} ${ws.length === 1 ? 'opera' : 'opere'}</p><div class="grid3 cat-grid">${ws.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumbOf(w), w.t)}</a>`).join('')}</div>`
+          : `<div class="empty">${starSvg()}<strong>In arrivo</strong><p>Nessuna opera di ${name.toLowerCase()} per ora. Se sei un artista, pubblica la prima dal tuo profilo.</p><a class="btn-ghost" href="#scopri">Apri Scopri</a></div>`}`;
       return;
     }
     const tabs = ['Serie', 'Film', 'Classifica', 'Ordina per'];
@@ -1248,7 +1262,7 @@
     impostazioni: renderSettings,
   };
   const TITLES = {
-    invito: 'Invito', scopri: 'Scopri', post: 'Post', vista: 'Opera', galleria: 'Galleria', stile: 'Stile', disciplina: 'Cinematografia', opera: 'Opera',
+    invito: 'Invito', scopri: 'Scopri', post: 'Post', vista: 'Opera', galleria: 'Galleria', stile: 'Stile', disciplina: 'Galleria', opera: 'Opera',
     novae: 'Novae', mercato: 'Mercato', profilo: 'Profilo', artista: 'Artista', messaggi: 'Messaggi', impostazioni: 'Impostazioni',
   };
   const scrollMemo = new Map(); // hash -> scrollY, so "back" lands where you left
@@ -1498,11 +1512,11 @@
       case 'ctab':
         if (el.dataset.v === 'Ordina per') cineState.sortOpen = !cineState.sortOpen;
         else { cineState.tab = prefs.cineTab = el.dataset.v; cineState.sortOpen = false; cineState.expanded = null; savePrefs(); }
-        renderCine('cinematografia'); break;
-      case 'csort': cineState.sort = prefs.cineSort = el.dataset.v; cineState.sortOpen = false; savePrefs(); renderCine('cinematografia'); break;
-      case 'cf': cineState.center[el.dataset.g] = +el.dataset.i; cineState.expanded = null; renderCine('cinematografia'); break;
-      case 'expand': cineState.expanded = el.dataset.id; renderCine('cinematografia'); break;
-      case 'collapse': cineState.expanded = null; renderCine('cinematografia'); break;
+        renderCine(slugOf(CINEMA)); break;
+      case 'csort': cineState.sort = prefs.cineSort = el.dataset.v; cineState.sortOpen = false; savePrefs(); renderCine(slugOf(CINEMA)); break;
+      case 'cf': cineState.center[el.dataset.g] = +el.dataset.i; cineState.expanded = null; renderCine(slugOf(CINEMA)); break;
+      case 'expand': cineState.expanded = el.dataset.id; renderCine(slugOf(CINEMA)); break;
+      case 'collapse': cineState.expanded = null; renderCine(slugOf(CINEMA)); break;
       case 'related': {
         const open = el.getAttribute('aria-expanded') !== 'true';
         el.setAttribute('aria-expanded', open);

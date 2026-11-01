@@ -35,7 +35,7 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 | Invito | Menu principale | Scopri (feed stile X) |
 |:---:|:---:|:---:|
 | <img src="docs/screenshots/01-invito.jpg" width="220" alt="Schermata d'invito con QR"> | <img src="docs/screenshots/02-menu.jpg" width="220" alt="Menu principale a raggiera"> | <img src="docs/screenshots/03-feed.jpg" width="220" alt="Feed delle opere"> |
-| **Ruota delle sezioni** | **Cinematografia** | **Novae (il pianeta)** |
+| **Ruota delle sezioni** | **Cinema e video** | **Novae (il pianeta)** |
 | <img src="docs/screenshots/04-ruota.jpg" width="220" alt="Ruota girevole aperta dalla stella"> | <img src="docs/screenshots/05-cinematografia.jpg" width="220" alt="Righe di film per genere"> | <img src="docs/screenshots/06-scopri.jpg" width="220" alt="Globo con gli artisti nel mondo"> |
 
 <p align="center"><img src="docs/screenshots/07-opera.jpg" width="220" alt="Opera a schermo intero"><br><sub>Opere a schermo intero: scorri su e giù, come nei Reels</sub></p>
@@ -49,7 +49,7 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 - **Novae**: il pianeta con le stelle. Giralo e scopri gli artisti di ogni paese.
 - **Opere a schermo intero**: come Reels e TikTok, scorri su e giù per passare alla prossima. Tocca per mettere in pausa, doppio tocco per il mi piace.
 - **Scheda opera**: player, descrizione completa e opere correlate.
-- **Galleria**: le discipline (Cinematografia, Pittura, Fotografia...). In **Cinematografia**: serie, film e classifica, con le righe a gradini per genere (Novae, Thriller, Storico).
+- **Galleria**: 21 categorie, da Pittura e illustrazione ad Arte memetica. Ogni categoria mostra le sue opere (o "In arrivo"); in **Cinema e video**: serie, film e classifica, con le righe a gradini per genere (Novae, Thriller, Storico).
 - **Scopri**: il feed veloce in stile X. Tocca l'opera per la modalità reels, tocca il resto del post o il fumetto per i commenti; mi piace, ripubblica, condividi e tre puntini (Salva, Segnala, Non mi interessa). Il riquadro segue la forma dell'opera.
 - **Stile**: coming soon.
 - **Mercato**: opere in vendita, con prezzi in crediti.
