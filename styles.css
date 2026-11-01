@@ -926,3 +926,14 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 /* Galleria categories */
 .disc.empty-disc h2 { color: #8a8984; }
 .cat-count { margin: -6px 0 14px; color: var(--muted, #8a8984); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+
+/* category tag on posts (same pill as the Critico / Artista tags) */
+.x-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 6px; }
+.x-tags:empty, .reel-cats:empty { display: none; }
+.x-tags .aud-tag { margin-left: 0; vertical-align: 0; }
+.cat-tag { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, .04); color: var(--ink-2); font-size: 9.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+.cat-tag i { font-size: 11px; }
+.cat-tag:hover { color: var(--ink); border-color: var(--ink-2); }
+.reel-cats { margin-top: 8px; }
+.reel-cats .cat-tag { background: rgba(0, 0, 0, .35); color: #eee; border-color: rgba(255, 255, 255, .35); }
+.x-tags .who-tag { margin-left: 0; vertical-align: 0; padding: 2px 9px; }

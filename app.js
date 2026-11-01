@@ -498,6 +498,15 @@
     if (t === 'artista') return `<span class="who-tag t-artista"><img src="${STAR_SRC}" alt="">Artista</span>`;
     return '';
   };
+  // category tag on posts: icon + name, links to the category page
+  const CAT_ICONS = {
+    'Pittura e illustrazione': 'paint-brush', 'Musica': 'music-notes', 'Letteratura': 'book-open', 'Cinema e video': 'film-strip',
+    'Fotografia': 'camera', 'Design': 'pen-nib', 'Architettura': 'buildings', 'Moda': 't-shirt', 'Scultura': 'cube',
+    'Fumetto': 'chat-circle-text', 'Animazione': 'shooting-star', 'Teatro e performance': 'mask-happy', 'Danza': 'sneaker-move',
+    'Street art': 'spray-bottle', 'Artigianato': 'hammer', 'Installazione e arti ambientali': 'tree', 'Arti digitali e tecnologiche': 'cpu',
+    'Videogiochi e arti interattive': 'game-controller', 'Arti culinarie': 'cooking-pot', 'Body art': 'drop', 'Arte memetica': 'smiley',
+  };
+  const catTag = w => CAT_ICONS[w.disc] ? `<a class="cat-tag" href="#galleria/${slugOf(w.disc)}"><i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>${w.disc}</a>` : '';
   function postX(w) {
     const a = ARTISTS[w.a];
     return `<article class="xpost" data-thread="${w.id}">
@@ -507,7 +516,8 @@
           <p class="x-meta"><a class="x-name" href="${profileHref(w.a)}">${a.name}</a> <span class="x-time">· ${agoText(w)}</span></p>
           ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
         </div>
-        <p class="x-title">${w.t} ${audTag(w)}</p>
+        <p class="x-title">${w.t}</p>
+        <p class="x-tags">${whoTag(w.a)}${catTag(w)}${audTag(w)}</p>
         <p class="x-desc">${w.desc}</p>
         ${mediaFrame(w)}
         ${xActions(w)}
@@ -565,7 +575,8 @@
             <p class="x-meta"><a class="x-name" href="${profileHref(w.a)}">${a.name}</a> <span class="x-time">· ${agoText(w)}</span></p>
             ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
           </div>
-          <p class="x-title">${w.t} ${audTag(w)}</p>
+          <p class="x-title">${w.t}</p>
+        <p class="x-tags">${whoTag(w.a)}${catTag(w)}${audTag(w)}</p>
           <p class="x-desc open">${w.desc}</p>
           ${mediaFrame(w)}
           <p class="x-stats"><span><strong data-rp="${w.id}">${fmt(repostCount(w))}</strong> ripubblicazioni</span><span><strong data-count="${w.id}">${fmt(likeCount(w))}</strong> mi piace</span><span><strong>${fmt(w.views)}</strong> visualizzazioni</span></p>
@@ -618,7 +629,8 @@
         <a class="reel-by" href="${profileHref(w.a)}">@${a.handle}</a>
         <h2>${w.t}</h2>
         <p class="reel-desc" data-act="expand">${w.desc}</p>
-        <p class="reel-tags">${w.rating ? rating(w.rating, 12) : '<span class="new-tag">Nuova</span>'}<span>${w.disc} · ${agoText(w)}</span></p>
+        <p class="reel-tags">${w.rating ? rating(w.rating, 12) : '<span class="new-tag">Nuova</span>'}<span>${agoText(w)}</span></p>
+        <p class="reel-cats">${catTag(w)}</p>
       </div>
     </section>`;
   }
