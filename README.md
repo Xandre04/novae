@@ -50,7 +50,7 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 - **Opere a schermo intero**: come Reels e TikTok, scorri su e giù per passare alla prossima. Tocca per mettere in pausa, doppio tocco per il mi piace.
 - **Scheda opera**: player, descrizione completa e opere correlate.
 - **Galleria**: 21 categorie, da Pittura e illustrazione ad Arte memetica. Ogni categoria mostra le sue opere (o "In arrivo"); in **Cinema e video**: serie, film e classifica, con le righe a gradini per genere (Novae, Thriller, Storico).
-- **Scopri**: il feed veloce in stile X. Tocca l'opera per la modalità reels, tocca il resto del post o il fumetto per i commenti; mi piace, ripubblica, condividi e tre puntini (Salva, Segnala, Non mi interessa). Il riquadro segue la forma dell'opera. Sotto il titolo, le etichette dicono chi è l'autore (artista, critico) e la categoria: toccala per aprirla in Galleria.
+- **Scopri**: il feed veloce in stile X. Tocca l'opera per la modalità reels, tocca il resto del post o il fumetto per i commenti; mi piace, ripubblica, condividi e tre puntini (Salva, Segnala, Non mi interessa). Il riquadro segue la forma dell'opera. Sotto il titolo, l'etichetta della categoria: toccala per aprirla in Galleria.
 - **Stile**: coming soon.
 - **Mercato**: opere in vendita, con prezzi in crediti.
 - **Profilo, Messaggi, Impostazioni**.

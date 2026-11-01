@@ -517,7 +517,7 @@
           ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
         </div>
         <p class="x-title">${w.t}</p>
-        <p class="x-tags">${whoTag(w.a)}${catTag(w)}${audTag(w)}</p>
+        <p class="x-tags">${catTag(w)}${audTag(w)}</p>
         <p class="x-desc">${w.desc}</p>
         ${mediaFrame(w)}
         ${xActions(w)}
@@ -576,7 +576,7 @@
             ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
           </div>
           <p class="x-title">${w.t}</p>
-        <p class="x-tags">${whoTag(w.a)}${catTag(w)}${audTag(w)}</p>
+        <p class="x-tags">${catTag(w)}${audTag(w)}</p>
           <p class="x-desc open">${w.desc}</p>
           ${mediaFrame(w)}
           <p class="x-stats"><span><strong data-rp="${w.id}">${fmt(repostCount(w))}</strong> ripubblicazioni</span><span><strong data-count="${w.id}">${fmt(likeCount(w))}</strong> mi piace</span><span><strong>${fmt(w.views)}</strong> visualizzazioni</span></p>

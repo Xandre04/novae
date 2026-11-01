@@ -936,4 +936,3 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .cat-tag:hover { color: var(--ink); border-color: var(--ink-2); }
 .reel-cats { margin-top: 8px; }
 .reel-cats .cat-tag { background: rgba(0, 0, 0, .35); color: #eee; border-color: rgba(255, 255, 255, .35); }
-.x-tags .who-tag { margin-left: 0; vertical-align: 0; padding: 2px 9px; }
