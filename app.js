@@ -242,7 +242,7 @@
       box(x, y, 7, 1); box(x, y + 6, 7, 1); box(x, y, 1, 7); box(x + 6, y, 1, 7); box(x + 2, y + 2, 3, 3);
     });
     // logo star in the middle
-    ctx.fillStyle = '#030303'; box(10, 10, 5, 5);
+    ctx.fillStyle = '#141414'; box(10, 10, 5, 5);
     const star = new Image();
     star.onload = () => { const h = m * 4.6, w = h * star.width / star.height; ctx.drawImage(star, (c.width - w) / 2, (c.height - h) / 2, w, h); };
     star.src = STAR_SRC;

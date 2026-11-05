@@ -4,9 +4,9 @@
    inputs/buttons are pills. Nothing else. */
 
 :root {
-  --bg: #020202;
-  --bg-2: #0d0d0e;
-  --bg-3: #161617;
+  --bg: #141414;
+  --bg-2: #1c1c1d;
+  --bg-3: #262627;
   --ink: #eeede9;
   --ink-2: #b4b2ad;
   --ink-3: #85837e;
@@ -185,7 +185,7 @@ body[data-screen="impostazioni"] #sky { opacity: 0; }
 }
 .hub-btn { display: grid; justify-items: center; gap: calc(var(--hw) * .012); border-radius: 12px; }
 .hub-circle {
-  position: relative; width: var(--c); aspect-ratio: 1; border-radius: 50%; border: var(--stroke) solid #5a5957; background: #050505;
+  position: relative; width: var(--c); aspect-ratio: 1; border-radius: 50%; border: var(--stroke) solid #5a5957; background: var(--bg);
   display: grid; place-items: center; overflow: visible; --w: calc(var(--hw) * .105);
   transition: transform .35s var(--ease), border-color .3s;
 }
@@ -257,7 +257,7 @@ body[data-screen="invito"] .dock, body[data-screen="hub"] .dock { display: none;
 .arc-item:not(.sel):hover .arc-circle { border-color: var(--line-hi); }
 .dock-star img { transition: transform .5s var(--ease), filter .2s; }
 .dock.spinning .dock-star img { transition: none; }
-.scrim { position: fixed; inset: 0; z-index: 25; background: rgba(3,3,3,.72); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .3s; }
+.scrim { position: fixed; inset: 0; z-index: 25; background: rgba(20,20,20,.72); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .3s; }
 .scrim.open { opacity: 1; pointer-events: auto; }
 
 /* ---------- Scroll rail ---------- */
@@ -318,7 +318,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 
 /* ---------- 4. Vista: full-screen reels (scroll-snap, one work per screen) ---------- */
 .screen[data-screen="vista"] { padding-bottom: 0; --col: min(100vw, calc(100dvh * 9 / 16)); } /* phone: full width; desktop: a 9:16 column */
-.vista { position: relative; height: 100dvh; overflow: hidden; background: #000; }
+.vista { position: relative; height: 100dvh; overflow: hidden; background: var(--bg); }
 .vista-back { position: absolute; left: 6px; top: 10px; z-index: 5; font-size: 30px; filter: drop-shadow(0 1px 4px rgba(0, 0, 0, .6)); }
 .reels { position: relative; height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; overscroll-behavior: contain; scrollbar-width: none; }
 .reels::-webkit-scrollbar { display: none; }
@@ -601,7 +601,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .danger { color: #ff8a9c; }
 
 /* ---------- Search ---------- */
-.search { position: fixed; inset: 0; z-index: 50; background: rgba(3,3,3,.94); backdrop-filter: blur(8px); overflow-y: auto; }
+.search { position: fixed; inset: 0; z-index: 50; background: rgba(20,20,20,.94); backdrop-filter: blur(8px); overflow-y: auto; }
 .search[hidden] { display: none; }
 .search-inner { width: min(100%, 560px); margin: 0 auto; padding: 40px 16px; }
 .search-inner > label { font-size: 22px; letter-spacing: .06em; display: block; margin-bottom: 14px; }
@@ -671,7 +671,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .country-nav h2 { font-size: 15px; font-weight: 700; letter-spacing: .14em; }
 .seg button { font-size: 12px; font-weight: 700; }
 .invite-code { font-weight: 600; font-size: 16px; }
-.arc-circle { border-color: #5a5957; background: #050505; }
+.arc-circle { border-color: #5a5957; background: var(--bg); }
 .arc-label { font-weight: 700; font-size: 9.5px; letter-spacing: .05em; }
 .arc-item.current .arc-circle { border-color: var(--accent-hi); }
 .arc-circle.i-profilo { --w: 41px; }
@@ -797,7 +797,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .x-actions.big .act { font-size: 25px; }
 .x-actions.big .act small { display: none; }
 /* comments page */
-.screen[data-screen="post"] .x-top { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 8px 8px; background: rgba(3, 3, 3, .88); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: var(--stroke) solid var(--line); }
+.screen[data-screen="post"] .x-top { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 8px 8px; background: rgba(20, 20, 20, .88); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: var(--stroke) solid var(--line); }
 .x-top h1 { font-size: 18px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
 .x-stats { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 14px; padding: 12px 0; border-top: var(--stroke) solid var(--line); border-bottom: var(--stroke) solid var(--line); font-size: 13px; color: var(--ink-3); }
 .x-stats strong { color: var(--ink); font-weight: 600; }
@@ -822,10 +822,10 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 /* ---------- Profile: banner, type badge, reviews ---------- */
 .prof-banner {
   position: relative; height: 150px; margin: 0 0 -62px; background-size: cover; background-position: center;
-  background-image: radial-gradient(120% 140% at 50% 120%, rgba(150, 1, 37, .35), transparent 60%), linear-gradient(180deg, #0d0d0e, #050505);
+  background-image: radial-gradient(120% 140% at 50% 120%, rgba(150, 1, 37, .35), transparent 60%), linear-gradient(180deg, var(--bg-2), var(--bg));
   border-bottom: var(--stroke) solid var(--line);
 }
-.prof-banner.has::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(3, 3, 3, .75)); }
+.prof-banner.has::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(20, 20, 20, .75)); }
 .banner-edit { position: absolute; right: 10px; top: 10px; z-index: 1; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 19px; background: rgba(3, 3, 3, .6); border: var(--stroke) solid var(--line-hi); }
 .banner-edit:hover { background: rgba(3, 3, 3, .85); }
 .prof-banner + .prof-top { position: relative; z-index: 1; padding-top: 0; }
@@ -953,3 +953,6 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .my-qr strong { font-size: 20px; font-weight: 600; letter-spacing: .14em; }
 .my-qr .btn-accent { width: 100%; padding: 14px; }
 .notif-ava { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: var(--stroke) solid var(--line-hi); }
+
+/* the coin's square crop pokes out of its round frame: clip it, so its black corners don't show on the #141414 background */
+.i-mercato .crop, .crop.coin { border-radius: 50%; }
