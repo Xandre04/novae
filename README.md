@@ -29,6 +29,7 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 1. Apri **[xandre04.github.io/novae](https://xandre04.github.io/novae/)**, meglio dal telefono.
 2. Nella schermata d'invito scrivi un codice qualsiasi di almeno 4 caratteri (ad esempio `NVE-7K2Q`) e tocca **Entra**.
 3. Dal menu a stella scegli dove andare, oppure usa la stella in basso per aprire la ruota delle sezioni.
+4. I tre trattini in basso a destra aprono notifiche, crea, codice QR e segnala un problema.
 
 ## Schermate
 

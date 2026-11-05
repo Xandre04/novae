@@ -227,8 +227,8 @@
   }
 
   /* ---------------- 1. Gate ---------------- */
-  function drawQR() {
-    const c = $('#qr'), ctx = c.getContext('2d');
+  function drawQR(c = $('#qr')) {
+    const ctx = c.getContext('2d');
     const N = 25, m = c.width / N, r = rng(2026);
     ctx.clearRect(0, 0, c.width, c.height);
     ctx.fillStyle = '#ecebe6';
@@ -1238,6 +1238,75 @@
     sheetOpener?.focus?.({ preventScroll: true }); // give focus back to what opened it
     sheetOpener = null;
   }
+  /* ---------------- Three bars in the dock: Notifiche, Crea, Codice QR, Segnala un problema ---------------- */
+  const REPO_ISSUES = 'https://github.com/Xandre04/novae/issues/new';
+  const markBars = () => $('.dock-menu').classList.toggle('unread', !store.get('novae.notif'));
+  function openBars() {
+    const fresh = !store.get('novae.notif');
+    openSheet(`<h3>Menu</h3><div class="action-list">
+      <button data-act="notifs"><i class="ph-light ph-bell"></i>Notifiche${fresh ? '<span class="bars-new" aria-label="Nuove notifiche"></span>' : ''}</button>
+      <button data-act="create"><i class="ph-light ph-plus-circle"></i>Crea</button>
+      <button data-act="my-qr"><i class="ph-light ph-qr-code"></i>Codice QR</button>
+      <button data-act="problem"><i class="ph-light ph-warning-circle"></i>Segnala un problema</button>
+    </div>`);
+  }
+  // sample notifications, like the rest of the alpha's data
+  function openNotifs() {
+    const fresh = !store.get('novae.notif');
+    const [w1, w2] = FEED.filter(canSee), mine = MINE[0];
+    const items = [
+      ['giulia', `ha recensito <em>${(mine || w1).t}</em>`, '#post/' + (mine || w1).id, '12 min'],
+      ['aiko', 'ha iniziato a seguirti', profileHref('aiko'), '1 h'],
+      ...(mine ? [['nicolo', `ha messo mi piace a <em>${mine.t}</em>`, '#post/' + mine.id, '3 h']] : []),
+      [w2.a, `ha pubblicato <em>${w2.t}</em>`, '#post/' + w2.id, '5 h'],
+      ['teo', 'ha iniziato a seguirti', profileHref('teo'), '1 g'],
+    ];
+    openSheet(`<h3>Notifiche</h3><div class="notifs">${items.map(([aid, text, href, time], i) => `<a class="notif ${fresh && i < 2 ? 'new' : ''}" href="${href}" data-act="sheet-close">
+      <img class="notif-ava" src="${avatar(aid)}" alt=""><p><strong>${ARTISTS[aid].name}</strong> ${text}<small>${time}</small></p></a>`).join('')}</div>`);
+    store.set('novae.notif', '1');
+    markBars();
+  }
+  function openCreate() {
+    const type = typeOf('me');
+    openSheet(`<h3>Crea</h3><div class="action-list">${type === 'critico'
+      ? '<a href="#scopri" data-act="sheet-close"><i class="ph-light ph-star-four"></i>Scrivi una recensione</a>'
+      : `<button data-act="publish"><i class="ph-light ph-image"></i>${type === 'utente' ? 'Pubblica per i follower' : 'Nuova opera'}</button>
+         ${type === 'artista' ? '<button data-act="new-col"><i class="ph-light ph-star-four"></i>Nuova costellazione</button>' : ''}`}</div>`);
+  }
+  function myCode() {
+    let code = store.get('novae.mycode');
+    if (!code) {
+      code = 'NVE-' + Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
+      store.set('novae.mycode', code);
+    }
+    return code;
+  }
+  function openMyQR() {
+    openSheet(`<h3>Codice QR</h3><div class="my-qr">
+      <canvas id="myQr" width="264" height="264" aria-label="Il tuo codice QR di invito"></canvas>
+      <strong>${myCode()}</strong>
+      <p>Il tuo codice invito: chi lo riceve lo scrive nella schermata d'ingresso.</p>
+      <button class="btn-accent" data-act="invite-share">Condividi invito</button>
+    </div>`);
+    drawQR($('#myQr'));
+  }
+  function openProblem() {
+    openSheet(`<h3>Segnala un problema</h3>
+      <form class="pub" id="problemForm" novalidate>
+        <div class="field"><label for="problemText">Cosa è successo?</label><textarea id="problemText" maxlength="1000" rows="4" placeholder="Cosa stavi facendo e cosa non ha funzionato"></textarea></div>
+        <p class="x-note">Si apre GitHub con il testo già scritto: serve un account e la segnalazione è pubblica.</p>
+        <p class="pub-err" id="problemErr" role="alert"></p>
+        <button class="btn-accent" type="submit">Continua su GitHub</button>
+      </form>`);
+  }
+  function submitProblem() {
+    const text = $('#problemText').value.trim();
+    if (!text) { $('#problemErr').textContent = 'Scrivi cosa è successo.'; $('#problemText').focus(); return; }
+    const body = `${text}\n\n---\nSchermata: ${location.hash || '#hub'}`;
+    window.open(`${REPO_ISSUES}?title=${encodeURIComponent(text.slice(0, 60))}&body=${encodeURIComponent(body)}`, '_blank', 'noopener');
+    closeSheet();
+  }
+
   let toastT;
   // toast(msg) or toast(msg, { label, fn }) for an undo-style action button
   function toast(msg, action) {
@@ -1443,6 +1512,17 @@
       case 'search': openSearch(); break;
       case 'search-close': $('#search').hidden = true; break;
       case 'sheet-close': closeSheet(); break;
+      case 'bars': setArc(false); openBars(); break;
+      case 'notifs': openNotifs(); break;
+      case 'create': openCreate(); break;
+      case 'my-qr': openMyQR(); break;
+      case 'problem': openProblem(); break;
+      case 'invite-share': {
+        const text = `Entra su NOVAE con il mio codice ${myCode()}`, url = location.href.split('#')[0];
+        if (navigator.share) navigator.share({ title: 'NOVAE', text, url }).catch(() => {});
+        else navigator.clipboard?.writeText(`${text}: ${url}`).then(() => toast('Invito copiato'), () => toast(myCode()));
+        break;
+      }
       case 'back': goBack(el.dataset.fallback || '#hub'); break;
       case 'recent': $('#q').value = el.dataset.v; renderResults(el.dataset.v); $('#q').focus(); break;
       case 'recent-clear': recent = []; store.del('novae.recent'); renderResults(''); break;
@@ -1569,6 +1649,7 @@
     if (f.dataset.reply) { e.preventDefault(); submitReply(f); return; }
     if (f.id === 'profForm') { e.preventDefault(); submitProfile(); return; }
     if (f.id === 'colForm') { e.preventDefault(); submitCol(); return; }
+    if (f.id === 'problemForm') { e.preventDefault(); submitProblem(); return; }
     if (f.classList.contains('composer')) {
       e.preventDefault();
       const input = f.querySelector('input');
@@ -1619,5 +1700,6 @@
 
   drawSky();
   renderArc();
+  markBars();
   route();
 })();

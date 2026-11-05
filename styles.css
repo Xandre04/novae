@@ -936,3 +936,20 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .cat-tag:hover { color: var(--ink); border-color: var(--ink-2); }
 .reel-cats { margin-top: 8px; }
 .reel-cats .cat-tag { background: rgba(0, 0, 0, .35); color: #eee; border-color: rgba(255, 255, 255, .35); }
+
+/* three bars menu: notifications, my QR */
+.dock-menu.unread::after, .bars-new { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-hi); }
+.dock-menu.unread::after { position: absolute; top: 8px; right: 6px; }
+.bars-new { margin-left: auto; }
+.notifs { display: grid; max-height: 60vh; overflow-y: auto; }
+.notif { display: flex; align-items: center; gap: 12px; padding: 12px 4px 12px 10px; border-bottom: var(--stroke) solid var(--line); border-left: 2px solid transparent; }
+.notif:last-child { border-bottom: 0; }
+.notif.new { border-left-color: var(--accent-hi); }
+.notif p { flex: 1; min-width: 0; font-size: 14px; line-height: 1.4; }
+.notif strong { color: var(--ink); }
+.notif small { display: block; margin-top: 2px; font-size: 12px; color: var(--ink-3); }
+.my-qr { display: grid; justify-items: center; gap: 12px; text-align: center; }
+.my-qr canvas { width: 200px; height: 200px; }
+.my-qr strong { font-size: 20px; font-weight: 600; letter-spacing: .14em; }
+.my-qr .btn-accent { width: 100%; padding: 14px; }
+.notif-ava { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: var(--stroke) solid var(--line-hi); }
