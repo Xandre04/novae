@@ -75,6 +75,7 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 |---|---|
 | Doppio tocco su un'opera | Mi piace |
 | Trascinare la ruota della stella | Scegliere la sezione (anche con rotellina o frecce ← →); ripremere la stella la richiude |
+| Doppio tocco sulla stella | Tornare al menu principale |
 | Scorrere su e giù nelle opere a schermo intero | Opera precedente o successiva (anche rotellina o frecce ↑ ↓) |
 | Tocco su un'opera a schermo intero | Pausa e ripresa di video e audio |
 | Trascinare giù il feed dall'alto | Aggiornare il feed |

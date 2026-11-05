@@ -368,6 +368,7 @@
     if (i === selIndex() && Math.abs(norm(wheel.rot - snapRot(wheel.rot))) < 1) open();
     else spinTo(rotFor(i), 340, () => setTimeout(open, 90));
   }
+  let lastStarTap = 0;
   function setArc(open) {
     const arc = $('#arc');
     const was = arc.classList.contains('open') && !arc.classList.contains('closing');
@@ -1507,7 +1508,14 @@
         break;
       }
       case 'unhide-all': hidden.clear(); store.del('novae.hidden'); refresh(); break;
-      case 'arc': setArc(el.getAttribute('aria-expanded') !== 'true'); break;
+      case 'arc': {
+        // double tap on the star: back to the main menu (timed by hand, dblclick isn't reliable on phones)
+        const now = Date.now(), dbl = now - lastStarTap < 350;
+        lastStarTap = dbl ? 0 : now;
+        if (dbl) location.hash = '#hub';
+        else setArc(el.getAttribute('aria-expanded') !== 'true');
+        break;
+      }
       case 'arc-close': setArc(false); break;
       case 'search': openSearch(); break;
       case 'search-close': $('#search').hidden = true; break;
