@@ -845,11 +845,30 @@
         clearTimeout(idleT); idleT = setTimeout(settle, 200);
       };
       globe.draw = draw;
-      svg.call(d3.drag().clickDistance(4).on('drag', e => {
-        const k = 75 / proj.scale();
-        globe.rot = [globe.rot[0] + e.dx * k, Math.max(-70, Math.min(70, globe.rot[1] - e.dy * k)), 0];
-        draw();
-      }));
+      // drag to spin; on release it keeps going and slows down (momentum)
+      const spin = (dx, dy) => { globe.rot = [globe.rot[0] + dx, Math.max(-70, Math.min(70, globe.rot[1] + dy)), 0]; draw(); };
+      let vel = [0, 0], lastT = 0; // degrees per ms
+      svg.call(d3.drag().clickDistance(4)
+        .on('start', () => { globe.anim?.stop(); vel = [0, 0]; lastT = performance.now(); })
+        .on('drag', e => {
+          const k = 100 / proj.scale(), dx = e.dx * k, dy = -e.dy * k, now = performance.now(), dt = Math.max(8, now - lastT);
+          lastT = now;
+          vel = [vel[0] * .4 + dx / dt * .6, vel[1] * .4 + dy / dt * .6]; // smoothed, so one jittery event doesn't fling it
+          spin(dx, dy);
+        })
+        .on('end', () => {
+          if (reduceMotion || performance.now() - lastT > 90) return; // the finger stopped before lifting: no fling
+          const cap = v => Math.max(-1.2, Math.min(1.2, v));
+          vel = vel.map(cap);
+          let prev = 0;
+          const t = globe.anim = d3.timer(el => {
+            const dt = el - prev; prev = el;
+            const f = Math.exp(-dt / 380); // friction: about 1s to glide to a stop
+            vel = [vel[0] * f, vel[1] * f];
+            spin(vel[0] * dt, vel[1] * dt);
+            if (Math.hypot(...vel) < .003) t.stop();
+          });
+        }));
       settle();
       globe.ready = true;
       $('#globeMsg').textContent = '';
