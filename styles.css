@@ -201,18 +201,18 @@ body[data-screen="invito"] .dock, body[data-screen="hub"] .dock { display: none;
 .dock-line::before, .dock-line::after {
   content: ""; position: absolute; top: 36px; height: var(--stroke); background: var(--line); border-radius: 2px;
 }
-.dock-line::before { left: 0; right: calc(50% + 52px); }
-.dock-line::after { right: 0; left: calc(50% + 52px); }
+.dock-line::before { left: 0; right: calc(50% + 42px); }
+.dock-line::after { right: 0; left: calc(50% + 42px); }
 .dock-bump {
-  position: absolute; left: 50%; top: -15.5px; width: 108px; height: 54px; /* a true half circle: height = radius */ transform: translateX(-50%);
-  border: var(--stroke) solid var(--line); border-bottom: 0; border-radius: 54px 54px 0 0; background: var(--bg-2);
+  position: absolute; left: 50%; top: -5.5px; width: 88px; height: 44px; /* a true half circle: height = radius */ transform: translateX(-50%);
+  border: var(--stroke) solid var(--line); border-bottom: 0; border-radius: 44px 44px 0 0; background: var(--bg-2);
 }
 .dock-side { position: absolute; bottom: calc(6px + env(safe-area-inset-bottom)); /* centred in the bar under the line */ width: 48px; height: 48px; display: grid; place-items: center; font-size: 30px; transition: transform .2s var(--ease); }
 .dock-side:active { transform: scale(.9); }
-.dock-search { left: calc(25% - 27px - 24px); } /* centred between the screen edge and the star bump */
-.dock-menu { right: calc(25% - 27px - 24px); }
-.dock-star { position: absolute; left: 50%; top: 4px; width: 76px; height: 84px; transform: translateX(-50%); display: grid; place-items: center; }
-.dock-star img { width: 64px; height: 70px; object-fit: contain; transition: transform .5s var(--ease), filter .2s; user-select: none; }
+.dock-search { left: calc(25% - 22px - 24px); } /* centred between the screen edge and the star bump */
+.dock-menu { right: calc(25% - 22px - 24px); }
+.dock-star { position: absolute; left: 50%; top: 8px; width: 62px; height: 68px; transform: translateX(-50%); display: grid; place-items: center; }
+.dock-star img { width: 50px; height: 55px; object-fit: contain; transition: transform .5s var(--ease), filter .2s; user-select: none; }
 .dock-star:hover img { filter: brightness(1.2); }
 .dock-star[aria-expanded="true"] img { transform: rotate(45deg) scale(.9); }
 
