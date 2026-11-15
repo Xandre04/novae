@@ -6,7 +6,8 @@
   <title>NOVAE</title>
   <meta name="description" content="NOVAE, il social su invito dove gli artisti condividono le loro opere.">
   <meta name="theme-color" content="#141414">
-  <link rel="icon" type="image/png" href="assets/icone/stella.png">
+  <link rel="icon" type="image/svg+xml" href="assets/svg/stella.svg">
+  <link rel="icon" type="image/png" href="assets/app/icon-192.png">
   <link rel="apple-touch-icon" href="assets/app/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="mobile-web-app-capable" content="yes">
@@ -18,14 +19,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/light/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="styles.css?v=58">
+  <link rel="stylesheet" href="styles.css?v=59">
   <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" defer></script>
-  <script src="app.js?v=56" defer></script>
+  <script src="app.js?v=57" defer></script>
 </head>
 <body data-screen="invito">
 
-  <!-- Small grey sparkle for the starry background (the red star is the logo image assets/icone/stella.png) -->
+  <!-- Small grey sparkle for the starry background (the red star is the logo, assets/svg/stella.svg) -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
       <symbol id="star4" viewBox="-50 -50 100 100">
@@ -45,7 +46,7 @@
     <!-- 1. Invito -->
     <section class="screen" data-screen="invito" aria-label="Invito">
       <div class="gate">
-        <img class="gate-star" src="assets/icone/stella.png" alt="" aria-hidden="true" draggable="false">
+        <img class="gate-star" src="assets/svg/stella.svg" alt="" aria-hidden="true" draggable="false">
         <p class="sketch-box gate-msg hand">Ti serve un invito per entrare</p>
         <div class="sketch-box gate-qr">
           <canvas id="qr" width="264" height="264" aria-label="Codice QR di invito"></canvas>
@@ -69,7 +70,7 @@
 
     <!-- 3. Scopri (feed) -->
     <section class="screen" data-screen="scopri" aria-label="Scopri">
-      <div class="ptr" id="ptr" aria-hidden="true"><img src="assets/icone/stella.png" alt="" draggable="false"></div>
+      <div class="ptr" id="ptr" aria-hidden="true"><img src="assets/svg/stella.svg" alt="" draggable="false"></div>
       <div class="feed" id="feed"></div>
     </section>
 
@@ -92,7 +93,7 @@
     <!-- 6. Stile: coming soon -->
     <section class="screen" data-screen="stile" aria-label="Stile">
       <div class="soon">
-        <span class="crop soon-gem i-stile" aria-hidden="true" style="--img:url('assets/icone/stile.jpg?v=2');--fx:.517;--fy:.442;--sz:.205"></span>
+        <img class="crop soon-gem i-stile" src="assets/svg/stile.svg" alt="" aria-hidden="true" draggable="false">
         <h1>Stile</h1>
         <p class="soon-tag">Coming soon</p>
         <p class="soon-text">Una nuova sezione di NOVAE è in arrivo.</p>
@@ -164,7 +165,7 @@
     <div class="dock-bump"></div>
     <button class="dock-side dock-search" data-act="search" aria-label="Cerca"><i class="ph-light ph-magnifying-glass"></i></button>
     <button class="dock-star" id="dockStar" data-act="arc" aria-label="Apri menu rapido" aria-expanded="false">
-      <img src="assets/icone/stella.png" alt="" aria-hidden="true" draggable="false">
+      <img src="assets/svg/stella.svg" alt="" aria-hidden="true" draggable="false">
     </button>
     <button class="dock-side dock-menu" data-act="bars" aria-label="Menu"><i class="ph-light ph-list"></i></button>
     <div class="arc" id="arc"></div>

@@ -92,7 +92,7 @@ NOVAE si installa come app dal sito, senza store: icona sulla schermata Home, sc
 
 ## Design
 
-Il linguaggio visivo nasce da bozzetti disegnati a mano: nero profondo, linee sottili grigie, una sola stella cremisi a quattro punte come accento. Le icone del sito sono ritagliate direttamente dai disegni originali in [`assets/icone/`](assets/icone/). I bozzetti delle schermate sono in [`docs/bozzetti/`](docs/bozzetti/).
+Il linguaggio visivo nasce da bozzetti disegnati a mano: nero profondo, linee sottili grigie, una sola stella cremisi a quattro punte come accento. Le icone sono i disegni originali in [`assets/icone/`](assets/icone/), ricalcati in vettoriale (SVG) in [`assets/svg/`](assets/svg/) e [`assets/categorie/`](assets/categorie/) con [`tools/trace-icons.py`](tools/trace-icons.py). I bozzetti delle schermate sono in [`docs/bozzetti/`](docs/bozzetti/).
 
 ## Avviarlo sul tuo computer
 
@@ -118,7 +118,11 @@ novae/
 ├── THIRD_PARTY_NOTICES.md  librerie, font e foto di terze parti
 ├── assets/
 │   ├── app/            icone dell'app (schermata Home)
-│   └── icone/          icone disegnate a mano, usate dal sito
+│   ├── categorie/      icone delle categorie della Galleria (SVG)
+│   ├── icone/          i disegni originali delle icone
+│   └── svg/            le icone del sito, ricalcate in vettoriale
+├── tools/
+│   └── trace-icons.py  ricalca i disegni in SVG
 └── docs/
     ├── bozzetti/       i disegni originali delle schermate
     └── screenshots/    le immagini di questo README

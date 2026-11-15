@@ -57,21 +57,8 @@ img.fade { opacity: 0; transition: opacity .6s var(--ease); }
 img.fade.loaded { opacity: 1; }
 @keyframes shimmer { to { background-position: -150% 0; } }
 
-/* ---------- Crop: pulls a single drawn icon out of the source sketches ---------- */
-.crop {
-  display: block;
-  flex: none;
-  width: var(--w);
-  height: calc(var(--w) * var(--ar, 1));
-  background-image: var(--img);
-  background-repeat: no-repeat;
-  background-size: calc(var(--w) / var(--sz));
-  background-position:
-    calc(var(--w) / 2 - var(--fx) * var(--w) / var(--sz))
-    calc(var(--w) * var(--ar, 1) / 2 - var(--fy) * var(--w) / var(--sz));
-  mix-blend-mode: lighten;
-  filter: contrast(1.35) brightness(1.05); /* crush JPEG near-blacks so the crop edge disappears */
-}
+/* ---------- Icons: the hand-drawn sketches, traced to SVG (assets/svg/) ---------- */
+.crop { display: block; flex: none; width: var(--w); height: calc(var(--w) * var(--ar, 1)); user-select: none; }
 .star-svg { display: block; object-fit: contain; user-select: none; } /* the logo star image */
 
 /* ---------- Sky: tiny faint four-point sparkles ---------- */
@@ -817,7 +804,6 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .toast-act { font-weight: 700; color: var(--accent); text-decoration: underline; }
 
 /* Stile ruby: no contrast filter, so its red stays the logo star's red (#960125-ish), as drawn */
-.i-stile .crop { filter: none; }
 
 /* ---------- Profile: banner, type badge, reviews ---------- */
 .prof-banner {
@@ -953,9 +939,6 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .my-qr strong { font-size: 20px; font-weight: 600; letter-spacing: .14em; }
 .my-qr .btn-accent { width: 100%; padding: 14px; }
 .notif-ava { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: var(--stroke) solid var(--line-hi); }
-
-/* the coin's square crop pokes out of its round frame: clip it, so its black corners don't show on the #141414 background */
-.i-mercato .crop, .crop.coin { border-radius: 50%; }
 .dock-star { touch-action: manipulation; } /* no double-tap zoom: double tap goes to the main menu */
 
 /* category icons: Galleria rows, category page title, coloured tags */

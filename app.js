@@ -15,28 +15,14 @@
   const pic = (seed, w, h, gray) => `https://picsum.photos/seed/novae-${seed}/${w}/${h}${gray ? '?grayscale' : ''}`;
   const img = (src, alt = '', cls = '') => `<img class="fade ${cls}" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
 
-  /* ---------------- Icons cropped from the hand-drawn sources in assets/icone/ ---------------- */
-  // [file, centerX, centerY, cropSize] all as fractions of the square source image, [aspect]
-  const CROPS = {
-    impostazioni: ['assets/icone/impostazioni.jpg', .480, .494, .085],
-    messaggi:     ['assets/icone/messaggi.jpg', .502, .4975, .13],
-    profilo:      ['assets/icone/profilo.jpg', .5159, .4860, .10],
-    mercato:      ['assets/icone/mercato.jpg', .489, .495, .10],
-    gem:          ['assets/icone/stile.jpg?v=2', .517, .442, .205],
-    wordmark:     ['assets/icone/logo.jpg', .4956, .5938, .169, .26],
-  };
-  const crop = (name, extra = '') => {
-    const [f, fx, fy, sz, ar = 1] = CROPS[name];
-    return `<span class="crop ${extra}" role="img" aria-label="${name}" style="--img:url('${f}');--fx:${fx};--fy:${fy};--sz:${sz};--ar:${ar}"></span>`;
-  };
-  // The red star is the NOVAE logo itself (assets/icone/stella.png, cut from the logo with a transparent background)
-  const STAR_SRC = 'assets/icone/stella.png';
+  /* ---------------- Icons: the hand-drawn sketches in assets/icone/, traced to SVG in assets/svg/ ---------------- */
+  const crop = (name, extra = '') => `<img class="crop ${extra}" src="assets/svg/${name}.svg" alt="" aria-hidden="true" draggable="false"${name === 'wordmark' ? ' style="--ar:.26"' : ''}>`;
+  // The red star is the NOVAE logo itself
+  const STAR_SRC = 'assets/svg/stella.svg';
   const starSvg = (cls = '') => `<img class="star-svg ${cls}" src="${STAR_SRC}" alt="" aria-hidden="true" draggable="false">`;
   const icon = key => {
     if (key === 'novae') return starSvg();
-    if (key === 'stile') return crop('gem');
-    // these two drawings cross their ring: transparent PNGs, so no black box shows outside the circle
-    if (key === 'galleria' || key === 'scopri') return `<img class="icon-png" src="assets/icone/${key}.png" alt="" aria-hidden="true" draggable="false">`;
+    if (key === 'galleria' || key === 'scopri') return `<img class="icon-png" src="assets/svg/${key}.svg" alt="" aria-hidden="true" draggable="false">`;
     return crop(key);
   };
   const coin = () => crop('mercato', 'coin');
@@ -58,7 +44,7 @@
   };
   const AIDS = Object.keys(ARTISTS);
   const avatar = id => id === 'me' ? ME_AVATAR : pic('av-' + id, 160, 160, true);
-  const ME_AVATAR = 'assets/icone/profilo-avatar.png'; // the hand-drawn profile silhouette, same as the Profilo screen
+  const ME_AVATAR = 'assets/svg/profilo-avatar.svg'; // the hand-drawn profile silhouette, same as the Profilo screen
   // Profile types: what each can do and what their profile shows
   const TYPES = {
     artista: { label: 'Artista', icon: 'paint-brush', hint: 'Pubblica opere' },
@@ -507,12 +493,12 @@
     'Street art': 'spray-bottle', 'Artigianato': 'hammer', 'Installazione e arti ambientali': 'tree', 'Arti digitali e tecnologiche': 'cpu',
     'Videogiochi e arti interattive': 'game-controller', 'Arti culinarie': 'cooking-pot', 'Body art': 'drop', 'Arte memetica': 'smiley',
   };
-  // hand-drawn icons (assets/categorie/<slug>.png) and their ink colour; the other categories use the Phosphor icon in a plain ring
+  // hand-drawn icons (assets/categorie/<slug>.svg) and their ink colour; the other categories use the Phosphor icon in a plain ring
   const CAT_COLORS = {
     'Pittura e illustrazione': '#e17d3d', 'Musica': '#7656b6', 'Letteratura': '#437a54', 'Cinema e video': '#2d4676', 'Fotografia': '#3b9ab4',
     'Design': '#c69f31', 'Architettura': '#6c767f', 'Moda': '#d36497', 'Scultura': '#ab8869',
   };
-  const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.png" alt="" aria-hidden="true">`
+  const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.svg" alt="" aria-hidden="true">`
     : `<span class="cat-ico ring" aria-hidden="true"><i class="ph-light ph-${CAT_ICONS[d]}"></i></span>`;
   const catTag = w => CAT_ICONS[w.disc] ? `<a class="cat-tag" href="#galleria/${slugOf(w.disc)}"${CAT_COLORS[w.disc] ? ` style="--c:${CAT_COLORS[w.disc]}"` : ''}><i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>${w.disc}</a>` : '';
   function postX(w) {
