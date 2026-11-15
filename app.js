@@ -22,7 +22,7 @@
     messaggi:     ['assets/icone/messaggi.jpg', .502, .4975, .13],
     profilo:      ['assets/icone/profilo.jpg', .5159, .4860, .10],
     mercato:      ['assets/icone/mercato.jpg', .489, .495, .10],
-    gem:          ['assets/icone/stile.jpg', .491, .478, .055],
+    gem:          ['assets/icone/stile.jpg?v=2', .517, .442, .205],
     wordmark:     ['assets/icone/logo.jpg', .4956, .5938, .169, .26],
   };
   const crop = (name, extra = '') => {
@@ -507,7 +507,14 @@
     'Street art': 'spray-bottle', 'Artigianato': 'hammer', 'Installazione e arti ambientali': 'tree', 'Arti digitali e tecnologiche': 'cpu',
     'Videogiochi e arti interattive': 'game-controller', 'Arti culinarie': 'cooking-pot', 'Body art': 'drop', 'Arte memetica': 'smiley',
   };
-  const catTag = w => CAT_ICONS[w.disc] ? `<a class="cat-tag" href="#galleria/${slugOf(w.disc)}"><i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>${w.disc}</a>` : '';
+  // hand-drawn icons (assets/categorie/<slug>.png) and their ink colour; the other categories use the Phosphor icon in a plain ring
+  const CAT_COLORS = {
+    'Pittura e illustrazione': '#e17d3d', 'Musica': '#7656b6', 'Letteratura': '#437a54', 'Cinema e video': '#2d4676', 'Fotografia': '#3b9ab4',
+    'Design': '#c69f31', 'Architettura': '#6c767f', 'Moda': '#d36497', 'Scultura': '#ab8869',
+  };
+  const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.png" alt="" aria-hidden="true">`
+    : `<span class="cat-ico ring" aria-hidden="true"><i class="ph-light ph-${CAT_ICONS[d]}"></i></span>`;
+  const catTag = w => CAT_ICONS[w.disc] ? `<a class="cat-tag" href="#galleria/${slugOf(w.disc)}"${CAT_COLORS[w.disc] ? ` style="--c:${CAT_COLORS[w.disc]}"` : ''}><i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>${w.disc}</a>` : '';
   function postX(w) {
     const a = ARTISTS[w.a];
     return `<article class="xpost" data-thread="${w.id}">
@@ -672,7 +679,7 @@
     $('#disciplines').innerHTML = DISCIPLINES.map(d => {
       const ws = WORKS.filter(w => w.disc === d && canSee(w));
       return `<a class="disc ${ws.length ? '' : 'empty-disc'}" href="#galleria/${slugOf(d)}">
-        <div><h2>${d}</h2><p>${ws.length ? `${ws.length} ${ws.length === 1 ? 'opera' : 'opere'}` : 'In arrivo'}</p></div>
+        ${catIcon(d)}<div><h2>${d}</h2><p>${ws.length ? `${ws.length} ${ws.length === 1 ? 'opera' : 'opere'}` : 'In arrivo'}</p></div>
         <div class="disc-thumbs">${ws.slice(0, 3).map((w, k) => `<img src="${w.ts ? w.img : pic(w.id, 120, 150)}" alt="" loading="lazy" style="--r:${(k - 1) * 7}deg">`).join('')}</div>
       </a>`;
     }).join('');
@@ -702,7 +709,7 @@
       // every other category: its works in a grid, or "In arrivo" while it's empty
       const ws = WORKS.filter(w => w.disc === name && canSee(w)).sort(byRecent);
       root.innerHTML = `<button class="cine-back icon-btn" data-act="back" data-fallback="#galleria" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
-        <h1 class="cine-title">${name}</h1>
+        <h1 class="cine-title">${catIcon(name)}${name}</h1>
         ${ws.length ? `<p class="cat-count">${ws.length} ${ws.length === 1 ? 'opera' : 'opere'}</p><div class="grid3 cat-grid">${ws.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumbOf(w), w.t)}</a>`).join('')}</div>`
           : `<div class="empty">${starSvg()}<strong>In arrivo</strong><p>Nessuna opera di ${name.toLowerCase()} per ora. Se sei un artista, pubblica la prima dal tuo profilo.</p><a class="btn-ghost" href="#scopri">Apri Scopri</a></div>`}`;
       return;
@@ -710,7 +717,7 @@
     const tabs = ['Serie', 'Film', 'Classifica', 'Ordina per'];
     root.innerHTML = `
       <button class="cine-back icon-btn" data-act="back" data-fallback="#galleria" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
-      <h1 class="cine-title">${name}</h1>
+      <h1 class="cine-title">${catIcon(name)}${name}</h1>
       <div class="tabs" role="tablist">${tabs.map(t => `<button class="tab" role="tab" data-act="ctab" data-v="${t}" aria-selected="${t === cineState.tab || (t === 'Ordina per' && cineState.sortOpen)}">${t}</button>`).join('')}</div>
       ${cineState.sortOpen ? `<div class="sortmenu" role="menu" style="top:${0}px">${[['recenti', 'Più recenti'], ['stelle', 'Più stelle'], ['visti', 'Più visti']].map(([v, l]) => `<button role="menuitemradio" aria-checked="${cineState.sort === v}" data-act="csort" data-v="${v}">${l}</button>`).join('')}</div>` : ''}
       ${Object.keys(FILM).map(rowHtml).join('')}`;

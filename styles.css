@@ -957,3 +957,15 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 /* the coin's square crop pokes out of its round frame: clip it, so its black corners don't show on the #141414 background */
 .i-mercato .crop, .crop.coin { border-radius: 50%; }
 .dock-star { touch-action: manipulation; } /* no double-tap zoom: double tap goes to the main menu */
+
+/* category icons: Galleria rows, category page title, coloured tags */
+.disc { grid-template-columns: auto 1fr auto; }
+.cat-ico { display: block; flex: none; width: 46px; height: 46px; }
+.cat-ico.ring { display: grid; place-items: center; border-radius: 50%; border: var(--stroke) solid var(--line-hi); color: var(--ink-3); font-size: 22px; box-sizing: border-box; }
+.cine-title .cat-ico { width: 64px; height: 64px; margin: 0 auto 14px; }
+.cine-title .cat-ico.ring { font-size: 30px; }
+.cat-tag[style] { color: color-mix(in srgb, var(--c) 60%, #fff); border-color: color-mix(in srgb, var(--c) 70%, transparent); background: color-mix(in srgb, var(--c) 14%, transparent); }
+.reel-cats .cat-tag[style] { background: rgba(0, 0, 0, .35); }
+.disc > div:not(.disc-thumbs) { min-width: 0; }
+@media (max-width: 480px) { .disc-thumbs img:nth-child(n+3) { display: none; } } /* room for the icon + long names */
+.cat-count { padding: 0 6px; }
