@@ -822,9 +822,11 @@
       const markers = COUNTRIES.flatMap(c => artistsIn(c).map(() => [c.c[0] + (r() - .5) * 6, c.c[1] + (r() - .5) * 4]))
         .concat(Array.from({ length: 10 }, () => [r() * 360 - 180, r() * 120 - 50]));
       const mk = svg.append('g').selectAll('image').data(markers).join('image').attr('href', STAR_SRC).attr('class', 'mk').attr('width', 18).attr('height', 20);
-      const draw = () => {
+      // While the globe moves: no chalk filter (it re-renders the whole map every frame) and no invisible
+      // tap areas; both come back once it stops. One redraw per frame at most.
+      const drawFrame = () => {
         proj.rotate(globe.rot);
-        grat.attr('d', path); hits.attr('d', path); coast.attr('d', path); bord.attr('d', path);
+        grat.attr('d', path); coast.attr('d', path); bord.attr('d', path);
         const cur = feats.find(f => f.properties.name === COUNTRIES[globe.idx].en);
         sel.datum(cur).attr('d', cur ? path : null);
         const center = [-globe.rot[0], -globe.rot[1]];
@@ -835,13 +837,20 @@
           this.style.display = vis ? '' : 'none';
         });
       };
+      const settle = () => { drawFrame(); hits.attr('d', path); g.attr('filter', 'url(#chalk)'); };
+      let raf = 0, idleT;
+      const draw = () => {
+        g.attr('filter', null);
+        if (!raf) raf = requestAnimationFrame(() => { raf = 0; drawFrame(); });
+        clearTimeout(idleT); idleT = setTimeout(settle, 200);
+      };
       globe.draw = draw;
       svg.call(d3.drag().clickDistance(4).on('drag', e => {
         const k = 75 / proj.scale();
         globe.rot = [globe.rot[0] + e.dx * k, Math.max(-70, Math.min(70, globe.rot[1] - e.dy * k)), 0];
         draw();
       }));
-      draw();
+      settle();
       globe.ready = true;
       $('#globeMsg').textContent = '';
     } catch {
@@ -856,8 +865,9 @@
     const c = COUNTRIES[globe.idx];
     const to = [-c.c[0], -c.c[1], 0];
     if (reduceMotion) { globe.rot = to; globe.draw(); return; }
+    globe.anim?.stop();
     const interp = d3.interpolate(globe.rot, to);
-    const t = d3.timer(el => {
+    const t = globe.anim = d3.timer(el => {
       const k = Math.min(1, el / 1100);
       globe.rot = interp(d3.easeCubicInOut(k));
       globe.draw();
