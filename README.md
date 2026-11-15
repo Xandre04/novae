@@ -71,7 +71,7 @@ NOVAE si installa come app dal sito, senza store: icona sulla schermata Home, sc
   - **utente**: può pubblicare, ma le sue opere le vede **solo chi lo segue** (lucchetto "Follower").
 - **Nei commenti** un'etichetta colorata dice chi scrive: oro per i critici, rosso con la stella per gli artisti.
 - **Nel profilo**: schede Opere (con le costellazioni sopra e il filtro Recenti / Stelle), Recensioni, Repost e Salvate, secondo il tipo.
-- **Pubblicare un'opera** dal profilo: immagine, titolo, disciplina e descrizione. Poi puoi modificarla o eliminarla dai tre puntini.
+- **Pubblicare un'opera** dal profilo: immagine, titolo, categoria e descrizione. Poi puoi modificarla o eliminarla dai tre puntini.
 - **Personalizzare il profilo**: banner, nome, nome utente e bio.
 - **Salvare** un'opera dai tre puntini e ritrovarla in *Profilo → Salvate*.
 - **Seguire** gli artisti e scrivere loro nei messaggi.

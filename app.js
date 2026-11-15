@@ -66,13 +66,19 @@
   const LEGACY_DISC = { Cinematografia: CINEMA, Pittura: 'Pittura e illustrazione', Illustrazione: 'Pittura e illustrazione', Poesia: 'Letteratura' };
   const discOf = d => LEGACY_DISC[d] || d;
 
-  const DESCS = [
+  // sample descriptions: the film ones only go on films
+  const FILM_DESCS = [
     'Girato in tre notti con una sola lente. Il suono è registrato sul posto, senza doppiaggio.',
     'Nasce da un quaderno di appunti lasciato a metà. Ogni scena corrisponde a una pagina.',
-    'Un lavoro sulla distanza tra chi parte e chi resta, costruito con materiali trovati.',
     'Prima opera pubblicata su NOVAE. Montaggio lento, pochi dialoghi, molto mare.',
     'Realizzato insieme a una comunità di pescatori. Nessun attore professionista.',
+  ];
+  const ART_DESCS = [
+    'Un lavoro sulla distanza tra chi parte e chi resta, costruito con materiali trovati.',
     'Studio sul colore rosso e su quanto a lungo si può guardare un punto fisso.',
+    "Fa parte di una serie iniziata d'inverno. Ogni pezzo nasce da un solo gesto, senza correzioni.",
+    'Nato da un quaderno di appunti lasciato a metà e ripreso anni dopo.',
+    "Fatto in una settimana, di notte, con quello che c'era in studio.",
   ];
 
   const WORKS = [];
@@ -85,7 +91,7 @@
       likes: Math.floor(900 + r() * 320000),
       rating: Math.round((2.6 + r() * 2.4) * 10) / 10,
       year: 2024 + Math.floor(r() * 3),
-      desc: DESCS[Math.floor(r() * DESCS.length)],
+      desc: (d => d[Math.floor(r() * d.length)])(o.disc === CINEMA || o.disc === 'Animazione' ? FILM_DESCS : ART_DESCS),
       ago: 4 + Math.floor(r() * r() * 5000), // minutes since it was published
       ...o,
     };
@@ -534,10 +540,11 @@
   ];
   const mockReplies = w => {
     const r = rng(w.likes || 7);
-    const ids = AIDS.filter(id => id !== w.a);
+    const shuffled = list => list.map(v => [r(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]); // no author or text twice
+    const ids = shuffled(AIDS.filter(id => id !== w.a)), texts = shuffled(REPLY_TEXTS);
     const out = Array.from({ length: w.ts ? 0 : 6 }, (_, i) => {
-      const a = ids[Math.floor(r() * ids.length)];
-      return { a, text: REPLY_TEXTS[Math.floor(r() * REPLY_TEXTS.length)], ago: 3 + i * 17 + Math.floor(r() * 40), likes: Math.floor(r() * 900),
+      const a = ids[i];
+      return { a, text: texts[i], ago: 3 + i * 17 + Math.floor(r() * 40), likes: Math.floor(r() * 900),
         rating: typeOf(a) === 'critico' ? 3 + Math.floor(r() * 3) : 0 }; // only critics give stars
     });
     if (!w.ts && !out.some(rp => typeOf(rp.a) === 'critico')) out.splice(1, 0, { a: 'giulia', text: REVIEW_TEXTS[(w.likes || 0) % REVIEW_TEXTS.length], ago: 22, likes: 341, rating: Math.max(3, Math.round(w.rating || 4)) });
@@ -761,7 +768,7 @@
           <p>${w.desc}</p>
           <dl>
             <dt>Artista</dt><dd><a href="#artista/${w.a}">${a.name}</a></dd>
-            <dt>Disciplina</dt><dd>${w.disc}${w.genre ? `, ${w.genre.toLowerCase()}` : ''}</dd>
+            <dt>Categoria</dt><dd>${w.disc}${w.genre ? `, ${w.genre.toLowerCase()}` : ''}</dd>
             <dt>Anno</dt><dd>${w.year}</dd>
             <dt>Paese</dt><dd>${a.country}</dd>
             <dt>Visualizzazioni</dt><dd>${fmt(w.views)}</dd>
@@ -1048,7 +1055,7 @@
         ${!w && typeOf('me') === 'utente' ? '<p class="pub-note"><i class="ph-light ph-lock-simple"></i>Come utente, le tue opere le vede solo chi ti segue.</p>' : ''}
         <label class="pub-drop ${w ? 'has' : ''}" id="pubDrop"><input type="file" accept="image/*" id="pubFile" aria-label="Immagine dell'opera"><img id="pubPrev" alt="" ${w ? `src="${w.img}"` : 'hidden'}><span><i class="ph-light ph-image-square"></i>Scegli un'immagine</span>${w ? '<em class="pub-change">Cambia immagine</em>' : ''}</label>
         <div class="field"><label for="pubT">Titolo</label><input id="pubT" maxlength="60" placeholder="Come si chiama?" autocomplete="off" value="${w ? esc(w.t) : ''}"></div>
-        <div class="field"><label for="pubDisc">Disciplina</label><select id="pubDisc">${DISCIPLINES.map(d => `<option ${w?.disc === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+        <div class="field"><label for="pubDisc">Categoria</label><select id="pubDisc">${DISCIPLINES.map(d => `<option ${w?.disc === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
         <div class="field"><label for="pubDesc">Descrizione</label><textarea id="pubDesc" maxlength="400" rows="3" placeholder="Racconta com'è nata (facoltativo)">${w ? esc(w.desc) : ''}</textarea></div>
         <p class="pub-err" id="pubErr" role="alert"></p>
         <button class="btn-accent" type="submit">${w ? 'Salva modifiche' : 'Pubblica'}</button>
@@ -1378,6 +1385,7 @@
     if (HUB.some(h => h.k === name)) { prefs.lastHub = name; savePrefs(); }
     cur = { name, param };
     RENDER[name](param);
+    markScrollable();
     const y = scrollMemo.get(curHash) || 0;
     window.scrollTo(0, 0);
     if (y) requestAnimationFrame(() => window.scrollTo(0, y));
@@ -1387,8 +1395,14 @@
   function refresh() {
     const y = window.scrollY;
     RENDER[cur.name]?.(cur.param);
+    markScrollable();
     requestAnimationFrame(() => window.scrollTo(0, y));
   }
+  // the scroll rail only makes sense when the page scrolls; checked again once the enter animation and images settle
+  const checkScrollable = () => document.body.classList.toggle('no-scroll', document.documentElement.scrollHeight <= innerHeight + 8);
+  let scrollT;
+  const markScrollable = () => { checkScrollable(); clearTimeout(scrollT); scrollT = setTimeout(checkScrollable, 900); };
+  window.addEventListener('resize', checkScrollable);
   // Pull to refresh on the feed (touch): pull down from the top, release to get a fresh order
   (() => {
     let y0 = null, dy = 0, busy = false;

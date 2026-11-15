@@ -512,7 +512,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .price .crop { --w: 22px; }
 .m-buy .btn-ghost { padding: 6px 14px; font-size: 13px; }
 .m-feature { margin: 0 16px 34px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: center; border: var(--stroke) solid var(--line); border-radius: var(--wobble); padding: 16px; }
-.m-feature img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border: var(--stroke) solid var(--line); }
+.m-feature img:not(.crop) { width: 100%; aspect-ratio: 4/3; object-fit: cover; border: var(--stroke) solid var(--line); }
 .m-feature h2 { font-family: var(--hand); font-weight: var(--hand-w); font-size: clamp(22px, 5vw, 32px); letter-spacing: .06em; }
 .m-feature p { color: var(--ink-2); font-size: 14px; line-height: 1.55; margin: 8px 0 16px; }
 @media (max-width: 640px) { .m-feature { grid-template-columns: 1fr; } }
@@ -608,7 +608,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .sheet-scrim.open { opacity: 1; pointer-events: auto; }
 .sheet {
   position: fixed; left: 50%; bottom: 0; z-index: 45; width: min(100vw, 560px); max-height: 78dvh; overflow-y: auto; background: var(--bg-2);
-  border: var(--stroke) solid var(--line); border-bottom: 0; border-radius: 22px 22px 0 0; padding: 12px 20px 34px;
+  border: var(--stroke) solid var(--line); border-bottom: 0; border-radius: 22px 22px 0 0; padding: 12px 20px calc(34px + env(safe-area-inset-bottom));
   transform: translate(-50%, 102%); transition: transform .45s var(--ease);
 }
 .sheet.open { transform: translate(-50%, 0); }
@@ -953,3 +953,8 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 @media (max-width: 480px) { .disc-thumbs img:nth-child(n+3) { display: none; } } /* room for the icon + long names */
 .cat-count { padding: 0 6px; }
 .cat-tag img { width: 16px; height: 16px; margin-left: -4px; } /* the hand-drawn category icon, ring included */
+
+/* polish pass */
+body.no-scroll .rail { display: none; } /* nothing to scroll: no scroll rail */
+.reel-tags { filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .75)); } /* stars stay readable on bright photos */
+.btn-accent:disabled { opacity: .4; cursor: not-allowed; }
