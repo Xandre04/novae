@@ -952,3 +952,4 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .disc > div:not(.disc-thumbs) { min-width: 0; }
 @media (max-width: 480px) { .disc-thumbs img:nth-child(n+3) { display: none; } } /* room for the icon + long names */
 .cat-count { padding: 0 6px; }
+.cat-tag img { width: 16px; height: 16px; margin-left: -4px; } /* the hand-drawn category icon, ring included */
