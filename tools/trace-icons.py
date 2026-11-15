@@ -67,6 +67,7 @@ if __name__ == '__main__':
     if want('mercato'):
         im = window('assets/icone/mercato.jpg', .489, .495, .10)
         write('assets/svg/mercato.svg', im.size, [(INK, brightwhite(im)), (RED, red(im))])
+    INK_OVERRIDE = {'cinema-e-video': '#5f86cf'}  # the drawing's navy (#2d4676) is too dark on the #141414 background
     CATS = {
      'pittura-e-illustrazione': 'Pittura.png', 'musica': 'Opera_senza_titolo_2.jpg', 'letteratura': 'Opera_senza_titolo_1.jpg',
      'cinema-e-video': 'Cinema.png', 'fotografia': 'Opera_senza_titolo.jpg', 'design': 'Opera_senza_titolo_5.jpg',
@@ -77,8 +78,9 @@ if __name__ == '__main__':
         im = flat('assets/icone/' + f, (255, 255, 255)); im.thumbnail((1400, 1400), Image.LANCZOS)
         px = list(im.getdata()); c = tuple(int(statistics.median(ch)) for ch in zip(*[p for p in px if min(p) < 150]))
         k = max(range(3), key=lambda i: 255 - c[i])
+        ink = INK_OVERRIDE.get(slug, '#%02x%02x%02x' % c)
         a = im.getchannel('RGB'[k]).point(lambda v: max(0, min(255, round((255 - v) * 255 / (255 - c[k])))))
         b = a.point(lambda v: 255 if v > 60 else 0).getbbox(); pad = round((b[2] - b[0]) * .04)
         s = max(b[2] - b[0], b[3] - b[1]) + 2 * pad; cx, cy = (b[0] + b[2]) // 2, (b[1] + b[3]) // 2
         a = a.crop((cx - s // 2, cy - s // 2, cx + s // 2, cy + s // 2))
-        write(f'assets/categorie/{slug}.svg', (160, 160), [('#%02x%02x%02x' % c, a.point(lambda v: 255 if v > 110 else 0))])
+        write(f'assets/categorie/{slug}.svg', (160, 160), [(ink, a.point(lambda v: 255 if v > 110 else 0))])
