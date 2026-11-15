@@ -1248,6 +1248,29 @@
       if (field && matchMedia('(hover: hover)').matches) field.focus({ preventScroll: true });
     });
   }
+  // drag the sheet down to close it, like a native bottom sheet (only from the top of its content)
+  {
+    const sheet = $('#sheet');
+    let drag = null;
+    sheet.addEventListener('touchstart', e => {
+      drag = sheet.scrollTop <= 0 && !e.target.closest('textarea, .notifs') ? { y: e.touches[0].clientY, dy: 0 } : null;
+    }, { passive: true });
+    sheet.addEventListener('touchmove', e => {
+      if (!drag) return;
+      drag.dy = Math.max(0, e.touches[0].clientY - drag.y);
+      if (!drag.dy) return;
+      e.preventDefault(); // no page bounce while dragging the sheet
+      sheet.style.transition = 'none';
+      sheet.style.transform = `translate(-50%, ${drag.dy}px)`;
+    }, { passive: false });
+    sheet.addEventListener('touchend', () => {
+      if (!drag) return;
+      const close = drag.dy > 90;
+      sheet.style.transition = sheet.style.transform = '';
+      if (close) closeSheet();
+      drag = null;
+    });
+  }
   function closeSheet() {
     if (!$('#sheet').classList.contains('open')) return;
     $('#sheet').classList.remove('open'); $('#sheetScrim').classList.remove('open');
