@@ -31,6 +31,13 @@ Si entra **solo su invito**: serve il codice (o il QR) di qualcuno che è già d
 3. Dal menu a stella scegli dove andare, oppure usa la stella in basso per aprire la ruota delle sezioni.
 4. I tre trattini in basso a destra aprono notifiche, crea, codice QR e segnala un problema.
 
+## Installarla come app
+
+NOVAE si installa come app dal sito, senza store: icona sulla schermata Home, schermo intero e apertura anche senza connessione (le pagine già viste restano disponibili).
+
+- **iPhone (Safari):** tocca **Condividi**, poi **Aggiungi alla schermata Home**.
+- **Android (Chrome):** menu **⋮**, poi **Installa app**. Oppure da *Impostazioni → App → Installa*.
+
 ## Schermate
 
 | Invito | Menu principale | Scopri (feed stile X) |
@@ -104,10 +111,13 @@ novae/
 ├── index.html          le schermate (una sola pagina)
 ├── styles.css          lo stile
 ├── app.js              dati di esempio, navigazione e interazioni
+├── manifest.webmanifest  nome, icone e colori dell'app installata
+├── sw.js               service worker: funziona anche offline
 ├── LICENSE             licenza MIT del codice
 ├── ASSETS-LICENSE.md   diritti su marchio, logo e grafiche
 ├── THIRD_PARTY_NOTICES.md  librerie, font e foto di terze parti
 ├── assets/
+│   ├── app/            icone dell'app (schermata Home)
 │   └── icone/          icone disegnate a mano, usate dal sito
 └── docs/
     ├── bozzetti/       i disegni originali delle schermate

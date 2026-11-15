@@ -1172,6 +1172,18 @@
   }
 
   /* ---------------- 13. Impostazioni ---------------- */
+  // installing as an app (PWA): Chrome/Android hands us a prompt; iPhone needs Share > Add to Home Screen
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+  window.addEventListener('appinstalled', () => { installEvt = null; toast('NOVAE installata'); if (cur.name === 'impostazioni') refresh(); });
+  const isApp = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  function install() {
+    if (installEvt) { installEvt.prompt(); installEvt = null; return; }
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    openSheet(`<h3>Installa NOVAE</h3>${ios
+      ? '<p>In Safari tocca <strong>Condividi</strong> <i class="ph-light ph-export"></i>, poi <strong>Aggiungi alla schermata Home</strong>.</p>'
+      : '<p>Apri il menu del browser <i class="ph-light ph-dots-three-vertical"></i> e scegli <strong>Installa app</strong> (o <strong>Aggiungi a schermata Home</strong>).</p>'}`);
+  }
   function renderSettings() {
     const code = store.get('novae.in') || 'NVE-ALFA';
     const toggles = store.get('novae.toggles') ? JSON.parse(store.get('novae.toggles')) : { priv: false, notif: true, auto: true, rate: true };
@@ -1191,6 +1203,10 @@
       <div class="set-group"><h2>Inviti</h2>
         <div class="set-row"><span>Il tuo codice<small>Sei entrato con questo invito</small></span><span class="invite-code">${code}</span></div>
         <div class="set-row"><span>Invita un artista<small>Hai 3 inviti disponibili</small></span><button class="btn-ghost" data-act="invite">Genera</button></div>
+      </div>
+      <div class="set-group"><h2>App</h2>
+        ${isApp() ? '<div class="set-row"><span>App installata<small>Stai usando NOVAE dalla schermata Home</small></span><i class="ph-light ph-check"></i></div>'
+          : '<div class="set-row"><span>Installa l\'app<small>NOVAE sulla schermata Home, a schermo intero</small></span><button class="btn-ghost" data-act="install">Installa</button></div>'}
       </div>
       <div class="set-group">
         <div class="set-row"><span class="danger">Esci da NOVAE</span><button class="btn-ghost danger" data-act="logout">Esci</button></div>
@@ -1521,6 +1537,7 @@
       case 'search-close': $('#search').hidden = true; break;
       case 'sheet-close': closeSheet(); break;
       case 'bars': setArc(false); openBars(); break;
+      case 'install': install(); break;
       case 'notifs': openNotifs(); break;
       case 'create': openCreate(); break;
       case 'my-qr': openMyQR(); break;
@@ -1709,5 +1726,6 @@
   drawSky();
   renderArc();
   markBars();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {}); // app: offline + installable
   route();
 })();
