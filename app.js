@@ -217,8 +217,17 @@
   const profileHref = aid => aid === 'me' ? '#profilo' : '#artista/' + aid;
   const agoText = w => {
     const m = w.ts ? Math.max(1, Math.round((Date.now() - w.ts) / 60000)) : w.ago;
-    return m < 60 ? `${m} min` : m < 1440 ? `${Math.round(m / 60)} h` : `${Math.round(m / 1440)} g`;
+    if (m < 60) return `${m} min`;
+    if (m < 1440) return `${Math.round(m / 60)} h`;
+    if (m < 7 * 1440) return `${Math.round(m / 1440)} g`;
+    // older than a week: the date (“400 g” means nothing to anyone), with the year only when it isn't this one
+    const d = new Date(Date.now() - m * 60000);
+    return d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', ...(d.getFullYear() !== new Date().getFullYear() && { year: 'numeric' }) }).replace('.', '');
   };
+  // “1 opera”, not “1 opere”: the singular of the labels shown next to a count
+  const ONE = { opere: 'opera', recensioni: 'recensione', salvate: 'salvata', seguiti: 'seguito', seguaci: 'seguace', cuori: 'cuore', lettori: 'lettore', ripubblicazioni: 'ripubblicazione', visualizzazioni: 'visualizzazione',
+    'mi piace': 'mi piace⁠' }; // same word in Italian; the invisible mark lets i18n.js say “1 like”
+  const label = (n, many) => String(n) === '1' ? ONE[many] || many : many;
 
   /* ---------------- Shared fragments ---------------- */
   const rating = (v, size = 18) => {
@@ -645,7 +654,7 @@
         <p class="x-tags">${catTag(w)}${audTag(w)}</p>
           <p class="x-desc open">${w.desc}</p>
           ${mediaFrame(w)}
-          <p class="x-stats"><span><strong data-rp="${w.id}">${fmt(repostCount(w))}</strong> ripubblicazioni</span><span><strong data-count="${w.id}">${fmt(likeCount(w))}</strong> mi piace</span><span><strong>${fmt(w.views)}</strong> visualizzazioni</span></p>
+          <p class="x-stats"><span><strong data-rp="${w.id}">${fmt(repostCount(w))}</strong> ${label(repostCount(w), 'ripubblicazioni')}</span><span><strong data-count="${w.id}">${fmt(likeCount(w))}</strong> ${label(likeCount(w), 'mi piace')}</span><span><strong>${fmt(w.views)}</strong> ${label(w.views, 'visualizzazioni')}</span></p>
           ${xActions(w, true)}
         </div>
       </article>
@@ -1089,7 +1098,7 @@
       : !other && profTab === 'Opere' ? `<button class="btn-accent" data-act="publish">${type === 'utente' ? 'Pubblica per i follower' : 'Pubblica opera'}</button>` : '';
     const showStrip = profTab === 'Opere' && type === 'artista' && (cols.length || !other);
     const colHead = col ? `<div class="col-head">
-        <p class="col-title"><img src="${STAR_SRC}" alt="" aria-hidden="true">${col.name}<small>${works.length} opere</small></p>
+        <p class="col-title"><img src="${STAR_SRC}" alt="" aria-hidden="true">${col.name}<small>${works.length} ${label(works.length, 'opere')}</small></p>
         ${col.desc ? `<p class="col-desc">${col.desc}</p>` : ''}
         ${MY_COLS.includes(col) ? `<button class="link-btn" data-act="del-col" data-col="${col.id}">Elimina costellazione</button>` : ''}
       </div>` : '';
@@ -1110,7 +1119,7 @@
         <span class="type-badge t-${type}"><i class="ph-light ph-${T.icon}"></i>${T.label}</span>
         <span class="handle">@${a.handle}, ${a.country}</span>
         <p class="bio">${a.bio}</p>
-        <div class="stats">${stats.map(([n, l]) => `<div><strong>${n}</strong><span>${l}</span></div>`).join('')}</div>
+        <div class="stats">${stats.map(([n, l]) => `<div><strong>${n}</strong><span>${label(n, l)}</span></div>`).join('')}</div>
         <div class="prof-cta">${other
           ? `<button class="${followed.has(aid) ? 'btn-ghost' : 'btn-accent'}" data-act="follow" data-a="${aid}" aria-pressed="${followed.has(aid)}">${followed.has(aid) ? 'Segui già' : 'Segui'}</button><a class="btn-ghost" href="#messaggi/${aid}">Messaggio</a>`
           : `${type === 'artista' ? '<button class="btn-accent" data-act="publish">Pubblica opera</button>' : type === 'critico' ? '<a class="btn-accent" href="#scopri">Scrivi una recensione</a>' : '<button class="btn-accent" data-act="publish">Pubblica per i follower</button>'}<button class="btn-ghost" data-act="edit-profile">Modifica profilo</button>`}</div>

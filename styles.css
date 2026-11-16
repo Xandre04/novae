@@ -991,3 +991,9 @@ body.out .dock { display: none; } /* reading the rules before entering: no app n
 .cat-tag, .tab, .col-chip, .avatar-ring { transition: transform .16s var(--ease-out), color .2s ease, border-color .2s ease, background-color .2s ease; }
 .action-list > :active, .set-link:active, .notif:active, .thread:active, .sr:active, .report-reasons label:active, .disc:active { background: rgba(255, 255, 255, .05); }
 .action-list > *, .set-link, .notif, .thread, .sr, .report-reasons label, .disc { transition: background-color .15s ease; }
+
+/* Worst-case data (break-ui): long names truncate but the time and labels stay; long links and words wrap instead of leaving the screen */
+.x-meta { display: flex; align-items: center; gap: 5px; }
+.x-meta .x-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.x-meta > :not(.x-name) { flex: none; white-space: nowrap; }
+.x-desc, .x-reply p, .x-title, .bubble, .comment p, .review-text, .notif p, .reel-desc, .reel-meta h2, .prof-top p, .m-feature h2, .d-desc p, .sr strong, .thread strong, .col-title { overflow-wrap: anywhere; }
