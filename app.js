@@ -4,13 +4,48 @@
 
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-  const fmt = n => n.toLocaleString('it-IT');
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage blocked */ } },
     del(k) { try { localStorage.removeItem(k); } catch { /* storage blocked */ } },
   };
+
+  /* ---------------- Language: Italian (source) or English (i18n.js) ---------------- */
+  // Chosen in Settings; the first time it follows the phone's language
+  const LANG = (v => v === 'it' || v === 'en' ? v : (navigator.language || '').toLowerCase().startsWith('it') ? 'it' : 'en')(store.get('novae.lang'));
+  const LOCALE = LANG === 'en' ? 'en-GB' : 'it-IT';
+  const T = s => LANG === 'en' && window.NOVAE_I18N ? NOVAE_I18N.en.tr(s) : s;
+  const fmt = n => n.toLocaleString(LOCALE);
+  if (LANG === 'en' && window.NOVAE_I18N) {
+    // every interface text the app renders (text, placeholder, aria-label, title, prefilled values) is swapped as it appears
+    document.documentElement.lang = 'en';
+    const ATTRS = ['placeholder', 'aria-label', 'title', 'value'];
+    const fixText = n => { const v = T(n.data); if (v !== n.data) n.data = v; };
+    const fixEl = el => ATTRS.forEach(a => {
+      const v = el.getAttribute(a);
+      if (!v || (a === 'value' && el.tagName !== 'INPUT')) return;
+      const t = T(v); if (t !== v) el.setAttribute(a, t);
+    });
+    const walk = root => {
+      if (root.nodeType === 3) return fixText(root);
+      if (root.nodeType !== 1 || root.matches('script, style')) return;
+      fixEl(root); root.querySelectorAll('*').forEach(fixEl);
+      const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+      while ((n = tw.nextNode())) if (!n.parentElement.closest('script, style')) fixText(n);
+    };
+    const observe = () => {
+      mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+      mo.observe(document.head, { childList: true, subtree: true, characterData: true }); // the page title
+    };
+    const mo = new MutationObserver(ms => {
+      mo.disconnect(); // our own swaps must not trigger it again
+      try {
+        for (const m of ms) m.type === 'characterData' ? fixText(m.target) : m.type === 'attributes' ? fixEl(m.target) : m.addedNodes.forEach(walk);
+      } catch (err) { console.warn('i18n', err); } finally { observe(); } // one odd node must never switch translation off
+    });
+    walk(document.body); walk(document.querySelector('title')); observe();
+  }
   const rng = seed => { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); };
   const pic = (seed, w, h, gray) => `https://picsum.photos/seed/novae-${seed}/${w}/${h}${gray ? '?grayscale' : ''}`;
   const img = (src, alt = '', cls = '') => `<img class="fade ${cls}" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
@@ -172,7 +207,7 @@
   const saveSaved = () => store.set('novae.saved', JSON.stringify([...saved]));
 
   // You: editable profile + the works you publish (images kept as compressed data URLs, on this device only)
-  const profile = Object.assign({ name: 'Il tuo nome', handle: 'tuonome', bio: 'Scrivi qui chi sei e cosa crei. Gli altri artisti lo leggeranno prima di seguirti.', type: 'artista', banner: '' }, readJSON('novae.profile', {}));
+  const profile = Object.assign({ name: T('Il tuo nome'), handle: LANG === 'en' ? 'yourname' : 'tuonome', bio: T('Scrivi qui chi sei e cosa crei. Gli altri artisti lo leggeranno prima di seguirti.'), type: 'artista', banner: '' }, readJSON('novae.profile', {}));
   ARTISTS.me = { name: profile.name, handle: profile.handle, country: 'Italia', bio: profile.bio, type: profile.type };
   const MINE = readJSON('novae.mine', []);
   MINE.forEach(w => { w.disc = discOf(w.disc); WORKS.unshift(w); byId[w.id] = w; });
@@ -306,7 +341,7 @@
     hub.innerHTML = `
       <div class="hub-core">${starSvg()}</div>
       <div class="hub-wordmark">${crop('wordmark')}</div>
-      ${HUB.map(h => `<div class="hub-item ${prefs.lastHub === h.k ? 'hub-last' : ''}" style="--dx:${h.dx};--dy:${h.dy}"><a class="hub-btn" href="#${h.k}"><span class="hub-circle i-${h.k}">${icon(h.k)}</span><span class="hub-label">${h.l}</span></a></div>`).join('')}`;
+      ${HUB.map(h => `<div class="hub-item ${prefs.lastHub === h.k ? 'hub-last' : ''}" style="--dx:${h.dx};--dy:${h.dy}"><a class="hub-btn" href="#${h.k}"><span class="hub-circle i-${h.k}">${icon(h.k)}</span><span class="hub-label">${T(h.l)}</span></a></div>`).join('')}`;
     if (reduceMotion) return;
     const box = hub.getBoundingClientRect();
     $$('.hub-item', hub).forEach((el, i) => {
@@ -492,7 +527,8 @@
   const REPLIES_MINE = readJSON('novae.replies', {}); // your replies, per work
   const repostCount = w => Math.floor(w.likes / 11) + (reposted.has(w.id) ? 1 : 0);
   // short counts like X: 842, 4,2K, 242K, 1,3M
-  const short = n => n < 1000 ? String(n) : n < 1e6 ? `${(n / 1e3).toFixed(n < 1e4 ? 1 : 0).replace('.', ',').replace(',0', '')}K` : `${(n / 1e6).toFixed(1).replace('.', ',').replace(',0', '')}M`;
+  const dec = s => LANG === 'en' ? s.replace('.0', '') : s.replace('.', ',').replace(',0', ''); // 4.2K / 4,2K
+  const short = n => n < 1000 ? String(n) : n < 1e6 ? `${dec((n / 1e3).toFixed(n < 1e4 ? 1 : 0))}K` : `${dec((n / 1e6).toFixed(1))}M`;
   const replyCount = w => w.comments + (REPLIES_MINE[w.id]?.length || 0);
   const xActions = (w, big = false) => {
     const on = liked.has(w.id), rp = reposted.has(w.id);
@@ -643,7 +679,7 @@
     const a = ARTISTS[w.a];
     const src = w.ts ? w.img : pic(w.id, 900, 1600); // portrait crop of the same photo
     const canFollow = w.a !== 'me' && !followed.has(w.a);
-    return `<section class="reel" data-id="${w.id}" data-type="${w.type}" aria-label="${w.t} di ${a.name}">
+    return `<section class="reel" data-id="${w.id}" data-type="${w.type}" aria-label="${w.t} \u2014 ${a.name}">
       <div class="reel-media ph-img" data-dbl="${w.id}">${img(src, w.t)}</div>
       <span class="reel-shade" aria-hidden="true"></span>
       ${w.type !== 'image' ? '<span class="reel-paused" aria-hidden="true"><i class="ph-fill ph-play"></i></span><div class="progress"><span></span></div>' : ''}
@@ -1251,7 +1287,7 @@
       <div class="set-group"><h2>Account</h2>
         <button class="set-row set-link" data-act="edit-profile"><span>Modifica profilo<small>${ARTISTS.me.name}, @${ARTISTS.me.handle}</small></span><i class="ph-light ph-caret-right"></i></button>
         ${sw('priv', 'Profilo privato', 'Solo chi segui vede le tue opere')}
-        <div class="set-row"><span>Lingua<small>Interfaccia</small></span><select aria-label="Lingua"><option>Italiano</option><option disabled>English (in arrivo)</option></select></div>
+        <div class="set-row"><span>Lingua<small>Interfaccia</small></span><select aria-label="Lingua" data-lang><option value="it" ${LANG === 'it' ? 'selected' : ''}>Italiano</option><option value="en" ${LANG === 'en' ? 'selected' : ''}>English</option></select></div>
       </div>
       <div class="set-group"><h2>Esperienza</h2>
         ${sw('notif', 'Notifiche Novae', 'Quando un artista che segui pubblica')}
@@ -1285,8 +1321,9 @@
   }
   function renderResults(q) {
     q = q.trim().toLowerCase();
-    const works = WORKS.filter(w => !q || w.t.toLowerCase().includes(q) || w.disc.toLowerCase().includes(q) || ARTISTS[w.a].country.toLowerCase().includes(q)).slice(0, 8);
-    const artists = AIDS.filter(id => !q || ARTISTS[id].name.toLowerCase().includes(q) || ARTISTS[id].country.toLowerCase().includes(q)).slice(0, 5);
+    const has = s => s.toLowerCase().includes(q) || T(s).toLowerCase().includes(q);
+    const works = WORKS.filter(w => !q || has(w.t) || has(w.disc) || has(ARTISTS[w.a].country)).slice(0, 8);
+    const artists = AIDS.filter(id => !q || has(ARTISTS[id].name) || has(ARTISTS[id].country)).slice(0, 5);
     const recentHtml = !q && recent.length
       ? `<h3>Recenti</h3><div class="recent">${recent.map(r => `<button class="pill" data-act="recent" data-v="${r.replace(/"/g, '&quot;')}">${r.replace(/</g, '&lt;')}</button>`).join('')}<button class="recent-clear" data-act="recent-clear">Cancella</button></div>`
       : '';
@@ -1388,7 +1425,7 @@
     return code;
   }
   const inviteExpiry = () => new Date((+store.get('novae.mycode.ts') || Date.now()) + INVITE_DAYS * 864e5)
-    .toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
+    .toLocaleDateString('it-IT', { day: 'numeric', month: 'long' }); // Italian on purpose: i18n.js translates the month
   function openMyQR() {
     openSheet(`<h3>Codice QR</h3><div class="my-qr">
       <canvas id="myQr" width="528" height="528" aria-label="Il tuo codice QR di invito"></canvas>
@@ -1533,12 +1570,93 @@
       <h2>Età</h2>
       <p>NOVAE è per chi ha almeno <strong>14 anni</strong>, l’età minima in Italia per usare da soli i servizi online.</p>` },
   };
+  // English versions of the three pages (same drafts, same [placeholders])
+  const DRAFT_EN = '<p class="legal-draft">Alpha draft. The parts in [brackets] still need filling in, and a lawyer should review the text before launch.</p>';
+  const DOCS_EN = {
+    regole: { title: 'Community rules', html: `
+      <p>NOVAE is a place to show what you make and look at what others make. A few rules, so it stays a good place.</p>
+      <h2>What you can post</h2>
+      <ul>
+        <li><strong>Only your own work</strong>, or work you hold the rights to. If several people made it, credit them.</li>
+        <li><strong>If a work was made with AI, say so</strong> in the description.</li>
+        <li><strong>Artistic nudity is allowed</strong>; explicit sexual content is not.</li>
+        <li>No gratuitous violence, no content that encourages hate or harm, towards yourself or others.</li>
+      </ul>
+      <h2>How we treat each other</h2>
+      <ul>
+        <li>No insults, harassment, threats or discrimination, not even “as a joke”.</li>
+        <li><strong>Critics critique the work, not the person.</strong> Stars go to the work, not to whoever made it.</li>
+        <li>No spam, no scams in the Market, no fake accounts.</li>
+        <li>Don’t post other people’s personal data: addresses, numbers, private photos.</li>
+      </ul>
+      <h2>Invites</h2>
+      <p>You can only join with an invite. Everyone has <strong>3 invites</strong>; each code works for one person only and for <strong>14 days</strong>. Inviting someone means vouching for them: people who invite rule-breakers can lose their invites.</p>
+      <h2>Reports</h2>
+      <p>From the three dots on any work you can report it by choosing a reason. The person reported never finds out who reported them.</p>
+      <p>The moderation team looks at every report <strong>within 48 hours</strong> and decides, depending on how serious it is:</p>
+      <ol>
+        <li><strong>No action</strong>, if the content follows the rules.</li>
+        <li><strong>A warning</strong> and a request to change something (for example: say that AI was used).</li>
+        <li><strong>Removal</strong> of the content.</li>
+        <li><strong>Suspension</strong> of the account, from 7 days up to closing it for serious or repeated cases.</li>
+      </ol>
+      <p>Threats, illegal content and material involving minors are removed immediately and, when needed, reported to the authorities.</p>
+      <p>Think a decision is wrong? Write to [project email]: someone other than the person who decided will look at it again.</p>` },
+    termini: { title: 'Terms of use', html: DRAFT_EN + `
+      <p>Last updated: [date]. By using NOVAE you accept these terms and the <a href="#doc/regole">Community rules</a>.</p>
+      <h2>1. What NOVAE is</h2>
+      <p>NOVAE is an invite-only social network for artists, run by [name of the owner or company]. It is in <strong>alpha</strong>: features can change or disappear, some content is sample content and the service may be interrupted.</p>
+      <h2>2. Who can use it</h2>
+      <p>You must be at least <strong>14 years old</strong> and have joined with a valid invite. One account per person; you are responsible for what happens with your account and for the invite codes you give out.</p>
+      <h2>3. Your works stay yours</h2>
+      <p>When you publish a work <strong>you keep all the rights to it</strong>. You only give NOVAE a free, non-exclusive permission to store it, show it to users and adapt its format (for example resizing an image) to run the service. The permission ends when you delete it, except for backup copies, which we delete within [30] days.</p>
+      <p>Only publish works you hold the rights to, and say if they were made with AI. We don’t use your works to train artificial intelligence and we don’t hand them over to third parties.</p>
+      <h2>4. Behaviour</h2>
+      <p>The <a href="#doc/regole">Community rules</a> apply. We can remove content and suspend or close accounts that break them.</p>
+      <h2>5. Reviews</h2>
+      <p>Critics’ reviews are the personal opinions of their authors, not of NOVAE.</p>
+      <h2>6. Market and credits</h2>
+      <p>In the alpha, credits have no real value and nothing is bought or sold in the Market. The rules for real purchases will come before they are switched on.</p>
+      <h2>7. Liability</h2>
+      <p>As far as the law allows, NOVAE is provided “as is” and is not liable for lost data or interruptions during the alpha. Your consumer rights are not affected.</p>
+      <h2>8. Changes and law</h2>
+      <p>If we change these terms we’ll tell you in the app. Italian law applies; consumers can always go to the court where they live.</p>
+      <p>Contact: [project email].</p>` },
+    privacy: { title: 'Privacy policy', html: DRAFT_EN + `
+      <p>Last updated: [date]. Data controller: [name or company], [address], [project email].</p>
+      <h2>Today, in the alpha</h2>
+      <p><strong>NOVAE doesn’t have its own server yet.</strong> Your profile, the works you publish, likes, messages, reports and your invite code stay <strong>only in the browser on your phone or computer</strong> (local storage). We don’t see them and we don’t receive them. To delete them: Settings → Log out, then clear the site’s data in your browser.</p>
+      <p>When you open the app, a few outside services receive your IP address, as with any website:</p>
+      <ul>
+        <li><strong>GitHub Pages</strong>, which hosts the app;</li>
+        <li><strong>jsDelivr</strong>, which serves libraries, icons and the globe map;</li>
+        <li><strong>Google Fonts</strong>, which serves the Outfit typeface;</li>
+        <li><strong>Picsum</strong>, which serves the sample images.</li>
+      </ul>
+      <p>“Report a problem” opens GitHub: there the text is public and GitHub’s privacy policy applies.</p>
+      <p>We don’t use profiling or advertising cookies.</p>
+      <h2>When the server arrives</h2>
+      <p>Before switching it on we’ll update this page and tell you in the app. In short, we will process:</p>
+      <ul>
+        <li><strong>account data</strong> (email, name, username, profile type, banner, bio) so you can use the service;</li>
+        <li><strong>the content</strong> you publish and your messages, to show them to the people meant to see them;</li>
+        <li><strong>who invited you and who you invite</strong>, to run invites and moderation;</li>
+        <li><strong>your country</strong>, never your city, for the Novae globe, which you’ll be able to turn off;</li>
+        <li><strong>technical data and reports</strong>, for security and moderation.</li>
+      </ul>
+      <p>Legal basis: the contract (the Terms) to run NOVAE, legitimate interest for security and moderation, consent for notifications. We keep data while you have an account and delete it within [30] days of closing it. Providers will be [server and providers, preferably in the EU].</p>
+      <h2>Your rights</h2>
+      <p>You can ask to see, correct, download or delete your data, and object to its use, by writing to [project email]. You can also complain to the Italian data protection authority (garanteprivacy.it).</p>
+      <h2>Age</h2>
+      <p>NOVAE is for people aged at least <strong>14</strong>, the minimum age in Italy for using online services on your own.</p>` },
+  };
   function renderDoc(which) {
-    const d = DOCS[which] || DOCS.regole;
+    const docs = LANG === 'en' ? DOCS_EN : DOCS;
+    const d = docs[which] || docs.regole;
     document.title = `${d.title} | NOVAE`;
     $('#legal').innerHTML = `<button class="cine-back icon-btn" data-act="back" data-fallback="${store.get('novae.in') ? '#impostazioni' : '#invito'}" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
       <h1>${d.title}</h1>${d.html}
-      <p class="legal-links">${Object.entries(DOCS).filter(([k]) => k !== which).map(([k, v]) => `<a href="#doc/${k}">${v.title}</a>`).join(' · ')}</p>`;
+      <p class="legal-links">${Object.entries(docs).filter(([k]) => k !== which).map(([k, v]) => `<a href="#doc/${k}">${v.title}</a>`).join(' · ')}</p>`;
   }
 
   let toastT;
@@ -1916,6 +2034,7 @@
   document.addEventListener('change', e => {
     if (e.target.id === 'pubFile') { onPubFile(e.target.files[0]); return; }
     if (e.target.id === 'bnFile') { onBannerFile(e.target.files[0]); return; }
+    if (e.target.matches('[data-lang]')) { store.set('novae.lang', e.target.value); location.reload(); return; }
     const k = e.target.dataset.toggle;
     if (!k) return;
     const t = store.get('novae.toggles') ? JSON.parse(store.get('novae.toggles')) : { priv: false, notif: true, auto: true, rate: true };

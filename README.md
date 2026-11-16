@@ -77,6 +77,7 @@ NOVAE si installa come app dal sito, senza store: icona sulla schermata Home, sc
 - **Seguire** gli artisti e scrivere loro nei messaggi.
 - **Invitare qualcuno**: dai tre trattini, *Codice QR*. Il QR si inquadra con la fotocamera e apre NOVAE con il codice già scritto; ogni persona ha 3 inviti, validi 14 giorni.
 - **Segnalare un'opera** dai tre puntini, scegliendo il motivo. Nell'alpha la segnalazione resta sul telefono.
+- **Usarla in inglese**: *Impostazioni → Lingua*. La prima volta segue la lingua del telefono. Si traduce l'interfaccia; quello che scrivono le persone (descrizioni, commenti, bio, messaggi) resta com'è.
 - **Leggere le regole**: Regole della community, Termini d'uso e Privacy, in *Impostazioni* e nella schermata d'invito (bozze da far rivedere a un legale).
 
 **Scorciatoie**
@@ -114,6 +115,7 @@ novae/
 ├── index.html          le schermate (una sola pagina)
 ├── styles.css          lo stile
 ├── app.js              dati di esempio, navigazione e interazioni
+├── i18n.js             traduzioni in inglese dell'interfaccia
 ├── manifest.webmanifest  nome, icone e colori dell'app installata
 ├── sw.js               service worker: funziona anche offline
 ├── LICENSE             licenza MIT del codice
