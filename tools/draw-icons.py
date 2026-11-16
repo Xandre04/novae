@@ -18,20 +18,7 @@ ICONS = {
 </g>
 <use href="#h" {M}/>'''),
 
-'letteratura': ('#437a54', f'''
-<g fill="none">
-  <rect x="21.25" y="22.5" width="57.5" height="51.25" rx="1"/>
-  <rect x="26.75" y="32" width="46.5" height="37" rx=".8"/>
-  <path d="M38.25 73.75V93M61.75 73.75V93M50 36.5V66.5"/>
-  <g id="h">
-    <path d="M50 36.5Q41 27.5 32 35V65.5Q41 59 50 66.5"/>
-    <path d="M29.75 34.5V68.25" stroke-width="1.3"/>
-    <path d="M29.75 68.25Q40 62.5 46.5 67.25L50 70" stroke-width="2"/>
-  </g>
-  <use href="#h" {M}/>
-</g>
-<path d="M54.5 33V47.5L56 45.5L57.5 47.5V33z" stroke="none"/>'''),
-
+# 'letteratura' is traced from the drawing itself (assets/categorie/letteratura.svg), not redrawn
 'musica': ('#7656b6', '''
 <path d="M17.5 44L75.5 28.4M14.5 63L87 43.4M23.5 78L85.5 61.3" fill="none" stroke-width="2.3"/>
 <path d="M25.4 60V35.8L32.8 33.8M54.2 70V47.2M75.2 65V41.5" fill="none" stroke-width="2.3"/>

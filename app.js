@@ -579,9 +579,9 @@
     'Design': '#c69f31', 'Architettura': '#6c767f', 'Moda': '#d36497', 'Scultura': '#ab8869',
     'Fumetto': '#deb440', 'Danza': '#d57aaa', 'Street art': '#d04c38', 'Artigianato': '#85633f',
   };
-  const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.svg?v=4" alt="" aria-hidden="true">`
+  const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.svg?v=5" alt="" aria-hidden="true">`
     : `<span class="cat-ico ring" aria-hidden="true"><i class="ph-light ph-${CAT_ICONS[d]}"></i></span>`;
-  const catTag = w => CAT_ICONS[w.disc] ? `<a class="cat-tag" href="#galleria/${slugOf(w.disc)}"${CAT_COLORS[w.disc] ? ` style="--c:${CAT_COLORS[w.disc]}"` : ''}>${CAT_COLORS[w.disc] ? `<img src="assets/categorie/${slugOf(w.disc)}.svg?v=4" alt="" aria-hidden="true">` : `<i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>`}${w.disc}</a>` : '';
+  const catTag = w => CAT_ICONS[w.disc] ? `<a class="cat-tag" href="#galleria/${slugOf(w.disc)}"${CAT_COLORS[w.disc] ? ` style="--c:${CAT_COLORS[w.disc]}"` : ''}>${CAT_COLORS[w.disc] ? `<img src="assets/categorie/${slugOf(w.disc)}.svg?v=5" alt="" aria-hidden="true">` : `<i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>`}${w.disc}</a>` : '';
   function postX(w) {
     const a = ARTISTS[w.a];
     return `<article class="xpost" data-thread="${w.id}">
