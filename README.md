@@ -75,6 +75,9 @@ NOVAE si installa come app dal sito, senza store: icona sulla schermata Home, sc
 - **Personalizzare il profilo**: banner, nome, nome utente e bio.
 - **Salvare** un'opera dai tre puntini e ritrovarla in *Profilo → Salvate*.
 - **Seguire** gli artisti e scrivere loro nei messaggi.
+- **Invitare qualcuno**: dai tre trattini, *Codice QR*. Il QR si inquadra con la fotocamera e apre NOVAE con il codice già scritto; ogni persona ha 3 inviti, validi 14 giorni.
+- **Segnalare un'opera** dai tre puntini, scegliendo il motivo. Nell'alpha la segnalazione resta sul telefono.
+- **Leggere le regole**: Regole della community, Termini d'uso e Privacy, in *Impostazioni* e nella schermata d'invito (bozze da far rivedere a un legale).
 
 **Scorciatoie**
 

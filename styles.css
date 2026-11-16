@@ -958,3 +958,25 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 body.no-scroll .rail { display: none; } /* nothing to scroll: no scroll rail */
 .reel-tags { filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .75)); } /* stars stay readable on bright photos */
 .btn-accent:disabled { opacity: .4; cursor: not-allowed; }
+
+/* invite link on the gate, legal pages, report sheet */
+.gate-legal { font-size: 12px; color: var(--ink-3); line-height: 1.5; margin-top: 6px; }
+.gate-legal a, .legal a, .x-note a, .report-note a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
+body.out .dock { display: none; } /* reading the rules before entering: no app navigation */
+.legal { max-width: 640px; margin: 0 auto; padding: 22px 20px calc(var(--dock-h) + 24px); color: var(--ink-2); font-size: 15px; line-height: 1.65; }
+.legal .cine-back { position: static; margin: 0 0 8px -8px; }
+.legal h1 { color: var(--ink); font-size: clamp(20px, 6vw, 28px); font-weight: 300; letter-spacing: .2em; text-transform: uppercase; margin-bottom: 18px; }
+.legal h2 { color: var(--ink); font-size: 14px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; margin: 26px 0 8px; }
+.legal p { margin: 0 0 12px; }
+.legal ul, .legal ol { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 6px; }
+.legal strong { color: var(--ink); }
+.legal-draft { padding: 10px 14px; border-radius: 10px; border: 1px dashed rgba(214, 28, 64, .5); color: var(--accent-hi); font-size: 13px; }
+.legal-links { margin-top: 30px !important; padding-top: 16px; border-top: var(--stroke) solid var(--line); font-size: 14px; }
+.report-reasons { display: grid; border: var(--stroke) solid var(--line); border-radius: var(--wobble); overflow: hidden; }
+.report-reasons label { display: flex; align-items: center; gap: 12px; padding: 12px 14px; font-size: 15px; border-bottom: var(--stroke) solid var(--line); cursor: pointer; }
+.report-reasons label:last-child { border-bottom: 0; }
+.report-reasons label:has(input:checked) { background: rgba(214, 28, 64, .1); }
+.report-reasons input, .report-hide input { accent-color: var(--accent-hi); width: 18px; height: 18px; flex: none; }
+.report-hide { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-2); }
+.my-qr canvas { border-radius: 14px; }
+.report-note { font-size: 13px; color: var(--ink-3); line-height: 1.5; }

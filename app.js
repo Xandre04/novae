@@ -219,6 +219,23 @@
   }
 
   /* ---------------- 1. Gate ---------------- */
+  // A real QR (dark on light, so phone cameras read it) that opens NOVAE with the invite code filled in
+  const inviteLink = code => `${location.origin}${location.pathname}?invito=${encodeURIComponent(code)}`;
+  function drawInviteQR(c, text) {
+    if (!window.qrcode) return drawQR(c); // library didn't load (offline): fall back to the drawn one
+    const q = qrcode(0, 'H'); // high error correction: the logo in the middle hides a few modules
+    q.addData(text); q.make();
+    const N = q.getModuleCount(), pad = 3, m = c.width / (N + pad * 2), ctx = c.getContext('2d');
+    ctx.fillStyle = '#ecebe6'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = '#141414';
+    // square modules: round dots look nicer but stop scanning reliably at larger sizes
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (q.isDark(y, x)) ctx.fillRect((x + pad) * m, (y + pad) * m, m + .5, m + .5);
+    const s = Math.round(N * .2), o = (N - s) / 2; // logo plate: about 4% of the code, well inside what level H recovers
+    ctx.fillStyle = '#ecebe6'; ctx.fillRect((o + pad) * m, (o + pad) * m, s * m, s * m);
+    const star = new Image();
+    star.onload = () => { const h = s * m * .9, w = h * star.width / star.height; ctx.drawImage(star, (c.width - w) / 2, (c.height - h) / 2, w, h); };
+    star.src = STAR_SRC;
+  }
   function drawQR(c = $('#qr')) {
     const ctx = c.getContext('2d');
     const N = 25, m = c.width / N, r = rng(2026);
@@ -259,6 +276,18 @@
       if (location.hash === '#hub') route(); else location.hash = '#hub';
     }, reduceMotion ? 0 : 750);
   });
+
+  // opened from an invite QR or link (?invito=NVE-XXXX): the code is already written in
+  {
+    const invited = new URLSearchParams(location.search).get('invito');
+    if (invited) {
+      if (!store.get('novae.in')) {
+        $('#code').value = invited.toUpperCase().slice(0, 12);
+        $('#gateHelp').textContent = 'Il codice del tuo invito è già scritto: tocca Entra.';
+      }
+      history.replaceState(null, '', location.pathname + location.hash); // don't keep the code in the address
+    }
+  }
 
   /* ---------------- 2. Hub ---------------- */
   // Offsets from the centre star, in units of hub width (measured from the reference video)
@@ -813,7 +842,7 @@
       const hits = g.append('g').selectAll('path').data(feats).join('path').attr('class', 'hit')
         .on('click', (e, f) => {
           const i = COUNTRIES.findIndex(c => c.en === f.properties.name);
-          if (i > -1) selectCountry(i); else toast(`Ancora nessuna Nova in ${f.properties.name}`);
+          if (i > -1) selectCountry(i); else toast('Ancora nessun artista in questo paese');
         });
       const coast = g.append('path').attr('class', 'land').datum(land);
       const bord = g.append('path').attr('class', 'land').attr('stroke-opacity', .35).datum(borders);
@@ -1222,7 +1251,7 @@
       <div class="set-group"><h2>Account</h2>
         <button class="set-row set-link" data-act="edit-profile"><span>Modifica profilo<small>${ARTISTS.me.name}, @${ARTISTS.me.handle}</small></span><i class="ph-light ph-caret-right"></i></button>
         ${sw('priv', 'Profilo privato', 'Solo chi segui vede le tue opere')}
-        <div class="set-row"><span>Lingua<small>Interfaccia</small></span><select aria-label="Lingua"><option>Italiano</option><option>English</option><option>ไทย</option></select></div>
+        <div class="set-row"><span>Lingua<small>Interfaccia</small></span><select aria-label="Lingua"><option>Italiano</option><option disabled>English (in arrivo)</option></select></div>
       </div>
       <div class="set-group"><h2>Esperienza</h2>
         ${sw('notif', 'Notifiche Novae', 'Quando un artista che segui pubblica')}
@@ -1231,11 +1260,16 @@
       </div>
       <div class="set-group"><h2>Inviti</h2>
         <div class="set-row"><span>Il tuo codice<small>Sei entrato con questo invito</small></span><span class="invite-code">${code}</span></div>
-        <div class="set-row"><span>Invita un artista<small>Hai 3 inviti disponibili</small></span><button class="btn-ghost" data-act="invite">Genera</button></div>
+        <div class="set-row"><span>Invita qualcuno<small>${INVITES} inviti, ognuno vale 14 giorni</small></span><button class="btn-ghost" data-act="my-qr">Mostra QR</button></div>
       </div>
       <div class="set-group"><h2>App</h2>
         ${isApp() ? '<div class="set-row"><span>App installata<small>Stai usando NOVAE dalla schermata Home</small></span><i class="ph-light ph-check"></i></div>'
           : '<div class="set-row"><span>Installa l\'app<small>NOVAE sulla schermata Home, a schermo intero</small></span><button class="btn-ghost" data-act="install">Installa</button></div>'}
+      </div>
+      <div class="set-group"><h2>Regole e privacy</h2>
+        <a class="set-row set-link" href="#doc/regole"><span>Regole della community<small>Cosa si può pubblicare e come funzionano le segnalazioni</small></span><i class="ph-light ph-caret-right"></i></a>
+        <a class="set-row set-link" href="#doc/termini"><span>Termini d'uso</span><i class="ph-light ph-caret-right"></i></a>
+        <a class="set-row set-link" href="#doc/privacy"><span>Privacy</span><i class="ph-light ph-caret-right"></i></a>
       </div>
       <div class="set-group">
         <div class="set-row"><span class="danger">Esci da NOVAE</span><button class="btn-ghost danger" data-act="logout">Esci</button></div>
@@ -1342,22 +1376,28 @@
       : `<button data-act="publish"><i class="ph-light ph-image"></i>${type === 'utente' ? 'Pubblica per i follower' : 'Nuova opera'}</button>
          ${type === 'artista' ? '<button data-act="new-col"><i class="ph-light ph-star-four"></i>Nuova costellazione</button>' : ''}`}</div>`);
   }
+  // Invites (alpha rules, see Regole della community): 3 per person, single use, valid 14 days; an expired code is replaced
+  const INVITES = 3, INVITE_DAYS = 14;
   function myCode() {
-    let code = store.get('novae.mycode');
-    if (!code) {
+    let code = store.get('novae.mycode'), ts = +store.get('novae.mycode.ts') || 0;
+    if (!code || Date.now() - ts > INVITE_DAYS * 864e5) {
       code = 'NVE-' + Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
-      store.set('novae.mycode', code);
+      ts = Date.now();
+      store.set('novae.mycode', code); store.set('novae.mycode.ts', String(ts));
     }
     return code;
   }
+  const inviteExpiry = () => new Date((+store.get('novae.mycode.ts') || Date.now()) + INVITE_DAYS * 864e5)
+    .toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
   function openMyQR() {
     openSheet(`<h3>Codice QR</h3><div class="my-qr">
-      <canvas id="myQr" width="264" height="264" aria-label="Il tuo codice QR di invito"></canvas>
+      <canvas id="myQr" width="528" height="528" aria-label="Il tuo codice QR di invito"></canvas>
       <strong>${myCode()}</strong>
-      <p>Il tuo codice invito: chi lo riceve lo scrive nella schermata d'ingresso.</p>
+      <p>Fallo inquadrare con la fotocamera: si apre NOVAE con il codice già scritto. Vale per una persona, fino al ${inviteExpiry()}.</p>
+      <p class="report-note">Hai ${INVITES} inviti. Chi entra con il tuo codice risulta invitato da te.</p>
       <button class="btn-accent" data-act="invite-share">Condividi invito</button>
     </div>`);
-    drawQR($('#myQr'));
+    drawInviteQR($('#myQr'), inviteLink(myCode()));
   }
   function openProblem() {
     openSheet(`<h3>Segnala un problema</h3>
@@ -1374,6 +1414,131 @@
     const body = `${text}\n\n---\nSchermata: ${location.hash || '#hub'}`;
     window.open(`${REPO_ISSUES}?title=${encodeURIComponent(text.slice(0, 60))}&body=${encodeURIComponent(body)}`, '_blank', 'noopener');
     closeSheet();
+  }
+
+  /* ---------------- Segnala: a report with a reason ---------------- */
+  const REPORT_REASONS = [
+    ['spam', 'Spam o truffa'],
+    ['odio', 'Insulti, odio o molestie'],
+    ['violenza', 'Violenza o minacce'],
+    ['sesso', 'Contenuto sessuale esplicito'],
+    ['copia', 'Non è sua: opera copiata da qualcun altro'],
+    ['ia', 'Generata con IA senza dirlo'],
+    ['privacy', 'Mostra dati personali di qualcuno'],
+    ['altro', 'Altro'],
+  ];
+  function openReport(w) {
+    openSheet(`<h3>Segnala “${w.t}”</h3>
+      <form class="pub" id="reportForm" data-id="${w.id}" novalidate>
+        <div class="report-reasons" role="radiogroup" aria-label="Motivo">${REPORT_REASONS.map(([v, l]) =>
+          `<label><input type="radio" name="reason" value="${v}"><span>${l}</span></label>`).join('')}</div>
+        <div class="field"><label for="reportText">Dettagli (facoltativo)</label><textarea id="reportText" maxlength="500" rows="2" placeholder="Cosa c’è che non va?"></textarea></div>
+        <label class="report-hide"><input type="checkbox" id="reportHide" checked><span>Non mostrarmi più questa opera</span></label>
+        <p class="report-note">Chi pubblica non saprà che sei stato tu. Le <a href="#doc/regole">Regole della community</a> spiegano cosa succede dopo. Nell’alpha la segnalazione resta sul tuo telefono: arriverà ai moderatori quando ci sarà il server.</p>
+        <p class="pub-err" id="reportErr" role="alert"></p>
+        <button class="btn-accent" type="submit">Invia segnalazione</button>
+      </form>`);
+  }
+  function submitReport(f) {
+    const reason = f.querySelector('input[name=reason]:checked')?.value;
+    if (!reason) { $('#reportErr').textContent = 'Scegli un motivo.'; return; }
+    // ponytail: no server yet, so reports stay on this phone; with the backend they go to the moderators' queue
+    const reports = readJSON('novae.reports', []);
+    reports.push({ id: f.dataset.id, reason, text: $('#reportText').value.trim().slice(0, 500), ts: Date.now() });
+    store.set('novae.reports', JSON.stringify(reports));
+    if ($('#reportHide').checked) { hidden.add(f.dataset.id); store.set('novae.hidden', JSON.stringify([...hidden])); }
+    closeSheet();
+    toast('Segnalazione salvata. Grazie');
+    if (cur.name === 'scopri') refresh();
+  }
+
+  /* ---------------- Regole della community, Termini, Privacy (#doc/...) ---------------- */
+  // Drafts for the alpha: the [bracketed] parts are still to be decided, and a lawyer should read them before launch.
+  const DRAFT = '<p class="legal-draft">Bozza per l’alpha. Le parti tra [parentesi] sono da completare, e il testo va fatto rileggere a un legale prima del lancio.</p>';
+  const DOCS = {
+    regole: { title: 'Regole della community', html: `
+      <p>NOVAE è un posto per mostrare quello che crei e guardare quello che creano gli altri. Poche regole, perché resti un bel posto.</p>
+      <h2>Cosa puoi pubblicare</h2>
+      <ul>
+        <li><strong>Solo opere tue</strong>, o di cui hai i diritti. Se è un lavoro a più mani, cita chi ha collaborato.</li>
+        <li><strong>Se un’opera è fatta con l’IA, dillo</strong> nella descrizione.</li>
+        <li><strong>Il nudo artistico è consentito</strong>; il contenuto sessuale esplicito no.</li>
+        <li>Niente violenza gratuita, niente contenuti che incitano all’odio o al danno, verso sé o verso altri.</li>
+      </ul>
+      <h2>Come ci si tratta</h2>
+      <ul>
+        <li>Niente insulti, molestie, minacce o discriminazioni, nemmeno “per scherzo”.</li>
+        <li><strong>I critici criticano l’opera, non la persona.</strong> Le stelle si danno al lavoro, non a chi l’ha fatto.</li>
+        <li>Niente spam, niente truffe nel Mercato, niente account falsi.</li>
+        <li>Non pubblicare dati personali di altri: indirizzi, numeri, foto private.</li>
+      </ul>
+      <h2>Inviti</h2>
+      <p>Si entra solo su invito. Ogni persona ha <strong>3 inviti</strong>; ogni codice vale per una sola persona e per <strong>14 giorni</strong>. Inviti qualcuno? Ti fidi di lui: chi invita persone che violano le regole può perdere i suoi inviti.</p>
+      <h2>Segnalazioni</h2>
+      <p>Dai tre puntini di ogni opera puoi segnalarla scegliendo un motivo. Chi viene segnalato non sa chi è stato.</p>
+      <p>Il team di moderazione guarda ogni segnalazione <strong>entro 48 ore</strong> e decide, a seconda della gravità:</p>
+      <ol>
+        <li><strong>Nessuna azione</strong>, se il contenuto rispetta le regole.</li>
+        <li><strong>Avviso</strong> e richiesta di modifica (per esempio: dichiarare l’uso di IA).</li>
+        <li><strong>Rimozione</strong> del contenuto.</li>
+        <li><strong>Sospensione</strong> dell’account, da 7 giorni fino alla chiusura nei casi gravi o ripetuti.</li>
+      </ol>
+      <p>Minacce, contenuti illegali e materiale che coinvolge minori vengono rimossi subito e, quando serve, segnalati alle autorità.</p>
+      <p>Pensi che una decisione sia sbagliata? Scrivi a [email del progetto]: una persona diversa da chi ha deciso la riguarderà.</p>` },
+    termini: { title: 'Termini d’uso', html: DRAFT + `
+      <p>Ultimo aggiornamento: [data]. Usando NOVAE accetti questi termini e le <a href="#doc/regole">Regole della community</a>.</p>
+      <h2>1. Cos’è NOVAE</h2>
+      <p>NOVAE è un social su invito per artisti, gestito da [nome del titolare o della società]. È in <strong>fase alpha</strong>: le funzioni possono cambiare o sparire, alcuni contenuti sono di esempio e il servizio può interrompersi.</p>
+      <h2>2. Chi può usarlo</h2>
+      <p>Devi avere almeno <strong>14 anni</strong> ed essere entrato con un invito valido. Un account a persona; sei responsabile di quello che succede con il tuo account e dei codici invito che dai.</p>
+      <h2>3. Le tue opere restano tue</h2>
+      <p>Pubblicando un’opera <strong>ne mantieni tutti i diritti</strong>. Concedi a NOVAE solo il permesso, gratuito e non esclusivo, di conservarla, mostrarla agli utenti e adattarne il formato (per esempio ridimensionare un’immagine) per far funzionare il servizio. Il permesso finisce quando la elimini, salvo le copie di sicurezza, che cancelliamo entro [30] giorni.</p>
+      <p>Pubblichi solo opere di cui hai i diritti, e dichiari se sono fatte con l’IA. Non usiamo le tue opere per addestrare intelligenze artificiali né le cediamo a terzi.</p>
+      <h2>4. Comportamento</h2>
+      <p>Valgono le <a href="#doc/regole">Regole della community</a>. Possiamo rimuovere contenuti e sospendere o chiudere account che le violano.</p>
+      <h2>5. Recensioni</h2>
+      <p>Le recensioni dei critici sono opinioni personali dei loro autori, non di NOVAE.</p>
+      <h2>6. Mercato e crediti</h2>
+      <p>Nell’alpha i crediti non hanno valore reale e nel Mercato non si compra né si vende nulla. Le regole per gli acquisti veri arriveranno prima che siano attivi.</p>
+      <h2>7. Responsabilità</h2>
+      <p>Nei limiti consentiti dalla legge, NOVAE è fornito “così com’è” e non risponde di perdite di dati o interruzioni durante l’alpha. Restano salvi i tuoi diritti di consumatore.</p>
+      <h2>8. Modifiche e legge</h2>
+      <p>Se cambiamo questi termini te lo diciamo nell’app. Si applica la legge italiana; per i consumatori resta competente il giudice del luogo in cui vivono.</p>
+      <p>Contatti: [email del progetto].</p>` },
+    privacy: { title: 'Informativa privacy', html: DRAFT + `
+      <p>Ultimo aggiornamento: [data]. Titolare del trattamento: [nome e cognome o società], [indirizzo], [email del progetto].</p>
+      <h2>Oggi, nell’alpha</h2>
+      <p><strong>NOVAE non ha ancora un server suo.</strong> Il profilo, le opere che pubblichi, i mi piace, i messaggi, le segnalazioni e il codice invito restano <strong>solo nel browser del tuo telefono o computer</strong> (archiviazione locale). Non li vediamo e non li riceviamo. Per cancellarli: Impostazioni → Esci, poi cancella i dati del sito dal browser.</p>
+      <p>Quando apri l’app, alcuni servizi esterni ricevono il tuo indirizzo IP, come per qualsiasi sito:</p>
+      <ul>
+        <li><strong>GitHub Pages</strong>, che ospita l’app;</li>
+        <li><strong>jsDelivr</strong>, che fornisce librerie, icone e la mappa del globo;</li>
+        <li><strong>Google Fonts</strong>, che fornisce il carattere Outfit;</li>
+        <li><strong>Picsum</strong>, che fornisce le immagini di esempio.</li>
+      </ul>
+      <p>“Segnala un problema” apre GitHub: lì il testo è pubblico e vale l’informativa di GitHub.</p>
+      <p>Non usiamo cookie di profilazione o pubblicità.</p>
+      <h2>Quando arriverà il server</h2>
+      <p>Prima di attivarlo aggiorneremo questa pagina e te lo diremo nell’app. In breve, tratteremo:</p>
+      <ul>
+        <li><strong>dati dell’account</strong> (email, nome, nome utente, tipo di profilo, banner, bio) per farti usare il servizio;</li>
+        <li><strong>i contenuti</strong> che pubblichi e i messaggi, per mostrarli a chi deve vederli;</li>
+        <li><strong>chi ti ha invitato e chi inviti</strong>, per far funzionare gli inviti e la moderazione;</li>
+        <li><strong>il paese</strong>, mai la città, per il globo di Novae, che potrai disattivare;</li>
+        <li><strong>dati tecnici e segnalazioni</strong>, per sicurezza e moderazione.</li>
+      </ul>
+      <p>Base giuridica: il contratto (i Termini) per far funzionare NOVAE, il legittimo interesse per sicurezza e moderazione, il consenso per le notifiche. Conserviamo i dati finché hai l’account e li cancelliamo entro [30] giorni dalla chiusura. I fornitori saranno [server e fornitori, preferibilmente nell’UE].</p>
+      <h2>I tuoi diritti</h2>
+      <p>Puoi chiedere di vedere, correggere, scaricare o cancellare i tuoi dati, e opporti al loro uso, scrivendo a [email del progetto]. Puoi anche fare reclamo al Garante per la protezione dei dati personali (garanteprivacy.it).</p>
+      <h2>Età</h2>
+      <p>NOVAE è per chi ha almeno <strong>14 anni</strong>, l’età minima in Italia per usare da soli i servizi online.</p>` },
+  };
+  function renderDoc(which) {
+    const d = DOCS[which] || DOCS.regole;
+    document.title = `${d.title} | NOVAE`;
+    $('#legal').innerHTML = `<button class="cine-back icon-btn" data-act="back" data-fallback="${store.get('novae.in') ? '#impostazioni' : '#invito'}" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
+      <h1>${d.title}</h1>${d.html}
+      <p class="legal-links">${Object.entries(DOCS).filter(([k]) => k !== which).map(([k, v]) => `<a href="#doc/${k}">${v.title}</a>`).join(' · ')}</p>`;
   }
 
   let toastT;
@@ -1396,6 +1561,7 @@
   /* ---------------- Router ---------------- */
   const RENDER = {
     invito: () => drawQR(),
+    doc: renderDoc,
     hub: renderHub,
     scopri: renderFeed,
     post: renderThread,
@@ -1412,7 +1578,7 @@
     impostazioni: renderSettings,
   };
   const TITLES = {
-    invito: 'Invito', scopri: 'Scopri', post: 'Post', vista: 'Opera', galleria: 'Galleria', stile: 'Stile', disciplina: 'Galleria', opera: 'Opera',
+    invito: 'Invito', doc: 'Regole e privacy', scopri: 'Scopri', post: 'Post', vista: 'Opera', galleria: 'Galleria', stile: 'Stile', disciplina: 'Galleria', opera: 'Opera',
     novae: 'Novae', mercato: 'Mercato', profilo: 'Profilo', artista: 'Artista', messaggi: 'Messaggi', impostazioni: 'Impostazioni',
   };
   const scrollMemo = new Map(); // hash -> scrollY, so "back" lands where you left
@@ -1424,7 +1590,8 @@
     if (trail.length > 1 && trail[trail.length - 2] === curHash) trail.pop(); else trail.push(curHash);
     let [name, param] = decodeURIComponent(location.hash.slice(1)).split('/');
     if (name === 'seguiti') name = 'stile'; // old link to the followed-artists works
-    if (!store.get('novae.in')) name = 'invito';
+    document.body.classList.toggle('out', !store.get('novae.in'));
+    if (!store.get('novae.in') && name !== 'doc') name = 'invito'; // rules, terms and privacy are readable before entering
     else if (!name || name === 'invito' || !(name in RENDER)) name = 'hub';
     if (name === 'galleria' && param) name = 'disciplina';
     const screen = name === 'artista' ? 'profilo' : name;
@@ -1602,7 +1769,7 @@
       case 'my-qr': openMyQR(); break;
       case 'problem': openProblem(); break;
       case 'invite-share': {
-        const text = `Entra su NOVAE con il mio codice ${myCode()}`, url = location.href.split('#')[0];
+        const text = `Entra su NOVAE con il mio codice ${myCode()}`, url = inviteLink(myCode());
         if (navigator.share) navigator.share({ title: 'NOVAE', text, url }).catch(() => {});
         else navigator.clipboard?.writeText(`${text}: ${url}`).then(() => toast('Invito copiato'), () => toast(myCode()));
         break;
@@ -1631,7 +1798,7 @@
           ${w.a === 'me'
             ? `<button data-act="edit-work" data-id="${w.id}"><i class="ph-light ph-pencil-simple"></i>Modifica opera</button>
                <button class="danger" data-act="delete" data-id="${w.id}"><i class="ph-light ph-trash"></i>Elimina opera</button>`
-            : `<button data-act="report"><i class="ph-light ph-flag"></i>Segnala</button>
+            : `<button data-act="report" data-id="${w.id}"><i class="ph-light ph-flag"></i>Segnala</button>
                <button data-act="not-interested" data-id="${w.id}"><i class="ph-light ph-eye-slash"></i>Non mi interessa</button>`}
         </div>`);
         break;
@@ -1654,7 +1821,7 @@
         closeSheet();
         break;
       }
-      case 'report': closeSheet(); toast('Grazie, la controlleremo'); break;
+      case 'report': openReport(w); break;
       case 'delete':
         openSheet(`<h3>Eliminare "${w.t}"?</h3><p>Sparisce dal feed e dal tuo profilo. Non si può annullare.</p>
           <div class="action-list"><button class="danger" data-act="delete-yes" data-id="${w.id}"><i class="ph-light ph-trash"></i>Elimina</button>
@@ -1716,12 +1883,6 @@
         break;
       }
       case 'buy': toast('Acquisto in crediti disponibile a breve'); break;
-      case 'invite': {
-        const c = 'NVE-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-        navigator.clipboard?.writeText(c).catch(() => {});
-        toast(`Nuovo invito: ${c} (copiato)`);
-        break;
-      }
       case 'logout': store.del('novae.in'); location.hash = '#invito'; break;
       case 'soon': toast('Presto disponibile'); break;
     }
@@ -1734,6 +1895,7 @@
     if (f.id === 'profForm') { e.preventDefault(); submitProfile(); return; }
     if (f.id === 'colForm') { e.preventDefault(); submitCol(); return; }
     if (f.id === 'problemForm') { e.preventDefault(); submitProblem(); return; }
+    if (f.id === 'reportForm') { e.preventDefault(); submitReport(f); return; }
     if (f.classList.contains('composer')) {
       e.preventDefault();
       const input = f.querySelector('input');

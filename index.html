@@ -19,10 +19,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/light/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="styles.css?v=64">
+  <link rel="stylesheet" href="styles.css?v=67">
   <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" defer></script>
-  <script src="app.js?v=64" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js" defer></script>
+  <script src="app.js?v=70" defer></script>
 </head>
 <body data-screen="invito">
 
@@ -59,6 +60,7 @@
             <button type="submit" class="btn-accent">Entra</button>
           </div>
           <p class="gate-help" id="gateHelp">Inquadra il QR di chi ti invita, oppure inserisci il codice.</p>
+          <p class="gate-legal">Entrando accetti i <a href="#doc/termini">Termini</a>, le <a href="#doc/regole">Regole della community</a> e l'<a href="#doc/privacy">Informativa privacy</a>.</p>
         </form>
       </div>
     </section>
@@ -88,6 +90,11 @@
     <section class="screen" data-screen="galleria" aria-label="Galleria">
       <header class="page-head"><h1 class="hand">Galleria</h1></header>
       <div class="disciplines" id="disciplines"></div>
+    </section>
+
+    <!-- Regole della community, termini, privacy -->
+    <section class="screen" data-screen="doc" aria-label="Regole e privacy">
+      <article class="legal" id="legal"></article>
     </section>
 
     <!-- 6. Stile: coming soon -->
