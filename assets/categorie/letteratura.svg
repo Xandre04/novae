@@ -1,6 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="160" height="160" fill="#437a54" stroke="#437a54" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="50" r="44.75" fill="none" stroke-width="2.5"/><g fill="none" stroke-width="3.2">
-  <g id="h"><path d="M50 33Q36 23 21.5 30V70Q36 63 50 72"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="160" height="160" fill="#437a54" stroke="#437a54" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="50" r="44.75" fill="none" stroke-width="2.5"/><g fill="none">
+  <g id="h">
+    <path d="M50 30Q37 21 24.5 27V58Q37 52 50 60"/>
+    <path d="M20.5 30.5V61.5Q34 57 46.5 62.5L50 65.5" stroke-width="2"/>
+  </g>
   <use href="#h" transform="matrix(-1 0 0 1 100 0)"/>
-  <path d="M50 33V72"/>
+  <path d="M50 30V60"/>
+  <path d="M29 36Q36.5 32.5 45.5 35.5M29 42Q36.5 38.5 45.5 41.5M29 48Q36.5 44.5 45.5 47.5M60.5 41.5Q65 39.5 71 42M60.5 47.5Q65 45.5 71 48" stroke-width="1.7"/>
 </g>
-<path d="M56.5 29.5V51L59.5 47.5L62.5 51V28z" stroke="none"/></svg>
+<path d="M54 28V45L56.25 42.5L58.5 45V29z" stroke="none"/>
+<rect x="22" y="67" width="56" height="4.5" rx="1.5" stroke="none"/>
+<rect x="47.5" y="71" width="5" height="23.5" stroke="none"/></svg>
