@@ -1353,19 +1353,22 @@
     const sheet = $('#sheet');
     let drag = null;
     sheet.addEventListener('touchstart', e => {
-      drag = sheet.scrollTop <= 0 && !e.target.closest('textarea, .notifs') ? { y: e.touches[0].clientY, dy: 0 } : null;
+      if (drag || e.touches.length > 1) return; // a second finger must not make it jump
+      drag = sheet.scrollTop <= 0 && !e.target.closest('textarea, .notifs') ? { y: e.touches[0].clientY, dy: 0, t: performance.now() } : null;
     }, { passive: true });
     sheet.addEventListener('touchmove', e => {
       if (!drag) return;
-      drag.dy = Math.max(0, e.touches[0].clientY - drag.y);
-      if (!drag.dy) return;
+      const raw = e.touches[0].clientY - drag.y;
+      if (!raw) return;
       e.preventDefault(); // no page bounce while dragging the sheet
+      drag.dy = raw > 0 ? raw : -Math.sqrt(-raw) * 2; // dragging up: friction instead of a hard stop
       sheet.style.transition = 'none';
       sheet.style.transform = `translate(-50%, ${drag.dy}px)`;
     }, { passive: false });
     sheet.addEventListener('touchend', () => {
       if (!drag) return;
-      const close = drag.dy > 90;
+      const speed = drag.dy / Math.max(1, performance.now() - drag.t); // px per ms
+      const close = drag.dy > 90 || (drag.dy > 20 && speed > .5); // far enough, or a real flick (500 px/s)
       sheet.style.transition = sheet.style.transform = '';
       if (close) closeSheet();
       drag = null;
