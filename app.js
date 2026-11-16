@@ -599,8 +599,8 @@
       </div>
     </article>`;
   }
-  // Feed / Reel switch at the top of Scopri, like Instagram's "Per te / Amici": same works, two ways to browse
-  const modeTabs = on => `<nav class="mode-tabs" aria-label="Modo di vista"><a href="#scopri" ${on === 'feed' ? 'class="on" aria-current="page"' : ''}>Feed</a><a href="#vista" ${on === 'reel' ? 'class="on" aria-current="page"' : ''}>Reel</a></nav>`;
+  // Sfoglia (list) / Scorri (full-screen) switch at the top of Scopri, like Instagram's "Per te / Amici": same works, two ways to browse
+  const modeTabs = on => `<nav class="mode-tabs" aria-label="Modo di vista"><a href="#scopri" ${on === 'feed' ? 'class="on" aria-current="page"' : ''}>Sfoglia</a><a href="#vista" ${on === 'reel' ? 'class="on" aria-current="page"' : ''}>Scorri</a></nav>`;
   function renderFeed() {
     const list = [...MINE, ...FEED].filter(w => !hidden.has(w.id) && canSee(w));
     $('#feed').className = 'xfeed';

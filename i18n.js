@@ -23,6 +23,7 @@ window.NOVAE_I18N = { en: {} };
   const pl = (n, one, many) => `${n} ${+String(n).replace(/\D/g, '') === 1 ? one : many}`;
 
   const dict = {
+    'Sfoglia': 'Browse', 'Scorri': 'Scroll', 'Modo di vista': 'View mode',
     ...CATS, ...COUNTRIES,
     // navigation, sections, titles
     'Galleria': 'Gallery', 'Scopri': 'Discover', 'Stile': 'Style', 'Mercato': 'Market', 'Mercato Novae': 'Novae Market', 'Mercato<br>Novae': 'Novae<br>Market', 'Profilo': 'Profile',
