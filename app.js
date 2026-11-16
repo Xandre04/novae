@@ -1348,6 +1348,16 @@
 
   /* ---------------- Sheet + toast ---------------- */
   let sheetT, sheetOpener = null;
+  // full-screen preview of one image (from Sfoglia); a tap or Esc closes it
+  function openPreview(w) {
+    const box = document.createElement('div');
+    box.className = 'lightbox'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', w.t); box.tabIndex = -1;
+    box.innerHTML = `<img src="${w.img || w.thumb}" alt="${w.t}"><button class="icon-btn lightbox-x" aria-label="Chiudi"><i class="ph-light ph-x"></i></button>`;
+    const close = () => { box.classList.add('out'); setTimeout(() => box.remove(), 200); removeEventListener('keydown', esc); };
+    const esc = e => { if (e.key === 'Escape') close(); };
+    box.addEventListener('click', close); addEventListener('keydown', esc);
+    document.body.append(box); box.focus();
+  }
   function openSheet(html) {
     clearTimeout(sheetT); // a pending close must not hide the sheet we are opening now
     if (!$('#sheet').classList.contains('open')) sheetOpener = document.activeElement;
@@ -1834,6 +1844,7 @@
       dblEl = dbl;
       dblTimer = setTimeout(() => {
         dblTimer = null;
+        if (dbl.matches('.x-media')) { openPreview(byId[dbl.dataset.dbl]); return; } // Sfoglia: just the image, full screen
         const h = dbl.getAttribute('href');
         if (h) { location.hash = h; return; }
         const reel = dbl.closest('.reel'); // single tap on a reel: pause / resume video and audio

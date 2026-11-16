@@ -1002,3 +1002,13 @@ body.out .dock { display: none; } /* reading the rules before entering: no app n
 .vista .mode-tabs { position: absolute; top: 14px; left: 0; right: 0; z-index: 5; pointer-events: none; }
 .vista .mode-tabs a { pointer-events: auto; color: rgba(255, 255, 255, .6); text-shadow: 0 1px 4px rgba(0, 0, 0, .6); }
 .vista .mode-tabs a.on { color: #fff; }
+
+/* full-screen image preview from Sfoglia */
+.lightbox { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: rgba(0, 0, 0, .94); outline: none; animation: lightbox-in .22s var(--ease-out); }
+.lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.lightbox-x { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 8px; font-size: 26px; color: #fff; }
+.lightbox.out { opacity: 0; transition: opacity .2s var(--ease-out); }
+@keyframes lightbox-in { from { opacity: 0; } }
+.lightbox img { animation: lightbox-img .26s var(--ease-out); }
+@keyframes lightbox-img { from { transform: scale(.96); } }
+@media (prefers-reduced-motion: reduce) { .lightbox, .lightbox img { animation: none; } }
