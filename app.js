@@ -599,11 +599,13 @@
       </div>
     </article>`;
   }
+  // Feed / Reel switch at the top of Scopri, like Instagram's "Per te / Amici": same works, two ways to browse
+  const modeTabs = on => `<nav class="mode-tabs" aria-label="Modo di vista"><a href="#scopri" ${on === 'feed' ? 'class="on" aria-current="page"' : ''}>Feed</a><a href="#vista" ${on === 'reel' ? 'class="on" aria-current="page"' : ''}>Reel</a></nav>`;
   function renderFeed() {
     const list = [...MINE, ...FEED].filter(w => !hidden.has(w.id) && canSee(w));
     $('#feed').className = 'xfeed';
-    $('#feed').innerHTML = list.length ? list.map(postX).join('')
-      : `<div class="empty">${starSvg()}<strong>Hai nascosto tutto</strong><p>Le opere che segni "Non mi interessa" spariscono da qui.</p><button class="btn-ghost" data-act="unhide-all">Mostrale di nuovo</button></div>`;
+    $('#feed').innerHTML = modeTabs('feed') + (list.length ? list.map(postX).join('')
+      : `<div class="empty">${starSvg()}<strong>Hai nascosto tutto</strong><p>Le opere che segni "Non mi interessa" spariscono da qui.</p><button class="btn-ghost" data-act="unhide-all">Mostrale di nuovo</button></div>`);
   }
 
   /* ---------------- Post comments page (#post/id), like an X thread ---------------- */
@@ -718,6 +720,7 @@
     root.className = 'vista';
     root.innerHTML = `
       <button class="vista-back icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
+      ${modeTabs('reel')}
       <p class="vista-hint" aria-hidden="true"><i class="ph-light ph-hand-swipe-up"></i>Scorri per la prossima</p>
       <div class="reels" id="reels">${list.map(reelHtml).join('')}</div>`;
     const reels = $('#reels');

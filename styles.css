@@ -992,3 +992,13 @@ body.out .dock { display: none; } /* reading the rules before entering: no app n
 .x-meta .x-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .x-meta > :not(.x-name) { flex: none; white-space: nowrap; }
 .x-desc, .x-reply p, .x-title, .bubble, .comment p, .review-text, .notif p, .reel-desc, .reel-meta h2, .prof-top p, .m-feature h2, .d-desc p, .sr strong, .thread strong, .col-title { overflow-wrap: anywhere; }
+
+/* Feed / Reel switch on Scopri */
+.mode-tabs { display: flex; justify-content: center; gap: 26px; }
+.mode-tabs a { position: relative; padding: 6px 2px; color: var(--ink-3); font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; transition: color .2s ease; }
+.mode-tabs a.on { color: var(--ink); }
+.mode-tabs a.on::after { content: ''; position: absolute; left: 50%; bottom: 0; width: 18px; height: 2px; margin-left: -9px; border-radius: 2px; background: currentColor; }
+#feed .mode-tabs { position: sticky; top: 0; z-index: 5; padding: 10px 0 8px; background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.vista .mode-tabs { position: absolute; top: 14px; left: 0; right: 0; z-index: 5; pointer-events: none; }
+.vista .mode-tabs a { pointer-events: auto; color: rgba(255, 255, 255, .6); text-shadow: 0 1px 4px rgba(0, 0, 0, .6); }
+.vista .mode-tabs a.on { color: #fff; }
