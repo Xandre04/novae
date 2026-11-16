@@ -747,8 +747,7 @@
     $('#disciplines').innerHTML = DISCIPLINES.map(d => {
       const ws = WORKS.filter(w => w.disc === d && canSee(w));
       return `<a class="disc ${ws.length ? '' : 'empty-disc'}" href="#galleria/${slugOf(d)}">
-        ${catIcon(d)}<div><h2>${d}</h2><p>${ws.length ? `${ws.length} ${ws.length === 1 ? 'opera' : 'opere'}` : 'In arrivo'}</p></div>
-        <div class="disc-thumbs">${ws.slice(0, 3).map((w, k) => `<img src="${w.ts ? w.img : pic(w.id, 120, 150)}" alt="" loading="lazy" style="--r:${(k - 1) * 7}deg">`).join('')}</div>
+        ${catIcon(d)}<h2>${d}</h2>
       </a>`;
     }).join('');
   }

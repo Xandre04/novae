@@ -375,13 +375,9 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .disciplines { display: grid; padding: 0 18px; }
 .disc { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 22px 4px; border-bottom: 1.5px solid #2a2927; }
 .disc:last-child { border-bottom: 0; }
-.disc > :not(.disc-thumbs) { transition: transform .25s var(--ease-out); }
-@media (hover: hover) and (pointer: fine) { .disc:hover > :not(.disc-thumbs) { transform: translateX(8px); } }
+.disc > * { transition: transform .25s var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .disc:hover > * { transform: translateX(8px); } }
 .disc h2 { font-family: var(--hand); font-weight: var(--hand-w); font-size: clamp(22px, 6vw, 30px); letter-spacing: .1em; text-transform: uppercase; }
-.disc p { color: var(--ink-3); font-size: 13px; margin-top: 2px; }
-.disc-thumbs { display: flex; }
-.disc-thumbs img { width: 52px; height: 64px; object-fit: cover; border: var(--stroke) solid var(--line); border-radius: 3px; margin-left: -18px; transform: rotate(var(--r)); background: var(--bg-2); transition: transform .3s var(--ease); }
-@media (hover: hover) and (pointer: fine) { .disc:hover .disc-thumbs img { transform: rotate(0) translateY(-3px); } }
 .disc.active h2 { color: var(--accent-hi); }
 
 /* ---------- 7. Disciplina / Cinematografia ---------- */
@@ -947,15 +943,14 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .dock-star { touch-action: manipulation; } /* no double-tap zoom: double tap goes to the main menu */
 
 /* category icons: Galleria rows, category page title, coloured tags */
-.disc { grid-template-columns: auto 1fr auto; }
+.disc { grid-template-columns: auto 1fr; }
 .cat-ico { display: block; flex: none; width: 46px; height: 46px; }
 .cat-ico.ring { display: grid; place-items: center; border-radius: 50%; border: var(--stroke) solid var(--line-hi); color: var(--ink-3); font-size: 22px; box-sizing: border-box; }
 .cine-title .cat-ico { width: 64px; height: 64px; margin: 0 auto 14px; }
 .cine-title .cat-ico.ring { font-size: 30px; }
 .cat-tag[style] { color: color-mix(in srgb, var(--c) 60%, #fff); border-color: color-mix(in srgb, var(--c) 70%, transparent); background: color-mix(in srgb, var(--c) 14%, transparent); }
 .reel-cats .cat-tag[style] { background: rgba(0, 0, 0, .35); }
-.disc > div:not(.disc-thumbs) { min-width: 0; }
-@media (max-width: 480px) { .disc-thumbs img:nth-child(n+3) { display: none; } } /* room for the icon + long names */
+.disc h2 { min-width: 0; }
 .cat-count { padding: 0 6px; }
 .cat-tag img { width: 16px; height: 16px; margin-left: -4px; } /* the hand-drawn category icon, ring included */
 
