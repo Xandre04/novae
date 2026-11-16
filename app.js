@@ -577,6 +577,7 @@
   const CAT_COLORS = {
     'Pittura e illustrazione': '#e17d3d', 'Musica': '#7656b6', 'Letteratura': '#437a54', 'Cinema e video': '#5f86cf', 'Fotografia': '#3b9ab4',
     'Design': '#c69f31', 'Architettura': '#6c767f', 'Moda': '#d36497', 'Scultura': '#ab8869',
+    'Fumetto': '#deb440', 'Danza': '#d57aaa', 'Street art': '#d04c38', 'Artigianato': '#85633f',
   };
   const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.svg?v=3" alt="" aria-hidden="true">`
     : `<span class="cat-ico ring" aria-hidden="true"><i class="ph-light ph-${CAT_ICONS[d]}"></i></span>`;

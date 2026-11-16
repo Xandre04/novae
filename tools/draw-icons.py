@@ -75,6 +75,36 @@ ICONS = {
 <rect x="47.5" y="82.5" width="5" height="11.5" stroke="none"/>
 <circle cx="40.5" cy="38.5" r="1.7" stroke="none"/>
 <circle cx="50" cy="51" r="3" stroke="none"/>'''),
+'fumetto': ('#deb440', '''
+<path d="M33.6 56.3A22.2 16 0 1 1 42.5 60.8C38.5 61.5 35 68 26.5 69.8C30.5 65.5 33.5 61 33.6 56.3z" fill="none"/>
+<path d="M40 41H56M39.5 45.8H61.5M40 50.6H56" fill="none" stroke-width="2"/>'''),
+
+'danza': ('#d57aaa', '''
+<g stroke="none">
+  <path d="M29.8 25.5Q37 22 42 25.5L43.5 33Q37 28 29.5 29z"/>
+  <path d="M27.5 33.5C24 37 21 41 21.8 44.5Q22.8 47.8 25.5 49C29 52 30.5 56 30.5 62V75.5Q30.5 79 34 79Q38.5 79 40 74C42.5 68 44 61 43.5 57C42 48 37 39 27.5 33.5z"/>
+  <path d="M55.8 25.5Q62 29.5 69.5 23.5L68.5 28.5Q62 32.5 56.5 29.5z"/>
+  <path fill-rule="evenodd" d="M58 40C55 50 55 62 57.5 74Q59 79.5 64.5 79.5Q70 79.5 71.5 74C74.5 62 74.5 50 71 40zM64.5 41C60 47 59 58 60 62.5Q61 67 64.5 67Q68 67 69 62.5C70 58 69 47 64.5 41z"/>
+</g>
+<path d="M57.5 32.5L71 40.5M71 32.5L57.5 40.5" fill="none" stroke-width="2.6" stroke-linecap="butt"/>'''),
+
+'street-art': ('#d04c38', '''
+<rect x="47" y="15.5" width="6" height="5" rx="1" stroke="none"/>
+<rect x="49" y="20" width="2" height="6" stroke="none"/>
+<path d="M38.5 38.5C38.5 30 43.5 27 50 27C56.5 27 61.5 30 61.5 38.5M40.5 41.5C42 52 41.5 66 38.5 79M59.5 41.5C58 52 58.5 66 61.5 79" fill="none"/>
+<rect x="37" y="38" width="26" height="3.6" rx="1.8" stroke="none"/>
+<rect x="37.5" y="77.5" width="25" height="4.5" rx="1" stroke="none"/>'''),
+
+'artigianato': ('#85633f', f'''
+<rect x="38.5" y="20" width="23" height="4.5" rx="1.2" stroke="none"/>
+<path d="M30.5 49.5H69.5L70 59.5H30z" stroke="none"/>
+<g fill="none" stroke-width="2.3">
+  <path d="M42 24.5C42 30 38 36 34 43.5H66C62 36 58 30 58 24.5"/>
+  <path d="M32.5 46H67.5M30.5 62.5H69.5"/>
+  <path d="M32.5 46C29.5 52 29 60 31 64Q33 70.5 40 71H60Q67 70.5 69 64C71 60 70.5 52 67.5 46"/>
+  <g id="h"><path d="M39 24.5C35 24.5 34.5 27 34.5 30L32 41.5C31.5 44 29 45 28 43.5C27 42 28.5 40.5 29.5 41.5M39 25C41.5 25.5 41.5 29 39.8 29.2C38.6 29.3 38.6 27.8 39.6 27.8" stroke-width="1.8"/></g>
+  <use href="#h" {M}/>
+</g>'''),
 }
 
 for name, (col, body) in ICONS.items():
