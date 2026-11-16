@@ -719,7 +719,6 @@
     const root = $('#vista');
     root.className = 'vista';
     root.innerHTML = `
-      <button class="vista-back icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
       ${modeTabs('reel')}
       <p class="vista-hint" aria-hidden="true"><i class="ph-light ph-hand-swipe-up"></i>Scorri per la prossima</p>
       <div class="reels" id="reels">${list.map(reelHtml).join('')}</div>`;

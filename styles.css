@@ -310,7 +310,6 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 /* ---------- 4. Vista: full-screen reels (scroll-snap, one work per screen) ---------- */
 .screen[data-screen="vista"] { padding-bottom: 0; --col: min(100vw, calc(100dvh * 9 / 16)); } /* phone: full width; desktop: a 9:16 column */
 .vista { position: relative; height: 100dvh; overflow: hidden; background: var(--bg); }
-.vista-back { position: absolute; left: 6px; top: 10px; z-index: 5; font-size: 30px; filter: drop-shadow(0 1px 4px rgba(0, 0, 0, .6)); }
 .reels { position: relative; height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; overscroll-behavior: contain; scrollbar-width: none; }
 .reels::-webkit-scrollbar { display: none; }
 .reel { position: relative; height: 100dvh; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; }
