@@ -51,7 +51,7 @@
   const img = (src, alt = '', cls = '') => `<img class="fade ${cls}" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
 
   /* ---------------- Icons: the hand-drawn sketches in assets/icone/, traced to SVG in assets/svg/ ---------------- */
-  const crop = (name, extra = '') => `<img class="crop ${extra}" src="assets/svg/${name}.svg" alt="" aria-hidden="true" draggable="false"${name === 'wordmark' ? ' style="--ar:.26"' : ''}>`;
+  const crop = (name, extra = '') => `<img class="crop ${extra}" src="assets/svg/${name}.svg${name === 'wordmark' ? '?v=2' : ''}" alt="" aria-hidden="true" draggable="false"${name === 'wordmark' ? ' style="--ar:.26"' : ''}>`;
   // The red star is the NOVAE logo itself
   const STAR_SRC = 'assets/svg/stella.svg';
   const starSvg = (cls = '') => `<img class="star-svg ${cls}" src="${STAR_SRC}" alt="" aria-hidden="true" draggable="false">`;

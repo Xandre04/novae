@@ -1,0 +1,28 @@
+<!doctype html><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:#141414}
+.post{position:relative;width:1080px;height:1350px;overflow:hidden;background:radial-gradient(ellipse 70% 45% at 50% 40%,#1d1416 0%,#141414 70%);color:#ecebe6;font-family:Outfit,sans-serif;display:flex;flex-direction:column;align-items:center}
+.kicker{margin-top:112px;font-size:22px;font-weight:600;letter-spacing:.42em;text-transform:uppercase;color:#8a8984}
+.star{margin-top:96px;width:420px;height:420px;filter:drop-shadow(0 0 60px rgba(150,1,37,.35))}
+.word{margin-top:64px;width:430px}
+.tag{margin-top:40px;font-size:40px;font-weight:300;letter-spacing:.02em}
+.cats{position:absolute;bottom:150px;left:0;right:0;display:flex;justify-content:center;gap:10px}
+.cats img{width:60px;height:60px}
+.foot{position:absolute;bottom:84px;font-size:20px;font-weight:400;letter-spacing:.3em;text-transform:uppercase;color:#6d6c68}
+.speck{position:absolute;width:var(--s);height:var(--s);opacity:var(--o)}
+</style>
+<div class="post">
+  <div id="sky"></div>
+  <p class="kicker">Solo su invito</p>
+  <img class="star" src="file:///C:/Users/Valer/Desktop/Novae/assets/social/novae-stella-trasparente.svg">
+  <img class="word" src="file:///C:/Users/Valer/Desktop/Novae/assets/svg/wordmark.svg">
+  <p class="tag">Il social di chi crea.</p>
+  <div class="cats"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/pittura-e-illustrazione.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/musica.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/letteratura.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/cinema-e-video.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/fotografia.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/design.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/architettura.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/moda.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/scultura.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/fumetto.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/danza.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/street-art.svg"><img src="file:///C:/Users/Valer/Desktop/Novae/assets/categorie/artigianato.svg"></div>
+  <p class="foot">Alpha · 2026</p>
+</div>
+<script>
+// a few faint specks, like the app's sky (fixed seed so it renders the same every time)
+let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;const sky=document.getElementById('sky');
+for(let i=0;i<34;i++){const x=r()*1080,y=r()*1350;if(Math.abs(x-540)<300&&y>150&&y<1000)continue;const z=6+r()*12;sky.insertAdjacentHTML('beforeend',`<svg class="speck" viewBox="0 0 10 10" style="left:${x}px;top:${y}px;--s:${z}px;--o:${.15+r()*.35}"><path d="M5 0Q5.6 4.4 10 5Q5.6 5.6 5 10Q4.4 5.6 0 5Q4.4 4.4 5 0z" fill="#ecebe6"/></svg>`)}
+</script>

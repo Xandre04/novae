@@ -1,0 +1,83 @@
+<!doctype html><meta charset="utf-8">
+<!-- First-post video (9:16, 10 s). draw(t) paints one frame at time t (seconds); tools/render-video.mjs grabs the frames. -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:#141414}canvas{display:block;width:540px;height:960px}</style>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+const W = 1080, H = 1920, DUR = 10, BG = '#141414', INK = '#ecebe6';
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const CATS = ['pittura-e-illustrazione', 'musica', 'letteratura', 'cinema-e-video', 'fotografia', 'design', 'architettura', 'moda', 'scultura', 'fumetto', 'danza', 'street-art', 'artigianato'];
+const load = src => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = src; });
+const clamp = v => Math.max(0, Math.min(1, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const out = p => 1 - Math.pow(1 - p, 3);            // strong ease-out for entrances
+let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+const SPECKS = [];
+while (SPECKS.length < 46) {
+  const x = rnd() * W, y = rnd() * H;
+  if (Math.abs(x - W / 2) < 330 && y > 250 && y < 1520) continue; // keep the centre clear
+  SPECKS.push({ x, y, z: 7 + rnd() * 14, a: .15 + rnd() * .4, d: rnd() * 1.4, ph: rnd() * 6.28 });
+}
+function speck(x, y, z) {
+  ctx.beginPath(); ctx.moveTo(x, y - z);
+  ctx.quadraticCurveTo(x + z * .12, y - z * .12, x + z, y); ctx.quadraticCurveTo(x + z * .12, y + z * .12, x, y + z);
+  ctx.quadraticCurveTo(x - z * .12, y + z * .12, x - z, y); ctx.quadraticCurveTo(x - z * .12, y - z * .12, x, y - z); ctx.fill();
+}
+function text(str, y, font, color, alpha, spacing = '0px', dy = 0) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.font = font; ctx.fillStyle = color; ctx.letterSpacing = spacing;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  // letter-spacing adds space after the last letter too; nudge back by half of it to stay centred
+  const sp = parseFloat(spacing) * (spacing.endsWith('em') ? parseFloat(font.match(/(\d+)px/)[1]) : 1) || 0;
+  ctx.fillText(str, W / 2 + sp / 2, y + dy); ctx.restore();
+}
+let IMG;
+function draw(t) {
+  ctx.globalAlpha = 1; ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
+  const pStar = out(seg(t, .5, 1.9));
+  const breathe = t > 1.9 ? Math.sin((t - 1.9) * 1.6) : 0;
+  // red halo behind the star
+  const halo = pStar * (.85 + .15 * breathe);
+  const g = ctx.createRadialGradient(W / 2, 760, 0, W / 2, 760, 620);
+  g.addColorStop(0, `rgba(150,1,37,${.22 * halo})`); g.addColorStop(1, 'rgba(150,1,37,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // twinkling specks
+  ctx.fillStyle = INK;
+  for (const k of SPECKS) {
+    ctx.globalAlpha = k.a * out(seg(t, k.d * .6, k.d * .6 + 1)) * (.65 + .35 * Math.sin(t * 2.2 + k.ph));
+    speck(k.x, k.y, k.z / 2);
+  }
+  ctx.globalAlpha = 1;
+  // the star: grows in with a quarter turn, then breathes
+  ctx.save(); ctx.translate(W / 2, 760);
+  ctx.rotate((1 - pStar) * -Math.PI / 5);
+  const sc = (.55 + .45 * pStar) * (1 + .018 * breathe), S = 780 * sc;
+  ctx.globalAlpha = pStar; ctx.shadowColor = 'rgba(150,1,37,.6)'; ctx.shadowBlur = 70 * pStar;
+  ctx.drawImage(IMG.star, -S / 2, -S / 2, S, S); ctx.restore();
+  // wordmark
+  const pW = out(seg(t, 1.9, 2.8)), ww = 470, wh = ww * 166 / 640;
+  ctx.save(); ctx.globalAlpha = pW; ctx.filter = `blur(${(1 - pW) * 8}px)`;
+  ctx.drawImage(IMG.word, W / 2 - ww / 2, 1125 - wh / 2 + 26 * (1 - pW), ww, wh); ctx.restore();
+  // tagline
+  const pT = out(seg(t, 2.6, 3.4));
+  text('Il social di chi crea.', 1250, '300 46px Outfit', INK, pT, '0.5px', 18 * (1 - pT));
+  // the 13 categories, one after the other
+  const size = 62, gap = 10, x0 = (W - (CATS.length * size + (CATS.length - 1) * gap)) / 2;
+  CATS.forEach((n, i) => {
+    const p = out(seg(t, 3.6 + i * .085, 3.6 + i * .085 + .5)), z = size * (.75 + .25 * p);
+    ctx.globalAlpha = p; ctx.drawImage(IMG.cats[i], x0 + i * (size + gap) + (size - z) / 2, 1395 - z / 2 + 14 * (1 - p), z, z);
+  });
+  ctx.globalAlpha = 1;
+  // invite-only line and footer
+  const pK = out(seg(t, 5.4, 6.3));
+  text('SOLO SU INVITO', 330, '600 28px Outfit', '#9a9994', pK, '0.42em', -14 * (1 - pK));
+  text('ALPHA  ·  2026', 1490, '400 22px Outfit', '#6d6c68', out(seg(t, 5.9, 6.7)), '0.3em');
+}
+window.ready = (async () => {
+  await document.fonts.load('300 46px Outfit'); await document.fonts.load('600 28px Outfit'); await document.fonts.load('400 22px Outfit');
+  IMG = { star: await load('novae-stella-trasparente.svg'), word: await load('../svg/wordmark.svg'),
+    cats: await Promise.all(CATS.map(n => load(`../categorie/${n}.svg`))) };
+  draw(new URLSearchParams(location.search).has('t') ? +new URLSearchParams(location.search).get('t') : DUR);
+  return true;
+})();
+window.frame = t => { draw(t); return c.toDataURL('image/png'); };
+</script>
