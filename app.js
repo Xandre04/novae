@@ -561,7 +561,7 @@
   // comment tag: colour + star by profile type (critics gold, artists red, users plain)
   const whoTag = aid => {
     const t = typeOf(aid);
-    if (t === 'critico') return '<span class="who-tag t-critico"><i class="ph-fill ph-star-four"></i>Critico</span>';
+    if (t === 'critico') return '<span class="who-tag t-critico"><i class="nstar" aria-hidden="true"></i>Critico</span>';
     if (t === 'artista') return `<span class="who-tag t-artista"><img src="${STAR_SRC}" alt="">Artista</span>`;
     return '';
   };
@@ -667,7 +667,7 @@
         <label for="replyInput" class="sr-only">${critic ? 'La tua recensione' : 'La tua risposta'}</label>
         <input id="replyInput" placeholder="${critic ? 'Scrivi la tua recensione' : 'Scrivi la tua risposta'}" autocomplete="off" maxlength="280">
         <button class="btn-accent" type="submit">${critic ? 'Pubblica' : 'Rispondi'}</button>
-        ${critic ? starPicker(0) : '<p class="x-note"><i class="ph-light ph-star-four"></i>Solo i critici possono dare le stelle.</p>'}
+        ${critic ? starPicker(0) : '<p class="x-note"><i class="nstar" aria-hidden="true"></i>Solo i critici possono dare le stelle.</p>'}
       </form>
       <div class="x-replies">${[...mine.reverse(), ...mockReplies(w)].map(replyHtml).join('') || '<p class="x-none">Ancora nessuna risposta. Scrivi la prima.</p>'}</div>`;
     if (focusReply) { focusReply = false; requestAnimationFrame(() => $('#replyInput')?.focus({ preventScroll: true })); }
@@ -1434,9 +1434,9 @@
   function openCreate() {
     const type = typeOf('me');
     openSheet(`<h3>Crea</h3><div class="action-list">${type === 'critico'
-      ? '<a href="#scopri" data-act="sheet-close"><i class="ph-light ph-star-four"></i>Scrivi una recensione</a>'
+      ? '<a href="#scopri" data-act="sheet-close"><i class="nstar" aria-hidden="true"></i>Scrivi una recensione</a>'
       : `<button data-act="publish"><i class="ph-light ph-image"></i>${type === 'utente' ? 'Pubblica per i follower' : 'Nuova opera'}</button>
-         ${type === 'artista' ? '<button data-act="new-col"><i class="ph-light ph-star-four"></i>Nuova costellazione</button>' : ''}`}</div>`);
+         ${type === 'artista' ? '<button data-act="new-col"><i class="nstar" aria-hidden="true"></i>Nuova costellazione</button>' : ''}`}</div>`);
   }
   // Invites (alpha rules, see Regole della community): 3 per person, single use, valid 14 days; an expired code is replaced
   const INVITES = 3, INVITE_DAYS = 14;
