@@ -165,11 +165,27 @@
     // a "utente": publishes only for followers
     { t: 'Quaderno di Lione', a: 'teo', type: 'image', disc: 'Pittura e illustrazione', audience: 'followers' },
     { t: 'Finestra, martedì', a: 'teo', type: 'image', disc: 'Fotografia', w: 900, h: 1200, audience: 'followers' },
+    // one sample post for every other category, so each category tag shows up in the feed (added last: older ids stay the same)
+    { t: 'Sedia per chi aspetta', a: 'ines', type: 'image', disc: 'Design', w: 1000, h: 1000, mix: 1 },
+    { t: 'Casa sul canale', a: 'livia', type: 'image', disc: 'Architettura', w: 1200, h: 850, mix: 1 },
+    { t: 'Cappotto di rete', a: 'kitti', type: 'image', disc: 'Moda', w: 900, h: 1200, mix: 1 },
+    { t: 'Il gatto del faro, tavola 4', a: 'ploy', type: 'image', disc: 'Fumetto', w: 900, h: 1250, mix: 1 },
+    { t: 'Monologo per una sedia vuota', a: 'thiago', type: 'video', disc: 'Teatro e performance', mix: 1 },
+    { t: 'Prova delle sei', a: 'aiko', type: 'video', disc: 'Danza', mix: 1 },
+    { t: 'Ciotola di Oaxaca', a: 'ruben', type: 'image', disc: 'Artigianato', w: 1000, h: 1000, mix: 1 },
+    { t: 'Cento lanterne sul fiume', a: 'kitti', type: 'image', disc: 'Installazione e arti ambientali', w: 1200, h: 800, mix: 1 },
+    { t: 'Rumore bianco, versione 2', a: 'mara', type: 'video', disc: 'Arti digitali e tecnologiche', mix: 1 },
+    { t: 'Isola senza mappa', a: 'thiago', type: 'video', disc: 'Videogiochi e arti interattive', mix: 1 },
+    { t: 'Risotto al nero, in tre passaggi', a: 'nicolo', type: 'image', disc: 'Arti culinarie', w: 1000, h: 1000, mix: 1 },
+    { t: 'Mano di henné', a: 'ananya', type: 'image', disc: 'Body art', w: 900, h: 1200, mix: 1 },
+    { t: 'Quando compila al primo colpo', a: 'livia', type: 'image', disc: 'Arte memetica', w: 1000, h: 1000, mix: 1 },
   ];
   const FEED = FEED_SRC.map(addWork);
   // interleave a few films into the feed
   FEED.splice(2, 0, byId.w1);
   FEED.splice(6, 0, byId.w9);
+  // and spread the per-category samples through it, one every other post
+  FEED.filter(w => w.mix).forEach((w, k) => { FEED.splice(FEED.indexOf(w), 1); FEED.splice(1 + k * 2, 0, w); });
 
   const COUNTRIES = [
     { it: 'Thailandia', en: 'Thailand', c: [100.9, 15.2] },
