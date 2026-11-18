@@ -85,7 +85,7 @@ NOVAE si installa dal sito, senza store: icona sulla schermata Home, schermo int
 | Doppio tocco su un'opera | Mi piace |
 | Trascinare la ruota della stella | Scegliere la sezione (anche rotellina o frecce ← →) |
 | Doppio tocco sulla stella | Tornare al menu principale |
-| Trascinare giù un pannello | Chiuderlo |
+| Trascinare giù un pannello, o il tasto indietro del telefono | Chiudere il pannello o l'anteprima |
 | Trascinare giù il feed dall'alto | Aggiornare il feed |
 | `/` | Cercare opere e artisti |
 | `Esc` | Chiudere pannelli, anteprima, ricerca e ruota |
@@ -106,8 +106,7 @@ Tutto parte da disegni fatti a mano:
 
 1. Metti il disegno in `assets/icone/categorie/` con il nome della categoria in minuscolo e con i trattini (es. `arti-culinarie.jpg`).
 2. In [`tools/draw-icons.py`](tools/draw-icons.py) aggiungi la voce con colore e forme (griglia 100×100, il cerchio è già incluso), poi lancia `python tools/draw-icons.py`.
-3. In [`app.js`](app.js) aggiungi il colore in `CAT_COLORS`.
-4. Alza i numeri di versione (vedi sotto), così telefoni e app installate scaricano la novità.
+3. In [`js/feed.js`](js/feed.js) aggiungi il colore in `CAT_COLORS`.
 
 ## Materiali per i social
 
@@ -132,11 +131,11 @@ Poi apri http://localhost:5173.
 
 Il sito è su **GitHub Pages** dal ramo `main`: ogni push aggiorna [xandre04.github.io/novae](https://xandre04.github.io/novae/) in circa un minuto.
 
-L'app installata tiene in memoria i file, quindi quando cambi qualcosa alza i numeri di versione, altrimenti i telefoni continuano a vedere la versione vecchia:
+Non servono numeri di versione: il service worker ([`sw.js`](sw.js)) chiede sempre al server se un file è cambiato, quindi anche l'app installata vede la versione nuova alla prima apertura dopo il push. Senza connessione usa la copia salvata.
 
-- in [`index.html`](index.html): `styles.css?v=…`, `i18n.js?v=…`, `app.js?v=…` (quello del file che hai cambiato);
-- in [`sw.js`](sw.js): il nome della cache, `novae-v…`;
-- se cambi un'icona: il `?v=…` dove viene caricata (per le categorie, in `app.js`).
+### L'anteprima dei link
+
+Quando qualcuno condivide un link a NOVAE (anche un invito) su WhatsApp, Instagram o Telegram, compare [`assets/app/anteprima-link.png`](assets/app/anteprima-link.png) con titolo e descrizione presi dai tag `og:` in [`index.html`](index.html). L'immagine nasce da [`docs/social/anteprima-link.html`](docs/social/anteprima-link.html): per rifarla, uno screenshot di quella pagina a 1200×630.
 
 ## Struttura del progetto
 
@@ -144,7 +143,15 @@ L'app installata tiene in memoria i file, quindi quando cambi qualcosa alza i nu
 novae/
 ├── index.html              le schermate (una sola pagina)
 ├── styles.css              lo stile
-├── app.js                  dati di esempio, navigazione e interazioni
+├── js/                     il codice dell'app, un file per zona (caricati in ordine da index.html)
+│   ├── base.js             funzioni comuni, lingua, icone, dati di esempio, stato salvato
+│   ├── menu.js             invito, menu principale, ruota della stella
+│   ├── feed.js             Scopri: Sfoglia, commenti, Scorri
+│   ├── galleria.js         categorie, Cinema e video, scheda opera
+│   ├── novae.js            il globo
+│   ├── profilo.js          Mercato, profili, pubblicare, Messaggi, Impostazioni
+│   ├── pannelli.js         ricerca, pannelli, anteprima, menu dei tre trattini, segnalazioni, regole
+│   └── app.js              router, eventi e avvio (per ultimo)
 ├── i18n.js                 traduzioni in inglese dell'interfaccia
 ├── manifest.webmanifest    nome, icone e colori dell'app installata
 ├── sw.js                   service worker: funziona anche offline
@@ -172,6 +179,6 @@ Librerie caricate da CDN: [Phosphor Icons](https://phosphoricons.com/), [D3](htt
 
 ## Licenza
 
-- **Codice** (HTML, CSS, JavaScript e gli strumenti in `tools/`): [MIT](LICENSE).
+- **Codice** (HTML, CSS, i file in `js/`, `i18n.js`, `sw.js` e gli strumenti in `tools/`): [MIT](LICENSE).
 - **Marchio e grafiche** (nome NOVAE, logo, icone, disegni, bozzetti, screenshot, materiali per i social): © 2026 Xandre04, tutti i diritti riservati. Dettagli in [`ASSETS-LICENSE.md`](ASSETS-LICENSE.md).
 - **Librerie, font e foto di terze parti**: in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

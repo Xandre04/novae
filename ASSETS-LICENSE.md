@@ -1,6 +1,6 @@
 # Licenza del marchio e delle grafiche NOVAE
 
-La licenza MIT in [`LICENSE`](LICENSE) vale **solo per il codice** (`index.html`, `styles.css`, `app.js`, `i18n.js`, `sw.js`, `manifest.webmanifest` e gli strumenti in `tools/`).
+La licenza MIT in [`LICENSE`](LICENSE) vale **solo per il codice** (`index.html`, `styles.css`, i file in `js/`, `i18n.js`, `sw.js`, `manifest.webmanifest` e gli strumenti in `tools/`).
 
 Il marchio e le grafiche **non** sono coperti dalla licenza MIT:
 

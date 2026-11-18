@@ -1,0 +1,220 @@
+/* NOVAE · Scopri: Sfoglia (X-style feed), the comments page of a post and Scorri (full-screen reels).
+   The js/*.js files are plain scripts that share one scope, loaded in order by index.html. */
+'use strict';
+
+/* ---------------- 3. Scopri: X-style feed ----------------
+   Tap the picture: reels. Tap anywhere else on the post (the black sides) or the comment
+   button: the post's comments page (#post/id), like on X. */
+const reposted = new Set(readJSON('novae.reposted', []));
+const hidden = new Set(readJSON('novae.hidden', [])); // "Non mi interessa"
+const REPLIES_MINE = readJSON('novae.replies', {}); // your replies, per work
+const repostCount = w => Math.floor(w.likes / 11) + (reposted.has(w.id) ? 1 : 0);
+// short counts like X: 842, 4,2K, 242K, 1,3M
+const dec = s => LANG === 'en' ? s.replace('.0', '') : s.replace('.', ',').replace(',0', ''); // 4.2K / 4,2K
+const short = n => n < 1000 ? String(n) : n < 1e6 ? `${dec((n / 1e3).toFixed(n < 1e4 ? 1 : 0))}K` : `${dec((n / 1e6).toFixed(1))}M`;
+const replyCount = w => w.comments + (REPLIES_MINE[w.id]?.length || 0);
+const xActions = (w, big = false) => {
+  const on = liked.has(w.id), rp = reposted.has(w.id);
+  return `<div class="x-actions ${big ? 'big' : ''}">
+    <button class="act like ${on ? 'on' : ''}" data-act="like" data-id="${w.id}" aria-pressed="${on}" aria-label="Mi piace"><i class="${on ? 'ph-fill' : 'ph-light'} ph-heart"></i><small data-count="${w.id}" data-short="1">${short(likeCount(w))}</small></button>
+    <button class="act" data-act="thread" data-id="${w.id}" aria-label="Commenti"><i class="ph-light ph-chat-circle"></i><small>${short(replyCount(w))}</small></button>
+    <button class="act repost ${rp ? 'on' : ''}" data-act="repost" data-id="${w.id}" aria-pressed="${rp}" aria-label="Ripubblica"><i class="ph-light ph-repeat"></i><small data-rp="${w.id}" data-short="1">${short(repostCount(w))}</small></button>
+    ${shareBtn(w)}
+    <button class="act" data-act="more" data-id="${w.id}" aria-label="Altre azioni"><i class="ph-light ph-dots-three"></i></button>
+  </div>`;
+};
+// the frame takes the work's own shape: wide works are wide, tall works are tall and narrower
+const mediaFrame = w => {
+  const ratio = Math.max(.56, Math.min(1.91, (w.w || 1200) / (w.h || 900)));
+  const width = ratio < 1 ? Math.round(56 + ratio * 30) : 100; // portrait: ~73% at 3:4, ~73-85% range
+  return `<a class="x-media ph-img" href="#vista/${w.id}" data-dbl="${w.id}" style="aspect-ratio:${ratio.toFixed(3)};width:${width}%" aria-label="Apri ${w.t} a schermo intero">${img(w.ts ? w.img : w.thumb, w.t)}${mediaOverlay(w)}</a>`;
+};
+// who can see a work: a "utente" publishes only for followers
+const canSee = w => w.audience !== 'followers' || w.a === 'me' || followed.has(w.a);
+const audTag = w => w.audience === 'followers' ? '<span class="aud-tag" title="Visibile solo a chi segue l\'autore"><i class="ph-light ph-lock-simple"></i>Follower</span>' : '';
+// comment tag: colour + star by profile type (critics gold, artists red, users plain)
+const whoTag = aid => {
+  const t = typeOf(aid);
+  if (t === 'critico') return '<span class="who-tag t-critico"><i class="nstar" aria-hidden="true"></i>Critico</span>';
+  if (t === 'artista') return `<span class="who-tag t-artista"><img src="${STAR_SRC}" alt="">Artista</span>`;
+  return '';
+};
+// category tag on posts: icon + name, links to the category page
+const CAT_ICONS = {
+  'Pittura e illustrazione': 'paint-brush', 'Musica': 'music-notes', 'Letteratura': 'book-open', 'Cinema e video': 'film-strip',
+  'Fotografia': 'camera', 'Design': 'pen-nib', 'Architettura': 'buildings', 'Moda': 't-shirt', 'Scultura': 'cube',
+  'Fumetto': 'chat-circle-text', 'Animazione': 'shooting-star', 'Teatro e performance': 'mask-happy', 'Danza': 'sneaker-move',
+  'Street art': 'spray-bottle', 'Artigianato': 'hammer', 'Installazione e arti ambientali': 'tree', 'Arti digitali e tecnologiche': 'cpu',
+  'Videogiochi e arti interattive': 'game-controller', 'Arti culinarie': 'cooking-pot', 'Body art': 'drop', 'Arte memetica': 'smiley',
+};
+// hand-drawn icons (assets/categorie/<slug>.svg) and their ink colour; the other categories use the Phosphor icon in a plain ring
+const CAT_COLORS = {
+  'Pittura e illustrazione': '#e17d3d', 'Musica': '#7656b6', 'Letteratura': '#437a54', 'Cinema e video': '#5f86cf', 'Fotografia': '#3b9ab4',
+  'Design': '#c69f31', 'Architettura': '#6c767f', 'Moda': '#d36497', 'Scultura': '#ab8869',
+  'Fumetto': '#deb440', 'Danza': '#d57aaa', 'Street art': '#d04c38', 'Artigianato': '#85633f',
+  'Arti digitali e tecnologiche': '#4c7cd4', 'Installazione e arti ambientali': '#84a259', 'Animazione': '#b775d3', 'Teatro e performance': '#833f6a',
+};
+const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.svg" alt="" aria-hidden="true">`
+  : `<span class="cat-ico ring" aria-hidden="true"><i class="ph-light ph-${CAT_ICONS[d]}"></i></span>`;
+const catTag = w => CAT_ICONS[w.disc] ? `<a class="cat-tag" href="#galleria/${slugOf(w.disc)}"${CAT_COLORS[w.disc] ? ` style="--c:${CAT_COLORS[w.disc]}"` : ''}>${CAT_COLORS[w.disc] ? `<img src="assets/categorie/${slugOf(w.disc)}.svg" alt="" aria-hidden="true">` : `<i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>`}${w.disc}</a>` : '';
+function postX(w) {
+  const a = ARTISTS[w.a];
+  return `<article class="xpost" data-thread="${w.id}">
+    <div class="x-ava">${avatarRing(w.a)}</div>
+    <div class="x-body">
+      <div class="x-head">
+        <p class="x-meta"><a class="x-name" href="${profileHref(w.a)}">${a.name}</a> <span class="x-time">· ${agoText(w)}</span></p>
+        ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
+      </div>
+      <p class="x-title">${w.t}</p>
+      <p class="x-tags">${catTag(w)}${audTag(w)}</p>
+      <p class="x-desc">${w.desc}</p>
+      ${mediaFrame(w)}
+      ${xActions(w)}
+    </div>
+  </article>`;
+}
+// Sfoglia (list) / Scorri (full-screen) switch at the top of Scopri, like Instagram's "Per te / Amici": same works, two ways to browse
+const modeTabs = on => `<nav class="mode-tabs" aria-label="Modo di vista"><a href="#scopri" ${on === 'feed' ? 'class="on" aria-current="page"' : ''}>Sfoglia</a><a href="#vista" ${on === 'reel' ? 'class="on" aria-current="page"' : ''}>Scorri</a></nav>`;
+function renderFeed() {
+  const list = [...MINE, ...FEED].filter(w => !hidden.has(w.id) && canSee(w));
+  $('#feed').className = 'xfeed';
+  $('#feed').innerHTML = modeTabs('feed') + (list.length ? list.map(postX).join('')
+    : `<div class="empty">${starSvg()}<strong>Hai nascosto tutto</strong><p>Le opere che segni "Non mi interessa" spariscono da qui.</p><button class="btn-ghost" data-act="unhide-all">Mostrale di nuovo</button></div>`);
+}
+
+/* ---------------- Post comments page (#post/id), like an X thread ---------------- */
+const REPLY_TEXTS = [
+  'Il taglio di luce al minuto due. Come hai fatto?', 'Questo mi ha fatto venire voglia di tornare a dipingere.',
+  'Cinque stelle, senza pensarci.', 'La composizione è pazzesca, ci ho messo un po\' a capirla.',
+  'Lo guardo da dieci minuti. Grazie.', 'Mi ricorda casa, in un modo che non so spiegare.',
+  'Quando esce la serie completa?', 'Il suono è perfetto con le cuffie.', 'Colori incredibili. Che pellicola usi?',
+];
+const mockReplies = w => {
+  const r = rng(w.likes || 7);
+  const shuffled = list => list.map(v => [r(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]); // no author or text twice
+  const ids = shuffled(AIDS.filter(id => id !== w.a)), texts = shuffled(REPLY_TEXTS);
+  const out = Array.from({ length: w.ts ? 0 : 6 }, (_, i) => {
+    const a = ids[i];
+    return { a, text: texts[i], ago: 3 + i * 17 + Math.floor(r() * 40), likes: Math.floor(r() * 900),
+      rating: typeOf(a) === 'critico' ? 3 + Math.floor(r() * 3) : 0 }; // only critics give stars
+  });
+  if (!w.ts && !out.some(rp => typeOf(rp.a) === 'critico')) out.splice(1, 0, { a: 'giulia', text: REVIEW_TEXTS[(w.likes || 0) % REVIEW_TEXTS.length], ago: 22, likes: 341, rating: Math.max(3, Math.round(w.rating || 4)) });
+  return out;
+};
+const replyHtml = rp => `<div class="x-reply ${typeOf(rp.a) === 'critico' ? 'is-critic' : ''}">
+    <div class="x-ava">${avatarRing(rp.a, 'sm')}</div>
+    <div><p class="x-meta"><a class="x-name" href="${profileHref(rp.a)}">${ARTISTS[rp.a].name}</a> ${whoTag(rp.a)} <span class="x-time">· ${rp.ts ? agoText(rp) : agoText({ ago: rp.ago })}</span></p>
+      ${rp.rating ? `<div class="x-reply-rating">${rating(rp.rating, 14)}</div>` : ''}
+      <p class="x-text">${rp.text}</p>
+      ${rp.likes ? `<p class="x-reply-likes"><i class="ph-light ph-heart"></i> ${fmt(rp.likes)}</p>` : ''}</div>
+  </div>`;
+// star picker for critics (the only ones who can give stars)
+const starPicker = n => `<div class="star-pick" role="radiogroup" aria-label="Le tue stelle">${[1, 2, 3, 4, 5].map(i => `<button type="button" role="radio" aria-checked="${i === n}" aria-label="${i} ${i === 1 ? 'stella' : 'stelle'}" data-act="pick-star" data-v="${i}" class="${i <= n ? 'on' : ''}"><img src="${STAR_SRC}" alt=""></button>`).join('')}</div>`;
+function renderThread(id) {
+  const w = byId[id];
+  const root = $('#thread');
+  if (!w) { root.innerHTML = `<div class="empty">${starSvg()}<strong>Post non trovato</strong><p>Forse è stato eliminato.</p><a class="btn-ghost" href="#scopri">Torna a Scopri</a></div>`; return; }
+  const a = ARTISTS[w.a];
+  if (!canSee(w)) { root.innerHTML = `<header class="x-top"><button class="icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-arrow-left"></i></button><h1>Post</h1></header><div class="empty">${starSvg()}<strong>Solo per i follower</strong><p>${a.name} condivide le sue opere solo con i suoi follower.</p><button class="btn-accent" data-act="follow" data-a="${w.a}">Segui</button></div>`; return; }
+  const mine = (REPLIES_MINE[w.id] || []).map(t => ({ a: 'me', text: t.text, ts: t.ts, rating: t.rating || 0 }));
+  const critic = typeOf('me') === 'critico';
+  root.innerHTML = `
+    <header class="x-top"><button class="icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-arrow-left"></i></button><h1>Post</h1></header>
+    <article class="xpost open">
+      <div class="x-ava">${avatarRing(w.a)}</div>
+      <div class="x-body">
+        <div class="x-head">
+          <p class="x-meta"><a class="x-name" href="${profileHref(w.a)}">${a.name}</a> <span class="x-time">· ${agoText(w)}</span></p>
+          ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
+        </div>
+        <p class="x-title">${w.t}</p>
+      <p class="x-tags">${catTag(w)}${audTag(w)}</p>
+        <p class="x-desc open">${w.desc}</p>
+        ${mediaFrame(w)}
+        <p class="x-stats"><span><strong data-rp="${w.id}">${fmt(repostCount(w))}</strong> ${label(repostCount(w), 'ripubblicazioni')}</span><span><strong data-count="${w.id}">${fmt(likeCount(w))}</strong> ${label(likeCount(w), 'mi piace')}</span><span><strong>${fmt(w.views)}</strong> ${label(w.views, 'visualizzazioni')}</span></p>
+        ${xActions(w, true)}
+      </div>
+    </article>
+    <form class="x-compose ${critic ? 'critic' : ''}" data-reply="${w.id}" data-stars="0">
+      <img class="x-me" src="${avatar('me')}" alt="">
+      <label for="replyInput" class="sr-only">${critic ? 'La tua recensione' : 'La tua risposta'}</label>
+      <input id="replyInput" placeholder="${critic ? 'Scrivi la tua recensione' : 'Scrivi la tua risposta'}" autocomplete="off" maxlength="280">
+      <button class="btn-accent" type="submit">${critic ? 'Pubblica' : 'Rispondi'}</button>
+      ${critic ? starPicker(0) : '<p class="x-note"><i class="nstar" aria-hidden="true"></i>Solo i critici possono dare le stelle.</p>'}
+    </form>
+    <div class="x-replies">${[...mine.reverse(), ...mockReplies(w)].map(replyHtml).join('') || '<p class="x-none">Ancora nessuna risposta. Scrivi la prima.</p>'}</div>`;
+  if (focusReply) { focusReply = false; requestAnimationFrame(() => $('#replyInput')?.focus({ preventScroll: true })); }
+}
+let focusReply = false; // set by the comment button, so you can type right away
+function submitReply(f) {
+  const input = f.querySelector('input');
+  const text = input.value.trim();
+  if (!text) { input.focus(); return; }
+  const id = f.dataset.reply;
+  const stars = typeOf('me') === 'critico' ? +f.dataset.stars || 0 : 0; // only critics can give stars
+  (REPLIES_MINE[id] ||= []).push({ text: text.replace(/&/g, '&amp;').replace(/</g, '&lt;'), ts: Date.now(), rating: stars });
+  store.set('novae.replies', JSON.stringify(REPLIES_MINE));
+  renderThread(id);
+  toast(stars ? `Recensione pubblicata con ${stars} ${stars === 1 ? 'stella' : 'stelle'}` : 'Risposta pubblicata');
+}
+
+/* ---------------- 4. Vista: full-screen vertical feed, like Reels / TikTok ----------------
+   Native scroll-snap does the swiping; an IntersectionObserver tracks the reel on screen. */
+let reelObserver;
+function reelHtml(w) {
+  const a = ARTISTS[w.a];
+  const src = w.ts ? w.img : pic(w.id, 900, 1600); // portrait crop of the same photo
+  const canFollow = w.a !== 'me' && !followed.has(w.a);
+  return `<section class="reel" data-id="${w.id}" data-type="${w.type}" aria-label="${w.t} \u2014 ${a.name}">
+    <div class="reel-media ph-img" data-dbl="${w.id}">${img(src, w.t)}</div>
+    <span class="reel-shade" aria-hidden="true"></span>
+    ${w.type !== 'image' ? '<span class="reel-paused" aria-hidden="true"><i class="ph-fill ph-play"></i></span><div class="progress"><span></span></div>' : ''}
+    <div class="reel-rail">
+      <span class="reel-ava">${avatarRing(w.a)}${canFollow ? `<button class="reel-follow" data-act="follow" data-a="${w.a}" aria-label="Segui ${a.name}">+</button>` : ''}</span>
+      ${heart(w, true)}
+      <button class="act" data-act="comments" data-id="${w.id}" aria-label="Commenti"><i class="ph-light ph-chat-circle"></i><small>${fmt(w.comments)}</small></button>
+      ${saveBtn(w)}
+      ${shareBtn(w)}
+      <button class="act" data-act="more" data-id="${w.id}" aria-label="Altro"><i class="ph-light ph-dots-three"></i></button>
+    </div>
+    <div class="reel-meta">
+      <a class="reel-by" href="${profileHref(w.a)}">@${a.handle}</a>
+      <h2>${w.t}</h2>
+      <p class="reel-desc" data-act="expand">${w.desc}</p>
+      <p class="reel-tags">${w.rating ? rating(w.rating, 12) : '<span class="new-tag">Nuova</span>'}<span>${agoText(w)}</span></p>
+      <p class="reel-cats">${catTag(w)}</p>
+    </div>
+  </section>`;
+}
+function renderVista(id) {
+  const all = [...MINE, ...FEED].filter(w => (!hidden.has(w.id) && canSee(w)) || w.id === id);
+  const start = byId[id] || all[0];
+  const list = all.includes(start) ? all : [start, ...all]; // e.g. a film opened from Cinema e video
+  const root = $('#vista');
+  root.className = 'vista';
+  root.innerHTML = `
+    ${modeTabs('reel')}
+    <p class="vista-hint" aria-hidden="true"><i class="ph-light ph-hand-swipe-up"></i>Scorri per la prossima</p>
+    <div class="reels" id="reels">${list.map(reelHtml).join('')}</div>`;
+  const reels = $('#reels');
+  reels.scrollTop = reels.querySelector(`[data-id="${start.id}"]`).offsetTop;
+  root.dataset.id = start.id;
+  if (!store.get('novae.reelHint')) { root.classList.add('hint'); store.set('novae.reelHint', '1'); }
+  reelObserver?.disconnect();
+  reelObserver = new IntersectionObserver(entries => entries.forEach(en => {
+    en.target.classList.toggle('active', en.isIntersecting);
+    if (!en.isIntersecting) return;
+    const wid = en.target.dataset.id, h = '#vista/' + wid;
+    root.dataset.id = wid;
+    if (location.hash !== h) { // keep the URL on the work you're watching, without adding history entries
+      history.replaceState(null, '', h);
+      curHash = h; trail[trail.length - 1] = h; cur.param = wid;
+    }
+  }), { root: reels, threshold: .6 });
+  $$('.reel', reels).forEach(r => reelObserver.observe(r));
+}
+function stepVista(dir) {
+  const reels = $('#reels');
+  if (reels) reels.scrollBy({ top: dir * reels.clientHeight, behavior: reduceMotion ? 'auto' : 'smooth' });
+}
