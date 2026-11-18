@@ -1,6 +1,6 @@
 // NOVAE service worker: network first, so every deploy shows up right away; the cache is only the offline fallback.
 // ponytail: the cache grows with every image seen (picsum); add a size cap or skip third-party images if it gets heavy.
-const CACHE = 'novae-v28';
+const CACHE = 'novae-v29';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'i18n.js', 'manifest.webmanifest', 'assets/svg/stella.svg'];
 
 self.addEventListener('install', e => {

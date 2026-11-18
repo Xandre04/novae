@@ -1,4 +1,4 @@
-// Renders assets/social/video.html frame by frame in headless Chrome and encodes an MP4 with ffmpeg.
+// Renders docs/social/video.html frame by frame in headless Chrome and encodes an MP4 with ffmpeg.
 // Needs the dev server on :5173 and ffmpeg (pip install imageio-ffmpeg).  Usage: node tools/render-video.mjs <ffmpeg.exe> <out.mp4>
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
@@ -28,7 +28,7 @@ const evaluate = async expr => {
   return m.result.result.value;
 };
 
-await send('Page.navigate', { url: 'http://localhost:5173/assets/social/video.html' });
+await send('Page.navigate', { url: 'http://localhost:5173/docs/social/video.html' });
 for (let i = 0; i < 100; i++) { await sleep(200); try { if (await evaluate('window.ready')) break; } catch { /* still loading */ } }
 const total = FPS * DUR;
 for (let f = 0; f < total; f++) {

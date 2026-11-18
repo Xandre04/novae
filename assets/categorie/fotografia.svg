@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="160" height="160" fill="#3b9ab4" stroke="#3b9ab4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="50" r="44.75" fill="none" stroke-width="2.5"/><rect x="36" y="11.5" width="28" height="8.3" rx="3" stroke="none"/>
-<g fill="none">
-  <path d="M27.75 35H37.5Q39 35 39.8 33.6L41.2 31.2Q42 30 43.4 30H56.6Q58 30 58.8 31.2L60.2 33.6Q61 35 62.5 35H72.25Q74.75 35 74.75 37.5V64Q74.75 66.5 72.25 66.5H27.75Q25.25 66.5 25.25 64V37.5Q25.25 35 27.75 35z"/>
-  <path d="M41 19.8C41 23 43.8 22.8 43.8 25.5V30M33.75 35V66.5M41 66.5L42.5 75.5H57.5L59 66.5M46.25 75.5V82.75H53.75V75.5"/>
-  <path d="M59 19.8C59 23 56.2 22.8 56.2 25.5V30"/>
-  <rect x="64.75" y="30.25" width="6" height="3.25" rx=".6" stroke-width="1.8"/>
-  <circle cx="50" cy="51" r="8" stroke-width="5"/>
-</g>
-<rect x="28.5" y="29.5" width="6" height="5.5" rx="1.2" stroke="none"/>
-<rect x="47.5" y="82.5" width="5" height="11.5" stroke="none"/>
-<circle cx="40.5" cy="38.5" r="1.7" stroke="none"/>
-<circle cx="50" cy="51" r="3" stroke="none"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="160" height="160" fill="#3b9ab4" stroke="#3b9ab4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="50" r="44.75" fill="none" stroke-width="2.5"/><path fill="none" stroke-width="2.9" d="M28.5 34.5H38.5Q40 34.5 40.6 33L41.4 30.5Q42 29 43.5 29H56.5Q58 29 58.6 30.5L59.4 33Q60 34.5 61.5 34.5H71.5Q74.5 34.5 74.5 37.5V63.5Q74.5 66.5 71.5 66.5H28.5Q25.5 66.5 25.5 63.5V37.5Q25.5 34.5 28.5 34.5ZM34.5 34.5V66.5"/><rect x="29" y="30" width="6" height="4.5" rx="1" stroke="none"/><rect x="65" y="30.2" width="5.5" height="4.3" rx=".8" fill="none" stroke-width="2.2"/><circle cx="41.2" cy="39" r="1.9" stroke="none"/><circle cx="50" cy="51" r="8.2" fill="none" stroke-width="4.4"/><circle cx="50" cy="51" r="2.8" stroke="none"/></svg>

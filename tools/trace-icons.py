@@ -4,9 +4,9 @@
 # Each colour is a binary mask, traced on its own and stacked; black in the drawings becomes see-through.
 import io, os, re, statistics
 import vtracer
-from PIL import Image, ImageChops, ImageFilter
+from PIL import Image, ImageFilter
 
-INK, RED = '#ecebe6', '#960125'
+INK = '#ecebe6'
 TARGET = 640  # trace at about this many pixels on the long side
 os.makedirs('assets/svg', exist_ok=True)
 
@@ -42,40 +42,27 @@ def flat(f, bg=(0, 0, 0)):
     return im.convert('RGB')
 
 def white(im): return im.convert('L').point(lambda v: 255 if v > 110 else 0)
-def red(im):
-    r, g, _ = im.split(); return ImageChops.subtract(r, g).point(lambda v: 255 if v > 50 else 0)
-def brightwhite(im):
-    r, g, b = im.split(); return ImageChops.darker(ImageChops.darker(r, g), b).point(lambda v: 255 if v > 150 else 0)
 
 if __name__ == '__main__':
     import sys
     only = sys.argv[1:]
     def want(n): return not only or n in only
     for name, args in {
-        'impostazioni': ('assets/icone/impostazioni.jpg', .480, .494, .085),
-        'messaggi': ('assets/icone/messaggi.jpg', .502, .4975, .13),
-        'profilo': ('assets/icone/profilo.jpg', .5159, .4860, .10),
-        'wordmark': ('assets/icone/logo.jpg', .4956, .5938, .169, .26),
+        'impostazioni': ('assets/icone/sezioni/impostazioni.jpg', .480, .494, .085),
+        'messaggi': ('assets/icone/sezioni/messaggi.jpg', .502, .4975, .13),
+        'profilo': ('assets/icone/sezioni/profilo.jpg', .5159, .4860, .10),
     }.items():
         if want(name): im = window(*args); write(f'assets/svg/{name}.svg', im.size, [(INK, white(im))])
     for name in ('galleria', 'scopri', 'profilo-avatar'):
-        if want(name): im = flat(f'assets/icone/{name}.png'); write(f'assets/svg/{name}.svg', im.size, [(INK, white(im))])
-    if want('stella'): im = flat('assets/icone/stella.png'); write('assets/svg/stella.svg', im.size, [(RED, red(im))])
-    if want('stile'):
-        im = window('assets/icone/stile.jpg', .517, .442, .205)
-        write('assets/svg/stile.svg', im.size, [('#a0092e', red(im)), ('#ffffff', brightwhite(im))])
-    if want('mercato'):
-        im = window('assets/icone/mercato.jpg', .489, .495, .10)
-        write('assets/svg/mercato.svg', im.size, [(INK, brightwhite(im)), (RED, red(im))])
+        if want(name): im = flat(f'assets/icone/sezioni/{name}.png'); write(f'assets/svg/{name}.svg', im.size, [(INK, white(im))])
+    # stella.svg, wordmark.svg, stile.svg and mercato.svg are redrawn by hand with clean lines (the clean star is
+    # also inside stile and mercato): they are edited as SVG now, not traced again from assets/icone/sezioni.
+    # categories still traced from the drawing; the others are redrawn by hand in tools/draw-icons.py
     INK_OVERRIDE = {'cinema-e-video': '#5f86cf'}  # the drawing's navy (#2d4676) is too dark on the #141414 background
-    CATS = {
-     'pittura-e-illustrazione': 'Pittura.png', 'musica': 'Opera_senza_titolo_2.jpg', 'letteratura': 'Opera_senza_titolo_1.jpg',
-     'cinema-e-video': 'Cinema.png', 'fotografia': 'Opera_senza_titolo.jpg', 'design': 'Opera_senza_titolo_5.jpg',
-     'architettura': 'Opera_senza_titolo_4.jpg', 'moda': 'Opera_senza_titolo_3.jpg', 'scultura': 'Opera_senza_titolo7.jpg',
-    }
+    CATS = {'pittura-e-illustrazione': 'pittura-e-illustrazione.png', 'cinema-e-video': 'cinema-e-video.png', 'scultura': 'scultura.jpg'}
     for slug, f in CATS.items():
         if not want(slug): continue
-        im = flat('assets/icone/' + f, (255, 255, 255)); im.thumbnail((1400, 1400), Image.LANCZOS)
+        im = flat('assets/icone/categorie/' + f, (255, 255, 255)); im.thumbnail((1400, 1400), Image.LANCZOS)
         px = list(im.getdata()); c = tuple(int(statistics.median(ch)) for ch in zip(*[p for p in px if min(p) < 150]))
         k = max(range(3), key=lambda i: 255 - c[i])
         ink = INK_OVERRIDE.get(slug, '#%02x%02x%02x' % c)

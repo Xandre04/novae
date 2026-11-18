@@ -6,7 +6,7 @@
 <script>
 const W = 1080, H = 1920, DUR = 10, BG = '#141414', INK = '#ecebe6';
 const c = document.getElementById('c'), ctx = c.getContext('2d');
-const CATS = ['pittura-e-illustrazione', 'musica', 'letteratura', 'cinema-e-video', 'fotografia', 'design', 'architettura', 'moda', 'scultura', 'fumetto', 'danza', 'street-art', 'artigianato'];
+const CATS = ['pittura-e-illustrazione', 'musica', 'letteratura', 'cinema-e-video', 'fotografia', 'design', 'architettura', 'moda', 'scultura', 'fumetto', 'danza', 'street-art', 'artigianato', 'animazione', 'teatro-e-performance', 'installazione-e-arti-ambientali', 'arti-digitali-e-tecnologiche'];
 const load = src => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = src; });
 const clamp = v => Math.max(0, Math.min(1, v));
 const seg = (t, a, b) => clamp((t - a) / (b - a));
@@ -61,9 +61,9 @@ function draw(t) {
   const pT = out(seg(t, 2.6, 3.4));
   text('Il social di chi crea.', 1250, '300 46px Outfit', INK, pT, '0.5px', 18 * (1 - pT));
   // the 13 categories, one after the other
-  const size = 62, gap = 10, x0 = (W - (CATS.length * size + (CATS.length - 1) * gap)) / 2;
+  const size = 52, gap = 8, x0 = (W - (CATS.length * size + (CATS.length - 1) * gap)) / 2;
   CATS.forEach((n, i) => {
-    const p = out(seg(t, 3.6 + i * .085, 3.6 + i * .085 + .5)), z = size * (.75 + .25 * p);
+    const p = out(seg(t, 3.6 + i * .07, 3.6 + i * .07 + .5)), z = size * (.75 + .25 * p);
     ctx.globalAlpha = p; ctx.drawImage(IMG.cats[i], x0 + i * (size + gap) + (size - z) / 2, 1395 - z / 2 + 14 * (1 - p), z, z);
   });
   ctx.globalAlpha = 1;
@@ -74,8 +74,8 @@ function draw(t) {
 }
 window.ready = (async () => {
   await document.fonts.load('300 46px Outfit'); await document.fonts.load('600 28px Outfit'); await document.fonts.load('400 22px Outfit');
-  IMG = { star: await load('novae-stella-trasparente.svg'), word: await load('../svg/wordmark.svg'),
-    cats: await Promise.all(CATS.map(n => load(`../categorie/${n}.svg`))) };
+  IMG = { star: await load('novae-stella-trasparente.svg'), word: await load('../../assets/svg/wordmark.svg'),
+    cats: await Promise.all(CATS.map(n => load(`../../assets/categorie/${n}.svg`))) };
   draw(new URLSearchParams(location.search).has('t') ? +new URLSearchParams(location.search).get('t') : DUR);
   return true;
 })();
