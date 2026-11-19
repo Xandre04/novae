@@ -74,7 +74,10 @@ NOVAE si installa dal sito, senza store: icona sulla schermata Home, schermo int
   - **Prima e dopo**: la bozza accanto all'opera finita, con una barra da trascinare per confrontarle;
   - **Processo**: da 2 a 6 foto delle fasi, che scorrono come un piccolo video e finiscono sull'opera;
   - **Insieme a**: un secondo artista; l'opera compare su tutti e due i profili.
-- **Guardare un profilo come una mostra**: *Mostra*, sopra le opere. Un'opera alla volta a schermo intero, con cornice e targhetta (titolo, categoria, anno); la parete prende il colore dell'opera.
+- **Guardare un profilo come una mostra**: *Mostra*, sopra le opere. Un'opera alla volta a schermo intero, con cornice e targhetta (titolo, categoria, anno); la parete prende il colore dell'opera. Doppio tocco o due dita per avvicinarsi e vedere i dettagli.
+- **Firmare**: in *Modifica profilo* si disegna la firma col dito; compare sulle targhette delle proprie opere nella Mostra e sul biglietto da visita.
+- **Commentare un punto dell'opera**: sotto la risposta, *Indica un punto dell'opera*, poi tocca l'immagine. Nel commento compare un "Qui", come i minuti nei commenti di YouTube: toccandolo, un cerchio lampeggia per un attimo su quel punto. Sull'opera non resta disegnato niente.
+- **Vederla sul proprio muro** (iPhone e iPad): nella scheda opera e nel Mercato, *Vedila sul tuo muro* apre la realtà aumentata con il quadro incorniciato alla misura vera. Le misure si danno quando si pubblica; se mancano, 60 cm sul lato lungo.
 - **Biglietto da visita**: tre trattini → *Codice QR* → *Biglietto da visita*. Un'immagine con nome, tipo di profilo, la tua opera migliore e il QR d'invito, da salvare o stampare.
 - **Personalizzare il profilo**: banner, nome, nome utente e bio.
 - **Salvare** un'opera e ritrovarla in *Profilo → Salvate*; **seguire** gli artisti e scrivere loro nei messaggi.
@@ -154,7 +157,7 @@ novae/
 │   ├── base.js             funzioni comuni, lingua, icone, dati di esempio, stato salvato
 │   ├── menu.js             invito, menu principale, ruota della stella
 │   ├── feed.js             Scopri: Sfoglia, commenti, Scorri
-│   ├── galleria.js         categorie, Cinema e video, scheda opera
+│   ├── galleria.js         categorie, Cinema e video, scheda opera, realtà aumentata
 │   ├── novae.js            il globo
 │   ├── profilo.js          Mercato, profili, pubblicare, Messaggi, Impostazioni
 │   ├── pannelli.js         ricerca, pannelli, anteprima, menu dei tre trattini, segnalazioni, regole

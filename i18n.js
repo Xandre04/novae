@@ -35,6 +35,16 @@ window.NOVAE_I18N = { en: {} };
     'Mostra': 'Exhibition', 'Scorri per la prossima opera': 'Swipe for the next work',
     'Biglietto da visita': 'Business card', 'Il tuo biglietto da visita': 'Your business card', 'Salva immagine': 'Save image',
     'Da stampare o da mettere nelle storie. Il QR fa entrare su NOVAE con il tuo invito.': 'To print or post in your stories. The QR lets people into NOVAE with your invite.',
+    // firma, punto sull'opera, zoom, AR
+    'Firma': 'Signature', 'Firma qui col dito': 'Sign here with your finger', 'Cancella la firma': 'Clear the signature', 'Disegna qui la tua firma': 'Draw your signature here',
+    'Compare sulle targhette delle tue opere nella Mostra e sul biglietto da visita.': 'It appears on the labels of your works in the Exhibition and on your business card.',
+    'Qui': 'Here', "Mostra il punto sull'opera": 'Show the spot on the work', "Indica un punto dell'opera": 'Point at a spot on the work',
+    "Tocca il punto sull'opera": 'Tap the spot on the work', 'Punto scelto. Tocca per toglierlo': 'Spot chosen. Tap to remove it',
+    'Scorri per la prossima, doppio tocco per avvicinarti': 'Swipe for the next one, double tap to get closer', 'Doppio tocco per avvicinarti': 'Double tap to get closer',
+    'Misure': 'Size', 'Misure in cm': 'Size in cm', 'Larghezza': 'Width', 'Altezza': 'Height', 'Larghezza in cm': 'Width in cm', 'Altezza in cm': 'Height in cm',
+    'Servono per vederla sul muro, in realtà aumentata, alla grandezza vera.': 'Used to see it on a wall, in augmented reality, at its real size.',
+    'Misure, bozza, processo, collaborazione': 'Size, sketch, process, collaboration',
+    'Vedila sul tuo muro': 'See it on your wall', "Preparo l'opera per il tuo muro": 'Getting the work ready for your wall', 'Non riesco a preparare questa immagine': "I can't prepare this image",
     'Inquadra il codice': 'Scan the code', 'per entrare su NOVAE': 'to get into NOVAE', 'il social di chi crea': 'the social network for makers',
     ...CATS, ...COUNTRIES,
     // navigation, sections, titles

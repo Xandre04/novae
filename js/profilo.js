@@ -12,7 +12,8 @@ function renderMarket() {
     <div class="m-feature">
       ${img(feat.img, feat.t)}
       <div><h2>${feat.t}</h2><p>Edizione unica di ${ARTISTS[feat.a].name}. Chi la acquista riceve il file originale e una stella sul profilo.</p>
-        <div class="m-buy"><span class="price">${coin()}${fmt(feat.price)}</span><button class="btn-accent" data-act="buy" data-id="${feat.id}">Acquista</button></div></div>
+        <div class="m-buy"><span class="price">${coin()}${fmt(feat.price)}</span><button class="btn-accent" data-act="buy" data-id="${feat.id}">Acquista</button></div>
+        ${AR_OK ? arBtn(feat) : ''}</div>
     </div>
     <div class="market-grid">${items.map(w => `
       <div class="m-item">
@@ -196,7 +197,10 @@ function openPublish(w) {
       <div class="field"><label for="pubT">Titolo</label><input id="pubT" maxlength="60" placeholder="Come si chiama?" autocomplete="off" value="${w ? esc(w.t) : ''}"></div>
       <div class="field"><label for="pubDisc">Categoria</label><select id="pubDisc">${DISCIPLINES.map(d => `<option ${w?.disc === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
       <div class="field"><label for="pubDesc">Descrizione</label><textarea id="pubDesc" maxlength="400" rows="3" placeholder="Racconta com'è nata (facoltativo)">${w ? esc(w.desc) : ''}</textarea></div>
-      <details class="pub-more" ${w?.before || w?.steps || w?.co ? 'open' : ''}><summary>Bozza, processo, collaborazione</summary>
+      <details class="pub-more" ${w?.before || w?.steps || w?.co || w?.cm ? 'open' : ''}><summary>Misure, bozza, processo, collaborazione</summary>
+        <div class="field"><span class="field-label">Misure in cm</span>
+          <div class="pub-cm"><input id="pubCmW" type="number" inputmode="numeric" min="1" max="2000" placeholder="Larghezza" aria-label="Larghezza in cm" value="${w?.cm?.[0] || ''}"><span>×</span><input id="pubCmH" type="number" inputmode="numeric" min="1" max="2000" placeholder="Altezza" aria-label="Altezza in cm" value="${w?.cm?.[1] || ''}"></div>
+          <small class="x-note">Servono per vederla sul muro, in realtà aumentata, alla grandezza vera.</small></div>
         <div class="field"><span class="field-label">Prima e dopo</span>
           <label class="pub-extra"><input type="file" accept="image/*" id="pubBefore"><i class="ph-light ph-columns"></i><span id="pubBeforeTxt"></span></label>
           <small class="x-note">Chi guarda trascina una barra per confrontare la bozza con l'opera finita.</small></div>
@@ -212,6 +216,7 @@ function openPublish(w) {
   pubExtra = { before: w?.before, steps: w?.steps };
   pubExtraText();
 }
+const pubCm = () => { const cm = [+$('#pubCmW').value, +$('#pubCmH').value]; return cm.every(n => n > 0 && n <= 2000) ? cm : undefined; };
 // extras of the work being published: a sketch for "prima e dopo" or the stages of the process (one or the other)
 let pubExtra = {};
 function pubExtraText() {
@@ -249,7 +254,7 @@ function submitPublish(f) {
   if (f.dataset.edit) {
     const w = byId[f.dataset.edit], before = { ...w };
     Object.assign(w, { t, disc: $('#pubDisc').value, desc: $('#pubDesc').value.trim() || w.desc, img: f.dataset.img, thumb: f.dataset.img, w: +f.dataset.w, h: +f.dataset.h,
-      before: pubExtra.before, steps: pubExtra.steps, co: $('#pubCo').value || undefined });
+      before: pubExtra.before, steps: pubExtra.steps, co: $('#pubCo').value || undefined, cm: pubCm() });
     if (!saveMine()) { Object.assign(w, before); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: usa un\'immagine più leggera.'; return; }
     closeSheet(); toast('Opera aggiornata'); refresh();
     return;
@@ -259,7 +264,7 @@ function submitPublish(f) {
     img: f.dataset.img, thumb: f.dataset.img, w: +f.dataset.w, h: +f.dataset.h,
     likes: 0, rating: 0, views: 0, comments: 0, price: 0, year: new Date().getFullYear(), ts: Date.now(),
     audience: typeOf('me') === 'utente' ? 'followers' : 'public', // users publish only for their followers
-    before: pubExtra.before, steps: pubExtra.steps, co: $('#pubCo').value || undefined,
+    before: pubExtra.before, steps: pubExtra.steps, co: $('#pubCo').value || undefined, cm: pubCm(),
   };
   MINE.unshift(w);
   if (!saveMine()) { MINE.shift(); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: elimina una tua opera e riprova.'; return; }
@@ -287,12 +292,67 @@ function openEditProfile() {
         <button type="button" class="link-btn" data-act="banner-clear" ${profile.banner ? '' : 'hidden'}>Togli il banner</button></div>
       <div class="field"><span class="field-label">Tipo di profilo</span>
         <div class="type-pick" role="radiogroup" aria-label="Tipo di profilo">${Object.entries(TYPES).map(([k, t]) => `<label><input type="radio" name="pfType" value="${k}" ${profile.type === k ? 'checked' : ''}><span><i class="ph-light ph-${t.icon}"></i>${t.label}<small>${t.hint}</small></span></label>`).join('')}</div></div>
+      <div class="field"><span class="field-label">Firma</span>
+        <div class="sig-pad"><canvas id="sigPad" width="900" height="300" aria-label="Disegna qui la tua firma"></canvas><span id="sigHint">Firma qui col dito</span></div>
+        <button type="button" class="link-btn" data-act="sig-clear">Cancella la firma</button>
+        <small class="x-note">Compare sulle targhette delle tue opere nella Mostra e sul biglietto da visita.</small></div>
       <div class="field"><label for="pfName">Nome</label><input id="pfName" maxlength="40" value="${esc(profile.name)}" autocomplete="name"></div>
       <div class="field"><label for="pfHandle">Nome utente</label><input id="pfHandle" maxlength="24" value="${esc(profile.handle)}" autocomplete="username" spellcheck="false"></div>
       <div class="field"><label for="pfBio">Bio</label><textarea id="pfBio" maxlength="160" rows="3">${esc(profile.bio)}</textarea></div>
       <p class="pub-err" id="pfErr" role="alert"></p>
       <button class="btn-accent" type="submit">Salva</button>
     </form>`);
+  initSigPad();
+}
+/* Firma: drawn once with a finger (or the mouse) in Modifica profilo, kept as a black PNG cropped to the strokes */
+let sigDirty = false;
+const SIG_INK = '#ecebe6';
+function initSigPad() {
+  const c = $('#sigPad'), x = c.getContext('2d', { willReadFrequently: true });
+  sigDirty = false;
+  x.lineCap = x.lineJoin = 'round'; x.lineWidth = 7; x.strokeStyle = x.fillStyle = SIG_INK;
+  if (profile.signature) {
+    $('#sigHint').hidden = true;
+    loadImg(profile.signature).then(im => {
+      if (!im) return;
+      const k = Math.min(c.width * .9 / im.width, c.height * .8 / im.height);
+      x.drawImage(inkCanvas(im, SIG_INK), (c.width - im.width * k) / 2, (c.height - im.height * k) / 2, im.width * k, im.height * k);
+    });
+  }
+  let last = null;
+  const pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) * c.width / r.width, (e.clientY - r.top) * c.height / r.height]; };
+  c.addEventListener('pointerdown', e => {
+    try { c.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
+    last = pos(e); sigDirty = true; $('#sigHint').hidden = true;
+    x.beginPath(); x.arc(last[0], last[1], x.lineWidth / 2, 0, 7); x.fill();
+  });
+  c.addEventListener('pointermove', e => {
+    if (!last) return;
+    const evs = e.getCoalescedEvents?.(); // the in-between points of a fast stroke (not on iPhone: then just this one)
+    for (const ev of evs?.length ? evs : [e]) { const p = pos(ev); x.beginPath(); x.moveTo(...last); x.lineTo(...p); x.stroke(); last = p; }
+  });
+  const end = () => { last = null; };
+  c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
+}
+function clearSig() {
+  const c = $('#sigPad');
+  c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  sigDirty = true; $('#sigHint').hidden = false;
+}
+// what to save: the old signature if untouched, none if cleared, otherwise the strokes cropped to their edges, in black
+function sigOut() {
+  if (!sigDirty) return profile.signature || '';
+  const c = $('#sigPad'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+    if (d[(y * c.width + x) * 4 + 3] < 20) continue;
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (x1 < 0) return '';
+  const pad = 6, out = document.createElement('canvas');
+  out.width = x1 - x0 + 1 + pad * 2; out.height = y1 - y0 + 1 + pad * 2;
+  out.getContext('2d').drawImage(c, x0 - pad, y0 - pad, out.width, out.height, 0, 0, out.width, out.height);
+  return inkCanvas(out, '#000').toDataURL('image/png');
 }
 async function onBannerFile(file) {
   if (!file) return;
@@ -309,7 +369,7 @@ function submitProfile() {
   if (!name) { $('#pfErr').textContent = 'Il nome non può essere vuoto.'; return; }
   if (!/^[a-z0-9._]{3,24}$/.test(handle)) { $('#pfErr').textContent = 'Nome utente: 3-24 caratteri tra lettere, numeri, punto e trattino basso.'; return; }
   const type = $('#profForm input[name="pfType"]:checked')?.value || profile.type;
-  const next = { ...profile, name, handle, type, bio: $('#pfBio').value.trim() || profile.bio, banner: $('#profForm').dataset.banner || '' };
+  const next = { ...profile, name, handle, type, bio: $('#pfBio').value.trim() || profile.bio, banner: $('#profForm').dataset.banner || '', signature: sigOut() };
   try { localStorage.setItem('novae.profile', JSON.stringify(next)); }
   catch { $('#pfErr').textContent = 'Spazio pieno su questo dispositivo: scegli un banner più leggero.'; return; }
   Object.assign(profile, next);

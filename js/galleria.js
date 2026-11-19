@@ -106,8 +106,10 @@ function renderDetail(id) {
           <dt>Categoria</dt><dd>${w.disc}${w.genre ? `, ${w.genre.toLowerCase()}` : ''}</dd>
           <dt>Anno</dt><dd>${w.year}</dd>
           <dt>Paese</dt><dd>${a.country}</dd>
+          ${w.type === 'image' ? `<dt>Misure</dt><dd>${cmOf(w).join(' × ')} cm</dd>` : ''}
           <dt>Visualizzazioni</dt><dd>${fmt(w.views)}</dd>
         </dl>
+        ${AR_OK && w.type === 'image' ? arBtn(w) : ''}
         <div class="related-panel" id="relPanel">
           <h3>Opere correlate</h3>
           ${related.map(r => `<a class="rel" href="#opera/${r.id}">${img(r.thumb, '')}<div><strong>${r.t}</strong><span>${ARTISTS[r.a].name}</span></div></a>`).join('')}
@@ -117,4 +119,166 @@ function renderDetail(id) {
     </div>`;
   // the page takes the colour of the work, like Spotify with album covers (styles.css: body[data-screen="opera"])
   tintOf(w.img).then(c => { if (c && $('#detail').dataset.id === w.id) document.body.style.setProperty('--tint', `rgb(${c})`); });
+}
+
+/* ---------------- Vedila sul tuo muro: the work in augmented reality (AR Quick Look, iPhone and iPad) ----------------
+   The model is made on the phone: a black frame at the real size with the picture on it, packed as a USDZ file. */
+const AR_OK = (() => { try { return document.createElement('a').relList.supports('ar'); } catch { return false; } })();
+// size in cm: the one given when publishing, or a guess (60 cm on the long side) from the picture's shape
+const cmOf = w => w.cm || (ar => ar >= 1 ? [60, Math.round(60 / ar)] : [Math.round(60 * ar), 60])((w.w || 1200) / (w.h || 900));
+const arBtn = w => `<button class="btn-ghost ar-btn" data-act="ar" data-id="${w.id}"><i class="ph-light ph-cube-focus"></i>Vedila sul tuo muro</button>`;
+async function openAR(w) {
+  toast("Preparo l'opera per il tuo muro");
+  const file = await makeUSDZ(w);
+  if (!file) { toast('Non riesco a preparare questa immagine'); return; }
+  const a = document.createElement('a');
+  a.rel = 'ar'; a.href = URL.createObjectURL(file);
+  a.append(document.createElement('img')); // Quick Look only opens links that hold an image
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+async function makeUSDZ(w) {
+  const im = await loadImg(w.img);
+  if (!im) return null;
+  const k = Math.min(1, 2048 / Math.max(im.width, im.height)), c = document.createElement('canvas');
+  c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+  c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+  const jpg = new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/jpeg', .9))).arrayBuffer());
+  return usdzZip([['novae.usda', new TextEncoder().encode(usdaOf(...cmOf(w).map(v => v / 100)))], ['art.jpg', jpg]]);
+}
+// the scene, in metres: the frame is a 3 cm deep box 2.5 cm wider than the work on each side, the picture sits on its front
+function usdaOf(W, H) {
+  const f = n => +n.toFixed(4), x = f(W / 2 + .025), y = f(H / 2 + .025), d = .03, ax = f(W / 2), ay = f(H / 2), az = d + .0005;
+  const pts = p => `[${p.map(q => `(${q.join(', ')})`).join(', ')}]`;
+  const box = pts([[-x, -y, 0], [x, -y, 0], [x, y, 0], [-x, y, 0], [-x, -y, d], [x, -y, d], [x, y, d], [-x, y, d]]);
+  const art = pts([[-ax, -ay, az], [ax, -ay, az], [ax, ay, az], [-ax, ay, az]]);
+  const S = '/Root/Scenes/Scene';
+  return `#usda 1.0
+(
+    customLayerData = {
+        string creator = "NOVAE"
+    }
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    def Scope "Scenes" (
+        kind = "sceneLibrary"
+    )
+    {
+        def Xform "Scene" (
+            customData = {
+                bool preliminary_collidesWithEnvironment = 0
+                string sceneName = "Scene"
+            }
+            sceneName = "Scene"
+        )
+        {
+            token preliminary:anchoring:type = "plane"
+            token preliminary:planeAnchoring:alignment = "vertical"
+
+            def Mesh "Frame" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [4, 5, 6, 7, 0, 3, 2, 1, 1, 2, 6, 5, 0, 4, 7, 3, 3, 7, 6, 2, 0, 1, 5, 4]
+                point3f[] points = ${box}
+                uniform token subdivisionScheme = "none"
+                rel material:binding = <${S}/Black>
+            }
+
+            def Mesh "Art" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                int[] faceVertexCounts = [4]
+                int[] faceVertexIndices = [0, 1, 2, 3]
+                point3f[] points = ${art}
+                normal3f[] normals = [(0, 0, 1), (0, 0, 1), (0, 0, 1), (0, 0, 1)] (
+                    interpolation = "vertex"
+                )
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "vertex"
+                )
+                uniform token subdivisionScheme = "none"
+                rel material:binding = <${S}/Paint>
+            }
+
+            def Material "Black"
+            {
+                token outputs:surface.connect = <${S}/Black/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.03, 0.03, 0.03)
+                    float inputs:roughness = 0.5
+                    token outputs:surface
+                }
+            }
+
+            def Material "Paint"
+            {
+                token outputs:surface.connect = <${S}/Paint/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor.connect = <${S}/Paint/Image.outputs:rgb>
+                    float inputs:roughness = 0.9
+                    token outputs:surface
+                }
+
+                def Shader "Reader"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "Image"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @art.jpg@
+                    float2 inputs:st.connect = <${S}/Paint/Reader.outputs:result>
+                    token inputs:wrapS = "clamp"
+                    token inputs:wrapT = "clamp"
+                    float3 outputs:rgb
+                }
+            }
+        }
+    }
+}
+`;
+}
+// USDZ = a zip with no compression whose files each start on a 64-byte boundary (the padding goes in the extra field)
+const CRC_T = Array.from({ length: 256 }, (_, n) => { for (let k = 0; k < 8; k++) n = n & 1 ? 0xEDB88320 ^ (n >>> 1) : n >>> 1; return n >>> 0; });
+const crc32 = b => { let c = -1; for (const v of b) c = CRC_T[(c ^ v) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0; };
+function usdzZip(files) {
+  const parts = [], central = [];
+  let off = 0;
+  for (const [name, data] of files) {
+    const nm = new TextEncoder().encode(name), crc = crc32(data);
+    const pad = (64 - (off + 30 + nm.length + 4) % 64) % 64, extra = new Uint8Array(4 + pad), ev = new DataView(extra.buffer);
+    ev.setUint16(0, 0x1986, true); ev.setUint16(2, pad, true);
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true);
+    h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true);
+    h.setUint16(26, nm.length, true); h.setUint16(28, extra.length, true);
+    parts.push(new Uint8Array(h.buffer), nm, extra, data);
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true);
+    cd.setUint32(16, crc, true); cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true);
+    cd.setUint16(28, nm.length, true); cd.setUint32(42, off, true);
+    central.push(new Uint8Array(cd.buffer), nm);
+    off += 30 + nm.length + extra.length + data.length;
+  }
+  const size = central.reduce((s, p) => s + p.length, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, size, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: 'model/vnd.usdz+zip' });
 }

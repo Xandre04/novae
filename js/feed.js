@@ -105,10 +105,12 @@ const mockReplies = w => {
   const r = rng(w.likes || 7);
   const shuffled = list => list.map(v => [r(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]); // no author or text twice
   const ids = shuffled(AIDS.filter(id => id !== w.a)), texts = shuffled(REPLY_TEXTS);
+  const rp = rng((w.likes || 7) + 99); // its own sequence, so the points don't change the rest
   const out = Array.from({ length: w.ts ? 0 : 6 }, (_, i) => {
     const a = ids[i];
     return { a, text: texts[i], ago: 3 + i * 17 + Math.floor(r() * 40), likes: Math.floor(r() * 900),
-      rating: typeOf(a) === 'critico' ? 3 + Math.floor(r() * 3) : 0 }; // only critics give stars
+      rating: typeOf(a) === 'critico' ? 3 + Math.floor(r() * 3) : 0, // only critics give stars
+      pt: i === 0 || i === 3 ? [Math.round(18 + rp() * 64), Math.round(18 + rp() * 64)] : null };
   });
   if (!w.ts && !out.some(rp => typeOf(rp.a) === 'critico')) out.splice(1, 0, { a: 'giulia', text: REVIEW_TEXTS[(w.likes || 0) % REVIEW_TEXTS.length], ago: 22, likes: 341, rating: Math.max(3, Math.round(w.rating || 4)) });
   return out;
@@ -117,7 +119,7 @@ const replyHtml = rp => `<div class="x-reply ${typeOf(rp.a) === 'critico' ? 'is-
     <div class="x-ava">${avatarRing(rp.a, 'sm')}</div>
     <div><p class="x-meta"><a class="x-name" href="${profileHref(rp.a)}">${ARTISTS[rp.a].name}</a> ${whoTag(rp.a)} <span class="x-time">· ${rp.ts ? agoText(rp) : agoText({ ago: rp.ago })}</span></p>
       ${rp.rating ? `<div class="x-reply-rating">${rating(rp.rating, 14)}</div>` : ''}
-      <p class="x-text">${rp.text}</p>
+      <p class="x-text">${rp.pt ? ptChip(rp.pt) : ''}${rp.text}</p>
       ${rp.likes ? `<p class="x-reply-likes"><i class="ph-light ph-heart"></i> ${fmt(rp.likes)}</p>` : ''}</div>
   </div>`;
 // star picker for critics (the only ones who can give stars)
@@ -125,10 +127,11 @@ const starPicker = n => `<div class="star-pick" role="radiogroup" aria-label="Le
 function renderThread(id) {
   const w = byId[id];
   const root = $('#thread');
+  document.body.classList.remove('pt-picking'); // a half-chosen point doesn't follow you to another post
   if (!w) { root.innerHTML = `<div class="empty">${starSvg()}<strong>Post non trovato</strong><p>Forse è stato eliminato.</p><a class="btn-ghost" href="#scopri">Torna a Scopri</a></div>`; return; }
   const a = ARTISTS[w.a];
   if (!canSee(w)) { root.innerHTML = `<header class="x-top"><button class="icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-arrow-left"></i></button><h1>Post</h1></header><div class="empty">${starSvg()}<strong>Solo per i follower</strong><p>${a.name} condivide le sue opere solo con i suoi follower.</p><button class="btn-accent" data-act="follow" data-a="${w.a}">Segui</button></div>`; return; }
-  const mine = (REPLIES_MINE[w.id] || []).map(t => ({ a: 'me', text: t.text, ts: t.ts, rating: t.rating || 0 }));
+  const mine = (REPLIES_MINE[w.id] || []).map(t => ({ a: 'me', text: t.text, ts: t.ts, rating: t.rating || 0, pt: t.pt }));
   const critic = typeOf('me') === 'critico';
   root.innerHTML = `
     <header class="x-top"><button class="icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-arrow-left"></i></button><h1>Post</h1></header>
@@ -152,10 +155,47 @@ function renderThread(id) {
       <label for="replyInput" class="sr-only">${critic ? 'La tua recensione' : 'La tua risposta'}</label>
       <input id="replyInput" placeholder="${critic ? 'Scrivi la tua recensione' : 'Scrivi la tua risposta'}" autocomplete="off" maxlength="280">
       <button class="btn-accent" type="submit">${critic ? 'Pubblica' : 'Rispondi'}</button>
+      <button type="button" class="pt-pick" data-act="pt-pick" aria-pressed="false"><i class="ph-light ph-crosshair-simple"></i><span>Indica un punto dell'opera</span></button>
       ${critic ? starPicker(0) : '<p class="x-note"><i class="nstar" aria-hidden="true"></i>Solo i critici possono dare le stelle.</p>'}
     </form>
     <div class="x-replies">${[...mine.reverse(), ...mockReplies(w)].map(replyHtml).join('') || '<p class="x-none">Ancora nessuna risposta. Scrivi la prima.</p>'}</div>`;
   if (focusReply) { focusReply = false; requestAnimationFrame(() => $('#replyInput')?.focus({ preventScroll: true })); }
+}
+/* Comments on a point of the work, shown like a video timestamp: a small "Qui" chip in the text. Tapping it flashes
+   a ring on that spot of the picture for a moment, so nothing is ever drawn on the work itself. */
+const ptChip = ([x, y]) => `<button class="pt-chip" data-act="pt" data-x="${x}" data-y="${y}" aria-label="Mostra il punto sull'opera"><i class="ph-light ph-crosshair-simple"></i>Qui</button> `;
+function showPt(x, y) {
+  const m = $('#thread .x-media');
+  if (!m) return;
+  m.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+  $$('.pt-mark', m).forEach(el => el.remove());
+  const mark = document.createElement('span');
+  mark.className = 'pt-mark'; mark.style.left = x + '%'; mark.style.top = y + '%';
+  m.append(mark);
+  setTimeout(() => mark.remove(), 2600);
+}
+// the composer's "Indica un punto" button: on, the next tap on the work marks the point (app.js); tapped again, no point
+function togglePtPick(btn) {
+  const f = btn.closest('form');
+  if (f.dataset.pt) { delete f.dataset.pt; ptPickUi(f); return; }
+  const on = !document.body.classList.contains('pt-picking');
+  document.body.classList.toggle('pt-picking', on);
+  ptPickUi(f);
+  if (on) $('#thread .x-media')?.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+function setPt(media, e) {
+  const r = media.getBoundingClientRect();
+  const x = Math.round((e.clientX - r.left) / r.width * 100), y = Math.round((e.clientY - r.top) / r.height * 100);
+  const f = $('#thread .x-compose');
+  f.dataset.pt = `${x},${y}`;
+  document.body.classList.remove('pt-picking');
+  ptPickUi(f); showPt(x, y);
+  $('#replyInput')?.focus({ preventScroll: true });
+}
+function ptPickUi(f) {
+  const b = $('.pt-pick', f), picking = document.body.classList.contains('pt-picking');
+  b.setAttribute('aria-pressed', String(!!(f.dataset.pt || picking)));
+  $('span', b).textContent = T(f.dataset.pt ? 'Punto scelto. Tocca per toglierlo' : picking ? "Tocca il punto sull'opera" : "Indica un punto dell'opera");
 }
 let focusReply = false; // set by the comment button, so you can type right away
 function submitReply(f) {
@@ -164,7 +204,8 @@ function submitReply(f) {
   if (!text) { input.focus(); return; }
   const id = f.dataset.reply;
   const stars = typeOf('me') === 'critico' ? +f.dataset.stars || 0 : 0; // only critics can give stars
-  (REPLIES_MINE[id] ||= []).push({ text: text.replace(/&/g, '&amp;').replace(/</g, '&lt;'), ts: Date.now(), rating: stars });
+  const pt = f.dataset.pt ? f.dataset.pt.split(',').map(Number) : undefined;
+  (REPLIES_MINE[id] ||= []).push({ text: text.replace(/&/g, '&amp;').replace(/</g, '&lt;'), ts: Date.now(), rating: stars, pt });
   store.set('novae.replies', JSON.stringify(REPLIES_MINE));
   renderThread(id);
   toast(stars ? `Recensione pubblicata con ${stars} ${stars === 1 ? 'stella' : 'stelle'}` : 'Risposta pubblicata');

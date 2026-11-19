@@ -60,7 +60,7 @@ function openSheet(html) {
   let drag = null;
   sheet.addEventListener('touchstart', e => {
     if (drag || e.touches.length > 1) return; // a second finger must not make it jump
-    drag = sheet.scrollTop <= 0 && !e.target.closest('textarea, .notifs') ? { y: e.touches[0].clientY, dy: 0, t: performance.now() } : null;
+    drag = sheet.scrollTop <= 0 && !e.target.closest('textarea, .notifs, .sig-pad') ? { y: e.touches[0].clientY, dy: 0, t: performance.now() } : null;
   }, { passive: true });
   sheet.addEventListener('touchmove', e => {
     if (!drag) return;
@@ -159,6 +159,13 @@ const loadImg = src => new Promise(res => {
   im.onload = () => res(im); im.onerror = () => res(null);
   im.src = src;
 });
+// a copy of a one-colour drawing (the signature, stored in black) in another colour
+function inkCanvas(im, color) {
+  const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
+  const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+  x.globalCompositeOperation = 'source-in'; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height);
+  return c;
+}
 function openCard() {
   openSheet(`<h3>Biglietto da visita</h3><div class="card-wrap">
     <canvas id="cardCv" width="1080" height="1350" role="img" aria-label="Il tuo biglietto da visita"></canvas>
@@ -208,6 +215,8 @@ async function drawCard(c) {
   x.font = font(38); x.fillStyle = '#d61c40';
   x.fillText([T(TYPES[typeOf('me')].label), disc && T(disc)].filter(Boolean).join(' · '), 108, top + 243, W - 64 - 320 - 24 - 108);
   x.font = font(34); x.fillStyle = '#85837e'; x.fillText('@' + me.handle, 64, top + 300, W - 64 - 320 - 24 - 64); // stays clear of the QR
+  const sig = await loadImg(profile.signature); // your signature in white, between the handle and the QR caption
+  if (sig) { const k = Math.min(360 / sig.width, 70 / sig.height); x.drawImage(inkCanvas(sig, '#ecebe6'), 64, top + 328, sig.width * k, sig.height * k); }
   // the QR, bottom right, on its light plate so cameras read it
   const Q = 320, qx = W - 64 - Q, qy = H - 64 - Q;
   x.save(); x.beginPath(); x.roundRect(qx, qy, Q, Q, 22); x.clip(); x.drawImage(qr, qx, qy, Q, Q); x.restore();
@@ -231,18 +240,68 @@ function openShow({ works, name, start = 0 }) {
   if (!works.length) return;
   const many = new Set(works.map(w => w.a)).size > 1; // the feed: say who made each work on its label
   const box = document.createElement('div');
-  box.className = 'show'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', `${T('Mostra')}: ${name}`); box.tabIndex = -1;
+  box.className = 'mostra'; // not 'show': the toast uses that class box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', `${T('Mostra')}: ${name}`); box.tabIndex = -1;
   box.innerHTML = `<header class="show-head"><p><strong>${name}</strong><span><b>${works.length}</b> ${label(works.length, 'opere')}</span></p><button class="icon-btn" data-close aria-label="Chiudi"><i class="ph-light ph-x"></i></button></header>
     <div class="show-wall">${works.map((w, i) => `<figure class="show-room" data-i="${i}">
-      <div class="show-frame"><img src="${w.img}" alt="${w.t}" ${i > 1 ? 'loading="lazy"' : ''} decoding="async"></div>
-      <figcaption><strong>${w.t}</strong>${many ? `<em>${[w.a, w.co].filter(Boolean).map(a => ARTISTS[a].name).join(' e ')}</em>` : ''}<span>${T(w.disc)}, ${w.year}</span><small>${i + 1} / ${works.length}</small></figcaption>
+      <div class="show-frame"><div class="show-pic"><img src="${w.img}" alt="${w.t}" ${i > 1 ? 'loading="lazy"' : ''} decoding="async" draggable="false"></div></div>
+      <figcaption><strong>${w.t}</strong>${many ? `<em>${[w.a, w.co].filter(Boolean).map(a => ARTISTS[a].name).join(' e ')}</em>` : ''}<span>${T(w.disc)}, ${w.year}</span>${authorOf(w, 'me') && profile.signature ? `<img class="sig" src="${profile.signature}" alt="Firma">` : ''}<small>${i + 1} / ${works.length}</small></figcaption>
     </figure>`).join('')}</div>
-    ${works.length > 1 ? '<p class="show-hint" aria-hidden="true"><i class="ph-light ph-hand-swipe-left"></i>Scorri per la prossima opera</p>' : ''}`;
+    <p class="show-hint" aria-hidden="true"><i class="ph-light ph-magnifying-glass-plus"></i>${works.length > 1 ? 'Scorri per la prossima, doppio tocco per avvicinarti' : 'Doppio tocco per avvicinarti'}</p>`;
   const wall = $('.show-wall', box);
   const io = new IntersectionObserver(es => es.forEach(en => {
-    if (en.isIntersecting) tintOf(works[en.target.dataset.i].img).then(c => c && box.style.setProperty('--tint', `rgb(${c})`));
+    if (!en.isIntersecting) return;
+    tintOf(works[en.target.dataset.i].img).then(c => c && box.style.setProperty('--tint', `rgb(${c})`));
+    if (zoom.pic && !en.target.contains(zoom.pic)) zoom.reset(); // moved on: the previous work goes back to normal
   }), { root: wall, threshold: .6 });
   $$('.show-room', box).forEach(r => io.observe(r));
+  // Zoom: double tap (or double click) to get close to the work, pinch with two fingers, drag to look around
+  const zoom = {
+    pic: null, z: 1, tx: 0, ty: 0,
+    apply(anim) {
+      const im = this.pic.firstElementChild, mx = (this.z - 1) * this.pic.clientWidth / 2, my = (this.z - 1) * this.pic.clientHeight / 2;
+      this.tx = Math.max(-mx, Math.min(mx, this.tx)); this.ty = Math.max(-my, Math.min(my, this.ty)); // never past the edges
+      im.style.transition = anim && !reduceMotion ? 'transform .3s var(--ease-out)' : 'none';
+      im.style.transform = this.z > 1 ? `translate(${this.tx}px, ${this.ty}px) scale(${this.z})` : '';
+      box.classList.toggle('zoomed', this.z > 1);
+    },
+    at(z, cx, cy, anim) { // zoom to z keeping the point under the finger where it is
+      const r = this.pic.getBoundingClientRect(), px = cx - r.left - r.width / 2, py = cy - r.top - r.height / 2;
+      z = Math.max(1, Math.min(4, z));
+      this.tx = px - (px - this.tx) * z / this.z; this.ty = py - (py - this.ty) * z / this.z; this.z = z;
+      this.apply(anim);
+    },
+    reset() { if (this.pic && this.z > 1) { this.z = 1; this.tx = this.ty = 0; this.apply(true); } },
+  };
+  const ptrs = new Map();
+  let pinch = null, pan = null, tap = { t: 0, x: 0, y: 0 };
+  wall.addEventListener('pointerdown', e => {
+    const pic = e.target.closest('.show-pic');
+    if (!pic) return;
+    if (zoom.pic !== pic) { zoom.reset(); zoom.pic = pic; }
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY });
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, z: zoom.z }; pan = null; }
+    else if (zoom.z > 1) pan = { x: e.clientX, y: e.clientY, tx: zoom.tx, ty: zoom.ty };
+    if (zoom.z > 1 || ptrs.size === 2) try { pic.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
+  });
+  wall.addEventListener('pointermove', e => {
+    const p = ptrs.get(e.pointerId);
+    if (!p) return;
+    p.x = e.clientX; p.y = e.clientY;
+    if (pinch && ptrs.size === 2) { const [a, b] = [...ptrs.values()]; zoom.at(pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, (a.x + b.x) / 2, (a.y + b.y) / 2); }
+    else if (pan) { zoom.tx = pan.tx + e.clientX - pan.x; zoom.ty = pan.ty + e.clientY - pan.y; zoom.apply(); }
+  });
+  const lift = e => {
+    const p = ptrs.get(e.pointerId);
+    if (!p) return;
+    ptrs.delete(e.pointerId);
+    if (ptrs.size < 2) pinch = null;
+    if (!ptrs.size) pan = null;
+    if (e.type !== 'pointerup' || Math.hypot(p.x - p.x0, p.y - p.y0) > 12) return; // a drag, not a tap
+    const now = performance.now();
+    if (now - tap.t < 320 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 40) { zoom.at(zoom.z > 1 ? 1 : 2.5, e.clientX, e.clientY, true); tap.t = 0; }
+    else tap = { t: now, x: e.clientX, y: e.clientY };
+  };
+  wall.addEventListener('pointerup', lift); wall.addEventListener('pointercancel', lift);
   const close = () => { io.disconnect(); box.classList.add('out'); setTimeout(() => box.remove(), 200); removeEventListener('keydown', key); releaseBack(); };
   const key = e => {
     if (e.key === 'Escape') close();

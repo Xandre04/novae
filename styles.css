@@ -1070,12 +1070,12 @@ body[data-screen="opera"] .player { border-bottom-color: transparent; }
 .card-wrap .btn-accent:disabled { opacity: .5; }
 .my-qr .btn-ghost { width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; }
 
-/* Mostra: one work per wall, lit from above, with a museum label; the wall takes the work's colour */
-.show { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; outline: none; color: #fff;
+/* Mostra (.mostra, not .show: that one is the toast's "visible" state): one work per wall, lit from above, with a museum label; the wall takes the work's colour */
+.mostra { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; outline: none; color: #fff;
   background: radial-gradient(ellipse 70% 55% at 50% 38%, color-mix(in srgb, var(--tint) 30%, #1c1c1c), #0a0a0a 75%);
   transition: --tint .9s var(--ease-out); animation: show-in .22s var(--ease-out); }
 .show-frame { animation: show-img .26s var(--ease-out); }
-.show.out { opacity: 0; transition: opacity .2s var(--ease-out); }
+.mostra.out { opacity: 0; transition: opacity .2s var(--ease-out); }
 .show-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(10px + env(safe-area-inset-top)) 8px 0 20px; }
 .show-head p { display: grid; min-width: 0; }
 .show-head strong { font-size: 17px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1093,4 +1093,36 @@ body[data-screen="opera"] .player { border-bottom-color: transparent; }
 .show-room figcaption em { font-style: normal; font-size: 13px; color: #1b1b1b; }
 .show-room figcaption small { font-size: 11px; color: #888; letter-spacing: .08em; }
 .show-hint { display: flex; align-items: center; justify-content: center; gap: 6px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); font-size: 12px; color: rgba(255, 255, 255, .55); }
-@media (prefers-reduced-motion: reduce) { .show, .show-frame { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .mostra, .show-frame { animation: none; } }
+
+/* Mostra: zoom (pannelli.js) and your signature on the label */
+.show-pic { display: block; overflow: hidden; touch-action: pan-x; cursor: zoom-in; }
+.show-pic img { transform-origin: center; }
+.mostra.zoomed .show-pic { touch-action: none; cursor: grab; }
+.mostra.zoomed .show-wall { overflow: hidden; }
+.show-room figcaption .sig { display: block; height: 30px; width: auto; max-width: 170px; margin: 4px 0 2px; opacity: .85; }
+
+/* Comments on a point of the work (feed.js): a chip in the text, a ring that flashes on the picture */
+.pt-chip { display: inline-flex; align-items: center; gap: 3px; margin-right: 4px; padding: 1px 9px 1px 6px; border-radius: 999px; background: rgba(214, 28, 64, .14); color: var(--accent-hi); font-size: 13px; font-weight: 600; vertical-align: 1px; }
+.pt-chip i { font-size: 14px; }
+.pt-pick { grid-column: 2 / -1; justify-self: start; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-3); }
+.pt-pick[aria-pressed="true"] { color: var(--accent-hi); }
+.pt-pick i { font-size: 16px; }
+body.pt-picking #thread .x-media { cursor: crosshair; outline: 2px dashed var(--accent-hi); outline-offset: 3px; }
+.pt-mark { position: absolute; z-index: 3; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; border: 2.5px solid #fff; box-shadow: 0 0 0 2px rgba(214, 28, 64, .9), 0 0 18px rgba(0, 0, 0, .5); pointer-events: none; animation: pt-mark 2.6s var(--ease-out) forwards; }
+@keyframes pt-mark { 0% { transform: scale(1.8); opacity: 0; } 12% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: scale(.9); opacity: 0; } }
+@keyframes pt-fade { 85% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pt-mark { animation-name: pt-fade; } }
+
+/* Signature pad (Modifica profilo) */
+.sig-pad { position: relative; border: var(--stroke) dashed var(--line-hi); border-radius: 12px; background: var(--bg-2); }
+.sig-pad canvas { display: block; width: 100%; aspect-ratio: 3; touch-action: none; cursor: crosshair; }
+.sig-pad span { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-3); font-size: 14px; pointer-events: none; }
+.sig-pad span[hidden] { display: none; }
+
+/* Size in cm, "Vedila sul tuo muro" */
+.pub-cm { display: flex; align-items: center; gap: 8px; }
+.pub-cm input { flex: 1; min-width: 0; }
+.pub-cm span { color: var(--ink-3); }
+.ar-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin: 14px 0; }
+.ar-btn i { font-size: 20px; }

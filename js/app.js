@@ -130,6 +130,9 @@ document.addEventListener('load', e => {
 }, true);
 
 document.addEventListener('click', e => {
+  // choosing the point of a comment: a tap on the work marks it instead of opening it
+  const ptMedia = document.body.classList.contains('pt-picking') && e.target.closest('#thread .x-media');
+  if (ptMedia) { e.preventDefault(); setPt(ptMedia, e); return; }
   // Double-tap target: first tap waits briefly, second tap likes instead of opening
   const dbl = e.target.closest('[data-dbl]');
   if (dbl && !e.target.closest('[data-act]')) {
@@ -223,7 +226,11 @@ document.addEventListener('click', e => {
     case 'card': openCard(); break;
     case 'card-save': saveCard(); break;
     case 'show': openShow(showList); break;
-    case 'cmp': break; // the "prima e dopo" bar: dragging it must not open or like the work
+    case 'cmp': break;
+    case 'pt-pick': togglePtPick(el); break;
+    case 'pt': showPt(+el.dataset.x, +el.dataset.y); break;
+    case 'sig-clear': clearSig(); break;
+    case 'ar': openAR(w); break; // the "prima e dopo" bar: dragging it must not open or like the work
     case 'problem': openProblem(); break;
     case 'invite-share': {
       const text = `Entra su NOVAE con il mio codice ${myCode()}`, url = inviteLink(myCode());

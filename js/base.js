@@ -133,6 +133,8 @@ function addWork(o) {
   w.views = Math.floor(w.likes * (2.2 + r() * 4));
   w.comments = Math.floor(w.likes / (28 + r() * 30));
   w.price = Math.floor(40 + r() * 900);
+  const side = 40 + Math.floor(r() * 9) * 10, ar = (o.w || 1200) / (o.h || 900); // sample size in cm, long side 40-120
+  w.cm = ar >= 1 ? [side, Math.round(side / ar)] : [Math.round(side * ar), side];
   w.img = pic(w.id, o.w || 1200, o.h || 900);
   w.thumb = pic(w.id, 480, Math.round(480 * (o.h || 900) / (o.w || 1200)));
   // sample "prima e dopo" and process posts: the same photo, grey and blurred, stands in for the sketch and the stages
