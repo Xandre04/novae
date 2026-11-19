@@ -264,8 +264,8 @@ function submitPublish(f) {
   MINE.unshift(w);
   if (!saveMine()) { MINE.shift(); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: elimina una tua opera e riprova.'; return; }
   WORKS.unshift(w); byId[w.id] = w;
-  closeSheet(); toast('Opera pubblicata'); buzz();
-  if (location.hash === '#scopri') renderFeed(); else location.hash = '#scopri';
+  toast('Opera pubblicata'); buzz();
+  closeSheet(() => { if (location.hash === '#scopri') renderFeed(); else location.hash = '#scopri'; });
 }
 function deleteMine(id) {
   const i = MINE.findIndex(w => w.id === id);
@@ -275,8 +275,9 @@ function deleteMine(id) {
   if (wi > -1) WORKS.splice(wi, 1);
   delete byId[id];
   saved.delete(id); saveSaved();
-  closeSheet(); toast('Opera eliminata');
-  if (location.hash.includes(id)) location.hash = '#profilo'; else refresh();
+  toast('Opera eliminata');
+  // change page only once the sheet's history entry is gone, or its "back" would land on the deleted work
+  closeSheet(() => { if (location.hash.includes(id)) location.hash = '#profilo'; else refresh(); });
 }
 function openEditProfile() {
   openSheet(`<h3>Modifica profilo</h3>

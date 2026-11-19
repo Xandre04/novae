@@ -86,8 +86,9 @@ function postX(w) {
 }
 // Sfoglia (list) / Scorri (full-screen) switch at the top of Scopri, like Instagram's "Per te / Amici": same works, two ways to browse
 const modeTabs = on => `<nav class="mode-tabs" aria-label="Modo di vista"><a href="#scopri" ${on === 'feed' ? 'class="on" aria-current="page"' : ''}>Sfoglia</a><a href="#vista" ${on === 'reel' ? 'class="on" aria-current="page"' : ''}>Scorri</a></nav>`;
+const feedList = () => [...MINE, ...FEED].filter(w => !hidden.has(w.id) && canSee(w));
 function renderFeed() {
-  const list = [...MINE, ...FEED].filter(w => !hidden.has(w.id) && canSee(w));
+  const list = feedList();
   $('#feed').className = 'xfeed';
   $('#feed').innerHTML = modeTabs('feed') + (list.length ? list.map(postX).join('')
     : `<div class="empty">${starSvg()}<strong>Hai nascosto tutto</strong><p>Le opere che segni "Non mi interessa" spariscono da qui.</p><button class="btn-ghost" data-act="unhide-all">Mostrale di nuovo</button></div>`);

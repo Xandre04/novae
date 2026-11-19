@@ -145,7 +145,11 @@ document.addEventListener('click', e => {
     dblEl = dbl;
     dblTimer = setTimeout(() => {
       dblTimer = null;
-      if (dbl.matches('.x-media')) { openPreview(byId[dbl.dataset.dbl]); return; } // Sfoglia: just the image, full screen
+      if (dbl.matches('.x-media')) { // Sfoglia: the feed as an exhibition, from this work
+        const works = feedList();
+        openShow({ works, name: T('Sfoglia'), start: Math.max(0, works.findIndex(w => w.id === dbl.dataset.dbl)) });
+        return;
+      }
       const h = dbl.getAttribute('href');
       if (h) { location.hash = h; return; }
       const reel = dbl.closest('.reel'); // single tap on a reel: pause / resume video and audio

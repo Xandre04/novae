@@ -39,16 +39,6 @@ addEventListener('popstate', e => {
   if (afterBack) { const then = afterBack; afterBack = null; then(); return; } // our own history.back() finished
   if (e.state?.overlay) history.back(); // an entry left behind by a sheet that closed because the page changed
 });
-// full-screen preview of one image (from Sfoglia); a tap, Esc or the back button closes it
-function openPreview(w) {
-  const box = document.createElement('div');
-  box.className = 'lightbox'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', w.t); box.tabIndex = -1;
-  box.innerHTML = `<img src="${w.img || w.thumb}" alt="${w.t}"><button class="icon-btn lightbox-x" aria-label="Chiudi"><i class="ph-light ph-x"></i></button>`;
-  const close = () => { box.classList.add('out'); setTimeout(() => box.remove(), 200); removeEventListener('keydown', esc); releaseBack(); };
-  const esc = e => { if (e.key === 'Escape') close(); };
-  box.addEventListener('click', close); addEventListener('keydown', esc);
-  document.body.append(box); box.focus(); holdBack(close);
-}
 let sheetUp = false, sheetRaf = 0;
 function openSheet(html) {
   clearTimeout(sheetT); // a pending close must not hide the sheet we are opening now
@@ -234,16 +224,18 @@ async function saveCard() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-/* ---------------- Mostra: a profile's works as an exhibition, one per wall, with a museum label ---------------- */
-// Swipe (or arrow keys) from work to work; the wall takes the colour of the work on it
-function openShow({ works, name }) {
+/* ---------------- Mostra: works as an exhibition, one per wall, with a museum label ---------------- */
+// From a profile (its works) or from Sfoglia (the feed, starting on the tapped work). Swipe or use the arrow keys;
+// the wall takes the colour of the work on it; a tap on the empty wall, Esc or the back button closes it.
+function openShow({ works, name, start = 0 }) {
   if (!works.length) return;
+  const many = new Set(works.map(w => w.a)).size > 1; // the feed: say who made each work on its label
   const box = document.createElement('div');
   box.className = 'show'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', `${T('Mostra')}: ${name}`); box.tabIndex = -1;
   box.innerHTML = `<header class="show-head"><p><strong>${name}</strong><span><b>${works.length}</b> ${label(works.length, 'opere')}</span></p><button class="icon-btn" data-close aria-label="Chiudi"><i class="ph-light ph-x"></i></button></header>
     <div class="show-wall">${works.map((w, i) => `<figure class="show-room" data-i="${i}">
       <div class="show-frame"><img src="${w.img}" alt="${w.t}" ${i > 1 ? 'loading="lazy"' : ''} decoding="async"></div>
-      <figcaption><strong>${w.t}</strong><span>${T(w.disc)}, ${w.year}</span><small>${i + 1} / ${works.length}</small></figcaption>
+      <figcaption><strong>${w.t}</strong>${many ? `<em>${[w.a, w.co].filter(Boolean).map(a => ARTISTS[a].name).join(' e ')}</em>` : ''}<span>${T(w.disc)}, ${w.year}</span><small>${i + 1} / ${works.length}</small></figcaption>
     </figure>`).join('')}</div>
     ${works.length > 1 ? '<p class="show-hint" aria-hidden="true"><i class="ph-light ph-hand-swipe-left"></i>Scorri per la prossima opera</p>' : ''}`;
   const wall = $('.show-wall', box);
@@ -257,7 +249,8 @@ function openShow({ works, name }) {
     else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') wall.scrollBy({ left: (e.key === 'ArrowRight' ? 1 : -1) * wall.clientWidth, behavior: reduceMotion ? 'auto' : 'smooth' });
   };
   $('[data-close]', box).addEventListener('click', close); addEventListener('keydown', key);
-  document.body.append(box); box.focus(); holdBack(close);
+  box.addEventListener('click', e => { if (e.target.matches('.show-room, .show-wall')) close(); });
+  document.body.append(box); wall.scrollLeft = start * wall.clientWidth; box.focus(); holdBack(close);
 }
 function openProblem() {
   openSheet(`<h3>Segnala un problema</h3>

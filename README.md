@@ -55,7 +55,7 @@ NOVAE si installa dal sito, senza store: icona sulla schermata Home, schermo int
 - **Invito**: si entra con un codice o un QR.
 - **Menu principale**: le 8 sezioni attorno alla stella NOVAE.
 - **Scopri**: due modi di guardare le stesse opere, scelti in alto.
-  - **Sfoglia**: il feed a post, in stile X. Tocca l'immagine per vederla da sola a schermo intero; tocca il resto del post o il fumetto per i commenti.
+  - **Sfoglia**: il feed a post, in stile X. Tocca l'immagine per aprire il feed come una mostra, partendo da quell'opera (cornice, targhetta con autore, parete del suo colore); tocca il resto del post o il fumetto per i commenti.
   - **Scorri**: le opere a schermo intero una dopo l'altra, come Reels e TikTok. Tocca per mettere in pausa, doppio tocco per il mi piace.
 - **Galleria**: le 21 categorie, da Pittura e illustrazione ad Arte memetica, ognuna con la sua icona e il suo colore. In **Cinema e video**: serie, film e classifica, con le righe a gradini per genere.
 - **Novae**: il pianeta. Giralo (ha un po' di slancio) e scopri gli artisti di ogni paese.
@@ -90,10 +90,10 @@ NOVAE si installa dal sito, senza store: icona sulla schermata Home, schermo int
 | Doppio tocco su un'opera | Mi piace |
 | Trascinare la ruota della stella | Scegliere la sezione (anche rotellina o frecce ← →) |
 | Doppio tocco sulla stella | Tornare al menu principale |
-| Trascinare giù un pannello, o il tasto indietro del telefono | Chiudere il pannello o l'anteprima |
+| Trascinare giù un pannello, o il tasto indietro del telefono | Chiudere il pannello o la mostra |
 | Trascinare giù il feed dall'alto | Aggiornare il feed |
 | `/` | Cercare opere e artisti |
-| `Esc` | Chiudere pannelli, anteprima, ricerca e ruota |
+| `Esc` | Chiudere pannelli, mostra, ricerca e ruota |
 | Frecce ↑ ↓ in Scorri, ← → in Novae | Opera precedente o successiva, paese precedente o successivo |
 
 ## Design
