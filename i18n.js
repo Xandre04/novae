@@ -24,6 +24,18 @@ window.NOVAE_I18N = { en: {} };
 
   const dict = {
     'Sfoglia': 'Browse', 'Scorri': 'Scroll', 'Modo di vista': 'View mode',
+    // prima e dopo, processo, collaborazioni, mostra, biglietto da visita
+    'Prima': 'Before', 'Dopo': 'After', 'Prima e dopo: trascina per confrontare': 'Before and after: drag to compare', 'Processo': 'Process', 'e': 'and',
+    'Bozza, processo, collaborazione': 'Sketch, process, collaboration', 'Prima e dopo': 'Before and after', 'Insieme a': 'Together with', 'Nessuno': 'No one',
+    "Chi guarda trascina una barra per confrontare la bozza con l'opera finita.": 'Viewers drag a bar to compare the sketch with the finished work.',
+    "Da 2 a 6 foto delle fasi, in ordine: scorrono come un piccolo video e finiscono sull'opera.": 'From 2 to 6 photos of the stages, in order: they play like a short video and end on the work.',
+    "L'opera compare su tutti e due i profili. Con il server, l'altro artista dovrà accettare.": 'The work shows on both profiles. Once there is a server, the other artist will have to accept.',
+    'Aggiungi la bozza': 'Add the sketch', 'Bozza aggiunta. Tocca per cambiarla': 'Sketch added. Tap to change it', 'Aggiungi le fasi': 'Add the stages',
+    'fasi aggiunte. Tocca per cambiarle': 'stages added. Tap to change them', 'Scegli almeno due foto delle fasi.': 'Choose at least two photos of the stages.',
+    'Mostra': 'Exhibition', 'Scorri per la prossima opera': 'Swipe for the next work',
+    'Biglietto da visita': 'Business card', 'Il tuo biglietto da visita': 'Your business card', 'Salva immagine': 'Save image',
+    'Da stampare o da mettere nelle storie. Il QR fa entrare su NOVAE con il tuo invito.': 'To print or post in your stories. The QR lets people into NOVAE with your invite.',
+    'Inquadra il codice': 'Scan the code', 'per entrare su NOVAE': 'to get into NOVAE', 'il social di chi crea': 'the social network for makers',
     ...CATS, ...COUNTRIES,
     // navigation, sections, titles
     'Galleria': 'Gallery', 'Scopri': 'Discover', 'Stile': 'Style', 'Mercato': 'Market', 'Mercato Novae': 'Novae Market', 'Mercato<br>Novae': 'Novae<br>Market', 'Profilo': 'Profile',

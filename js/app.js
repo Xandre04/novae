@@ -216,6 +216,10 @@ document.addEventListener('click', e => {
     case 'notifs': openNotifs(); break;
     case 'create': openCreate(); break;
     case 'my-qr': openMyQR(); break;
+    case 'card': openCard(); break;
+    case 'card-save': saveCard(); break;
+    case 'show': openShow(showList); break;
+    case 'cmp': break; // the "prima e dopo" bar: dragging it must not open or like the work
     case 'problem': openProblem(); break;
     case 'invite-share': {
       const text = `Entra su NOVAE con il mio codice ${myCode()}`, url = inviteLink(myCode());
@@ -365,6 +369,7 @@ document.addEventListener('submit', e => {
 document.addEventListener('change', e => {
   if (e.target.id === 'pubFile') { onPubFile(e.target.files[0]); return; }
   if (e.target.id === 'bnFile') { onBannerFile(e.target.files[0]); return; }
+  if (e.target.id === 'pubBefore' || e.target.id === 'pubSteps') { onPubExtra(e.target); return; }
   if (e.target.matches('[data-lang]')) { store.set('novae.lang', e.target.value); location.reload(); return; }
   const k = e.target.dataset.toggle;
   if (!k) return;
@@ -374,6 +379,15 @@ document.addEventListener('change', e => {
 });
 
 $('#q').addEventListener('input', e => renderResults(e.target.value));
+// "prima e dopo": the bar moves the edge between sketch and finished work
+document.addEventListener('input', e => { if (e.target.matches('.cmp-range')) e.target.parentElement.style.setProperty('--x', e.target.value + '%'); });
+// process posts: every 1.2 s each one shows its next stage, and holds one beat longer on the finished work
+setInterval(() => $$('.steps').forEach(s => {
+  const ims = $$('img', s), k = (+s.dataset.k + 1) % (ims.length + 1), on = Math.min(k, ims.length - 1);
+  s.dataset.k = k;
+  ims.forEach((im, i) => im.classList.toggle('on', i === on));
+  $$('.steps-dots i', s).forEach((d, i) => d.classList.toggle('on', i === on));
+}), 1200);
 
 $('#q').addEventListener('keydown', e => { if (e.key === 'Enter') addRecent(e.target.value); });
 

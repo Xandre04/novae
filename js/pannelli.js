@@ -156,8 +156,108 @@ function openMyQR() {
     <p>Fallo inquadrare con la fotocamera: si apre NOVAE con il codice già scritto. Vale per una persona, fino al ${inviteExpiry()}.</p>
     <p class="report-note">Hai ${INVITES} inviti. Chi entra con il tuo codice risulta invitato da te.</p>
     <button class="btn-accent" data-act="invite-share">Condividi invito</button>
+    <button class="btn-ghost" data-act="card"><i class="ph-light ph-identification-card"></i>Biglietto da visita</button>
   </div>`);
   drawInviteQR($('#myQr'), inviteLink(myCode()));
+}
+
+/* ---------------- Biglietto da visita: name, profile type, your best work and the invite QR on one image ---------------- */
+const loadImg = src => new Promise(res => {
+  if (!src) return res(null);
+  const im = new Image();
+  if (/^https?:/.test(src)) im.crossOrigin = 'anonymous'; // picsum allows it; without it the canvas could not be saved
+  im.onload = () => res(im); im.onerror = () => res(null);
+  im.src = src;
+});
+function openCard() {
+  openSheet(`<h3>Biglietto da visita</h3><div class="card-wrap">
+    <canvas id="cardCv" width="1080" height="1350" role="img" aria-label="Il tuo biglietto da visita"></canvas>
+    <p class="x-note">Da stampare o da mettere nelle storie. Il QR fa entrare su NOVAE con il tuo invito.</p>
+    <button class="btn-accent" data-act="card-save" disabled><i class="ph-light ph-download-simple"></i>Salva immagine</button>
+  </div>`);
+  drawCard($('#cardCv')).then(() => { const b = $('[data-act="card-save"]'); if (b) b.disabled = false; });
+}
+async function drawCard(c) {
+  const x = c.getContext('2d'), W = c.width, H = c.height, me = ARTISTS.me;
+  const mine = WORKS.filter(w => authorOf(w, 'me'));
+  const best = mine.slice().sort((p, q) => likeCount(q) - likeCount(p) || (q.ts || 0) - (p.ts || 0))[0];
+  const discs = mine.reduce((m, w) => (m[w.disc] = (m[w.disc] || 0) + 1, m), {});
+  const disc = Object.keys(discs).sort((p, q) => discs[q] - discs[p])[0];
+  const qr = document.createElement('canvas'); qr.width = qr.height = 600;
+  const [cover, ava, mark, star] = await Promise.all([loadImg(best?.img || profile.banner), loadImg(avatar('me')), loadImg('assets/svg/wordmark.svg'), loadImg(STAR_SRC),
+    drawInviteQR(qr, inviteLink(myCode())), document.fonts.load('600 40px Outfit')]);
+  const font = (size, weight = 400) => `${weight} ${size}px Outfit, system-ui, sans-serif`;
+  x.fillStyle = '#141414'; x.fillRect(0, 0, W, H);
+  // the work on top, cropped to fill, fading into the card; no work yet: a red glow
+  const top = 780;
+  if (cover) {
+    const k = Math.max(W / cover.width, top / cover.height), cw = cover.width * k, ch = cover.height * k;
+    x.drawImage(cover, (W - cw) / 2, (top - ch) / 2, cw, ch);
+  } else {
+    const glow = x.createRadialGradient(W * .7, 160, 0, W * .7, 160, 760);
+    glow.addColorStop(0, 'rgba(179,18,47,.55)'); glow.addColorStop(1, 'rgba(179,18,47,0)');
+    x.fillStyle = glow; x.fillRect(0, 0, W, top);
+  }
+  let g = x.createLinearGradient(0, top - 380, 0, top); g.addColorStop(0, 'rgba(20,20,20,0)'); g.addColorStop(1, '#141414');
+  x.fillStyle = g; x.fillRect(0, top - 380, W, 381);
+  g = x.createLinearGradient(0, 0, 0, 220); g.addColorStop(0, 'rgba(20,20,20,.7)'); g.addColorStop(1, 'rgba(20,20,20,0)');
+  x.fillStyle = g; x.fillRect(0, 0, W, 220);
+  if (mark) x.drawImage(mark, 64, 64, 240, 240 * mark.height / mark.width);
+  if (best) { x.font = font(26); x.fillStyle = 'rgba(236,235,230,.75)'; x.textAlign = 'right'; x.fillText(best.t, W - 64, top - 40, 560); x.textAlign = 'left'; }
+  // avatar in a ring
+  const A = 170, ax = 64, ay = top - 90;
+  x.save(); x.beginPath(); x.arc(ax + A / 2, ay + A / 2, A / 2, 0, 7); x.fillStyle = '#0F0F0F'; x.fill(); x.clip();
+  if (ava) x.drawImage(ava, ax + 14, ay + 14, A - 28, A - 28);
+  x.restore();
+  x.lineWidth = 5; x.strokeStyle = '#ecebe6'; x.beginPath(); x.arc(ax + A / 2, ay + A / 2, A / 2, 0, 7); x.stroke();
+  // name (shrinks to fit), type and category, handle
+  let size = 84; x.font = font(size, 600);
+  while (size > 44 && x.measureText(me.name).width > W - 128) x.font = font(size -= 4, 600);
+  x.fillStyle = '#ecebe6'; x.fillText(me.name, 64, top + 170, W - 128);
+  if (star) x.drawImage(star, 64, top + 213, 30, 30 * star.height / star.width);
+  x.font = font(38); x.fillStyle = '#d61c40';
+  x.fillText([T(TYPES[typeOf('me')].label), disc && T(disc)].filter(Boolean).join(' · '), 108, top + 243, W - 64 - 320 - 24 - 108);
+  x.font = font(34); x.fillStyle = '#85837e'; x.fillText('@' + me.handle, 64, top + 300, W - 64 - 320 - 24 - 64); // stays clear of the QR
+  // the QR, bottom right, on its light plate so cameras read it
+  const Q = 320, qx = W - 64 - Q, qy = H - 64 - Q;
+  x.save(); x.beginPath(); x.roundRect(qx, qy, Q, Q, 22); x.clip(); x.drawImage(qr, qx, qy, Q, Q); x.restore();
+  x.font = font(32, 600); x.fillStyle = '#ecebe6';
+  x.fillText(T('Inquadra il codice'), 64, H - 118); x.fillText(T('per entrare su NOVAE'), 64, H - 74);
+  x.font = font(28); x.fillStyle = 'rgba(236,235,230,.75)'; x.textAlign = 'right'; x.fillText(T('il social di chi crea'), W - 64, 106); x.textAlign = 'left';
+}
+async function saveCard() {
+  const blob = await new Promise(r => $('#cardCv').toBlob(r, 'image/png'));
+  const file = new File([blob], 'novae-biglietto.png', { type: 'image/png' });
+  // on phones the share sheet has "Salva immagine"; elsewhere a normal download
+  if (navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch { /* closed */ } return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* ---------------- Mostra: a profile's works as an exhibition, one per wall, with a museum label ---------------- */
+// Swipe (or arrow keys) from work to work; the wall takes the colour of the work on it
+function openShow({ works, name }) {
+  if (!works.length) return;
+  const box = document.createElement('div');
+  box.className = 'show'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', `${T('Mostra')}: ${name}`); box.tabIndex = -1;
+  box.innerHTML = `<header class="show-head"><p><strong>${name}</strong><span><b>${works.length}</b> ${label(works.length, 'opere')}</span></p><button class="icon-btn" data-close aria-label="Chiudi"><i class="ph-light ph-x"></i></button></header>
+    <div class="show-wall">${works.map((w, i) => `<figure class="show-room" data-i="${i}">
+      <div class="show-frame"><img src="${w.img}" alt="${w.t}" ${i > 1 ? 'loading="lazy"' : ''} decoding="async"></div>
+      <figcaption><strong>${w.t}</strong><span>${T(w.disc)}, ${w.year}</span><small>${i + 1} / ${works.length}</small></figcaption>
+    </figure>`).join('')}</div>
+    ${works.length > 1 ? '<p class="show-hint" aria-hidden="true"><i class="ph-light ph-hand-swipe-left"></i>Scorri per la prossima opera</p>' : ''}`;
+  const wall = $('.show-wall', box);
+  const io = new IntersectionObserver(es => es.forEach(en => {
+    if (en.isIntersecting) tintOf(works[en.target.dataset.i].img).then(c => c && box.style.setProperty('--tint', `rgb(${c})`));
+  }), { root: wall, threshold: .6 });
+  $$('.show-room', box).forEach(r => io.observe(r));
+  const close = () => { io.disconnect(); box.classList.add('out'); setTimeout(() => box.remove(), 200); removeEventListener('keydown', key); releaseBack(); };
+  const key = e => {
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') wall.scrollBy({ left: (e.key === 'ArrowRight' ? 1 : -1) * wall.clientWidth, behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
+  $('[data-close]', box).addEventListener('click', close); addEventListener('keydown', key);
+  document.body.append(box); box.focus(); holdBack(close);
 }
 function openProblem() {
   openSheet(`<h3>Segnala un problema</h3>

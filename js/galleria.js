@@ -87,10 +87,11 @@ function renderDetail(id) {
   const w = byId[id] || WORKS[0];
   const a = ARTISTS[w.a];
   const related = WORKS.filter(x => x !== w && (x.genre ? x.genre === w.genre : x.disc === w.disc || x.a === w.a)).slice(0, 6);
+  $('#detail').dataset.id = w.id;
   $('#detail').innerHTML = `
-    <div class="player ph-img" data-dbl="${w.id}">
+    <div class="player ph-img ${w.before || w.steps ? 'rich' : ''}" data-dbl="${w.id}">
       <button class="back icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
-      ${img(w.img, w.t)}
+      ${workMedia(w, w.img)}
       ${w.type !== 'image' ? `<button class="vista-play" data-act="play" aria-label="Riproduci"><i class="ph-light ph-play"></i></button><div class="progress"><span></span></div>` : ''}
     </div>
     <div class="d-title">${avatarRing(w.a, 'sm')}<h1>${w.t}</h1>${rating(w.rating, 20)}</div>
@@ -101,7 +102,7 @@ function renderDetail(id) {
         <h3>Descrizione</h3>
         <p>${w.desc}</p>
         <dl>
-          <dt>Artista</dt><dd><a href="#artista/${w.a}">${a.name}</a></dd>
+          <dt>${w.co ? 'Artisti' : 'Artista'}</dt><dd>${byline(w, '')}</dd>
           <dt>Categoria</dt><dd>${w.disc}${w.genre ? `, ${w.genre.toLowerCase()}` : ''}</dd>
           <dt>Anno</dt><dd>${w.year}</dd>
           <dt>Paese</dt><dd>${a.country}</dd>
@@ -114,4 +115,6 @@ function renderDetail(id) {
       </div>
       <button class="related-tab" data-act="related" aria-expanded="false" aria-controls="relPanel">Opere correlate*</button>
     </div>`;
+  // the page takes the colour of the work, like Spotify with album covers (styles.css: body[data-screen="opera"])
+  tintOf(w.img).then(c => { if (c && $('#detail').dataset.id === w.id) document.body.style.setProperty('--tint', `rgb(${c})`); });
 }

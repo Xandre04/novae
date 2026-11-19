@@ -23,11 +23,22 @@ const xActions = (w, big = false) => {
     <button class="act" data-act="more" data-id="${w.id}" aria-label="Altre azioni"><i class="ph-light ph-dots-three"></i></button>
   </div>`;
 };
+// A "prima e dopo" (drag the bar to compare sketch and finished work) or a process (the stages play one after the other,
+// see the ticker in app.js); any other work is just its picture
+const workMedia = (w, src) => {
+  if (w.before) return `<div class="cmp" style="--x:50%">${img(src, w.t)}${img(w.before, '', 'cmp-before')}<span class="cmp-line" aria-hidden="true"></span><span class="cmp-tag" aria-hidden="true">Prima</span><span class="cmp-tag after" aria-hidden="true">Dopo</span><input type="range" class="cmp-range" data-act="cmp" min="0" max="100" value="50" aria-label="Prima e dopo: trascina per confrontare"></div>`;
+  if (!w.steps?.length) return img(src, w.t);
+  const all = [...w.steps, src];
+  return `<div class="steps" data-k="0">${all.map((s, i) => img(s, i === all.length - 1 ? w.t : '', i ? '' : 'on')).join('')}<span class="steps-tag"><i class="ph-light ph-film-strip"></i>Processo</span><span class="steps-dots" aria-hidden="true">${all.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</span></div>`;
+};
 // the frame takes the work's own shape: wide works are wide, tall works are tall and narrower
 const mediaFrame = w => {
   const ratio = Math.max(.56, Math.min(1.91, (w.w || 1200) / (w.h || 900)));
   const width = ratio < 1 ? Math.round(56 + ratio * 30) : 100; // portrait: ~73% at 3:4, ~73-85% range
-  return `<a class="x-media ph-img" href="#vista/${w.id}" data-dbl="${w.id}" style="aspect-ratio:${ratio.toFixed(3)};width:${width}%" aria-label="Apri ${w.t} a schermo intero">${img(w.ts ? w.img : w.thumb, w.t)}${mediaOverlay(w)}</a>`;
+  const style = `style="aspect-ratio:${ratio.toFixed(3)};width:${width}%"`;
+  const src = w.ts || w.before || w.steps ? w.img : w.thumb; // the stages are full size, so the finished work matches them
+  if (w.before) return `<div class="x-media ph-img" ${style}>${workMedia(w, src)}</div>`; // no link: the bar takes the drag
+  return `<a class="x-media ph-img" href="#vista/${w.id}" data-dbl="${w.id}" ${style} aria-label="Apri ${w.t} a schermo intero">${workMedia(w, src)}${mediaOverlay(w)}</a>`;
 };
 // who can see a work: a "utente" publishes only for followers
 const canSee = w => w.audience !== 'followers' || w.a === 'me' || followed.has(w.a);
@@ -58,12 +69,11 @@ const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie
   : `<span class="cat-ico ring" aria-hidden="true"><i class="ph-light ph-${CAT_ICONS[d]}"></i></span>`;
 const catTag = w => CAT_ICONS[w.disc] ? `<a class="cat-tag" href="#galleria/${slugOf(w.disc)}"${CAT_COLORS[w.disc] ? ` style="--c:${CAT_COLORS[w.disc]}"` : ''}>${CAT_COLORS[w.disc] ? `<img src="assets/categorie/${slugOf(w.disc)}.svg" alt="" aria-hidden="true">` : `<i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>`}${w.disc}</a>` : '';
 function postX(w) {
-  const a = ARTISTS[w.a];
   return `<article class="xpost" data-thread="${w.id}">
-    <div class="x-ava">${avatarRing(w.a)}</div>
+    <div class="x-ava">${avatarRing(w.a)}${w.co ? avatarRing(w.co, 'co') : ''}</div>
     <div class="x-body">
       <div class="x-head">
-        <p class="x-meta"><a class="x-name" href="${profileHref(w.a)}">${a.name}</a> <span class="x-time">· ${agoText(w)}</span></p>
+        <p class="x-meta">${byline(w)} <span class="x-time">· ${agoText(w)}</span></p>
         ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
       </div>
       <p class="x-title">${w.t}</p>
@@ -122,10 +132,10 @@ function renderThread(id) {
   root.innerHTML = `
     <header class="x-top"><button class="icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-arrow-left"></i></button><h1>Post</h1></header>
     <article class="xpost open">
-      <div class="x-ava">${avatarRing(w.a)}</div>
+      <div class="x-ava">${avatarRing(w.a)}${w.co ? avatarRing(w.co, 'co') : ''}</div>
       <div class="x-body">
         <div class="x-head">
-          <p class="x-meta"><a class="x-name" href="${profileHref(w.a)}">${a.name}</a> <span class="x-time">· ${agoText(w)}</span></p>
+          <p class="x-meta">${byline(w)} <span class="x-time">· ${agoText(w)}</span></p>
           ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
         </div>
         <p class="x-title">${w.t}</p>
@@ -179,7 +189,7 @@ function reelHtml(w) {
       <button class="act" data-act="more" data-id="${w.id}" aria-label="Altro"><i class="ph-light ph-dots-three"></i></button>
     </div>
     <div class="reel-meta">
-      <a class="reel-by" href="${profileHref(w.a)}">@${a.handle}</a>
+      <p class="reel-by">${[w.a, w.co].filter(Boolean).map(aid => `<a href="${profileHref(aid)}">@${ARTISTS[aid].handle}</a>`).join(' <span class="x-and">e</span> ')}</p>
       <h2>${w.t}</h2>
       <p class="reel-desc" data-act="expand">${w.desc}</p>
       <p class="reel-tags">${w.rating ? rating(w.rating, 12) : '<span class="new-tag">Nuova</span>'}<span>${agoText(w)}</span></p>

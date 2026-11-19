@@ -59,7 +59,7 @@ NOVAE si installa dal sito, senza store: icona sulla schermata Home, schermo int
   - **Scorri**: le opere a schermo intero una dopo l'altra, come Reels e TikTok. Tocca per mettere in pausa, doppio tocco per il mi piace.
 - **Galleria**: le 21 categorie, da Pittura e illustrazione ad Arte memetica, ognuna con la sua icona e il suo colore. In **Cinema e video**: serie, film e classifica, con le righe a gradini per genere.
 - **Novae**: il pianeta. Giralo (ha un po' di slancio) e scopri gli artisti di ogni paese.
-- **Scheda opera**: player, descrizione completa e opere correlate.
+- **Scheda opera**: player, descrizione completa e opere correlate. Lo sfondo prende il colore principale dell'opera, come Spotify con le copertine.
 - **Mercato**: opere in vendita, con prezzi in crediti.
 - **Stile**: in arrivo.
 - **Profilo, Messaggi, Impostazioni**.
@@ -70,7 +70,12 @@ NOVAE si installa dal sito, senza store: icona sulla schermata Home, schermo int
   - **artista**: pubblica opere e le raccoglie in **costellazioni** (piccoli cieli di opere unite da una linea, sopra la griglia del profilo);
   - **critico**: l'unico che può dare le **stelle**; le sue recensioni prendono il posto dei post sul profilo;
   - **utente**: può pubblicare, ma le sue opere le vede **solo chi lo segue**.
-- **Pubblicare un'opera** dal profilo (immagine, titolo, categoria, descrizione), poi modificarla o eliminarla dai tre puntini.
+- **Pubblicare un'opera** dal profilo (immagine, titolo, categoria, descrizione), poi modificarla o eliminarla dai tre puntini. In *Bozza, processo, collaborazione* si può aggiungere:
+  - **Prima e dopo**: la bozza accanto all'opera finita, con una barra da trascinare per confrontarle;
+  - **Processo**: da 2 a 6 foto delle fasi, che scorrono come un piccolo video e finiscono sull'opera;
+  - **Insieme a**: un secondo artista; l'opera compare su tutti e due i profili.
+- **Guardare un profilo come una mostra**: *Mostra*, sopra le opere. Un'opera alla volta a schermo intero, con cornice e targhetta (titolo, categoria, anno); la parete prende il colore dell'opera.
+- **Biglietto da visita**: tre trattini → *Codice QR* → *Biglietto da visita*. Un'immagine con nome, tipo di profilo, la tua opera migliore e il QR d'invito, da salvare o stampare.
 - **Personalizzare il profilo**: banner, nome, nome utente e bio.
 - **Salvare** un'opera e ritrovarla in *Profilo → Salvate*; **seguire** gli artisti e scrivere loro nei messaggi.
 - **Invitare qualcuno**: tre trattini → *Codice QR*. Il QR apre NOVAE con il codice già scritto; ognuno ha 3 inviti, validi 14 giorni.
@@ -99,7 +104,7 @@ Tutto parte da disegni fatti a mano:
 
 - **Logo**: la stella e la scritta "N O V Λ E" sono ridisegnate in vettoriale a linee pulite ([`assets/svg/stella.svg`](assets/svg/stella.svg), [`assets/svg/wordmark.svg`](assets/svg/wordmark.svg)).
 - **Icone delle sezioni**: i disegni sono in [`assets/icone/sezioni/`](assets/icone/sezioni/), ricalcati in SVG in [`assets/svg/`](assets/svg/).
-- **Icone delle categorie**: i disegni sono in [`assets/icone/categorie/`](assets/icone/categorie/); le versioni SVG in [`assets/categorie/`](assets/categorie/) sono ridisegnate a mano (cerchio perfetto, linee dritte) da [`tools/draw-icons.py`](tools/draw-icons.py). Pittura, Cinema e Scultura sono ancora ricalcate dal disegno con [`tools/trace-icons.py`](tools/trace-icons.py).
+- **Icone delle categorie**: i disegni sono in [`assets/icone/categorie/`](assets/icone/categorie/); le versioni SVG sono in [`assets/categorie/`](assets/categorie/). Dieci (Animazione, Architettura, Arti digitali, Design, Fotografia, Installazione, Letteratura, Moda, Musica, Teatro) sono SVG fatti a mano e passati per [`tools/flatten-icons.py`](tools/flatten-icons.py); le altre le disegna [`tools/draw-icons.py`](tools/draw-icons.py), tranne Pittura, Cinema e Scultura, ricalcate con [`tools/trace-icons.py`](tools/trace-icons.py). Attenzione: `draw-icons.py` riscrive anche le sue vecchie versioni di quelle dieci, quindi dopo averlo lanciato rimetti i file buoni con `git checkout`.
 - **Bozzetti delle schermate**: in [`docs/bozzetti/`](docs/bozzetti/).
 
 ### Aggiungere l'icona di una categoria
@@ -107,6 +112,8 @@ Tutto parte da disegni fatti a mano:
 1. Metti il disegno in `assets/icone/categorie/` con il nome della categoria in minuscolo e con i trattini (es. `arti-culinarie.jpg`).
 2. In [`tools/draw-icons.py`](tools/draw-icons.py) aggiungi la voce con colore e forme (griglia 100×100, il cerchio è già incluso), poi lancia `python tools/draw-icons.py`.
 3. In [`js/feed.js`](js/feed.js) aggiungi il colore in `CAT_COLORS`.
+
+Se l'SVG l'hai fatto a mano e usa una `<mask>`, lancia `python tools/flatten-icons.py assets/categorie/<nome>.svg`: Safari su iPhone non mostra bene le maschere dentro un'immagine.
 
 ## Materiali per i social
 
@@ -165,6 +172,7 @@ novae/
 ├── tools/
 │   ├── draw-icons.py       disegna le icone delle categorie in SVG
 │   ├── trace-icons.py      ricalca i disegni in SVG (serve Python 3.13 e vtracer)
+│   ├── flatten-icons.py    toglie le maschere dagli SVG delle categorie (per iPhone)
 │   └── render-video.mjs    registra il video per i social
 ├── docs/
 │   ├── screenshots/        le immagini di questo README

@@ -135,6 +135,10 @@ function addWork(o) {
   w.price = Math.floor(40 + r() * 900);
   w.img = pic(w.id, o.w || 1200, o.h || 900);
   w.thumb = pic(w.id, 480, Math.round(480 * (o.h || 900) / (o.w || 1200)));
+  // sample "prima e dopo" and process posts: the same photo, grey and blurred, stands in for the sketch and the stages
+  const stage = (blur, gray) => `${pic(w.id, o.w || 1200, o.h || 900, gray)}${gray ? '&' : '?'}blur=${blur}`;
+  if (o.demo === 'cmp') w.before = stage(3, true);
+  if (o.demo === 'steps') w.steps = [stage(10, true), stage(4, true), stage(1, true), stage(2)];
   WORKS.push(w);
   byId[w.id] = w;
   return w;
@@ -154,12 +158,12 @@ const FEED_SRC = [
   { t: 'Crepa n. 3', a: 'nicolo', type: 'image', disc: 'Pittura e illustrazione', w: 900, h: 1200 },
   { t: 'Notturno a Yaowarat', a: 'kitti', type: 'image', disc: 'Fotografia' },
   { t: 'Sale e ferro', a: 'mara', type: 'audio', disc: 'Musica' },
-  { t: 'Muro di via Allende', a: 'ruben', type: 'image', disc: 'Pittura e illustrazione', w: 1200, h: 800 },
+  { t: 'Muro di via Allende', a: 'ruben', type: 'image', disc: 'Pittura e illustrazione', w: 1200, h: 800, demo: 'steps' },
   { t: 'Testa di bullone', a: 'ines', type: 'image', disc: 'Scultura', w: 900, h: 1150 },
   { t: 'Lettera senza vocali', a: 'ananya', type: 'image', disc: 'Letteratura', w: 1000, h: 1000 },
   { t: 'La volpe e il monsone', a: 'ploy', type: 'video', disc: 'Animazione' },
   { t: 'Fischio di mezzanotte', a: 'mara', type: 'audio', disc: 'Musica' },
-  { t: 'Porto di Catania, ore 6', a: 'nicolo', type: 'image', disc: 'Pittura e illustrazione', w: 1200, h: 850 },
+  { t: 'Porto di Catania, ore 6', a: 'nicolo', type: 'image', disc: 'Pittura e illustrazione', w: 1200, h: 850, demo: 'cmp' },
   { t: 'Neon su Rua Augusta', a: 'thiago', type: 'video', disc: 'Street art' },
   { t: 'Soglia', a: 'ines', type: 'image', disc: 'Scultura', w: 850, h: 1200 },
   // a "utente": publishes only for followers
@@ -169,7 +173,7 @@ const FEED_SRC = [
   { t: 'Sedia per chi aspetta', a: 'ines', type: 'image', disc: 'Design', w: 1000, h: 1000, mix: 1 },
   { t: 'Casa sul canale', a: 'livia', type: 'image', disc: 'Architettura', w: 1200, h: 850, mix: 1 },
   { t: 'Cappotto di rete', a: 'kitti', type: 'image', disc: 'Moda', w: 900, h: 1200, mix: 1 },
-  { t: 'Il gatto del faro, tavola 4', a: 'ploy', type: 'image', disc: 'Fumetto', w: 900, h: 1250, mix: 1 },
+  { t: 'Il gatto del faro, tavola 4', a: 'ploy', co: 'ananya', type: 'image', disc: 'Fumetto', w: 900, h: 1250, mix: 1 },
   { t: 'Monologo per una sedia vuota', a: 'thiago', type: 'video', disc: 'Teatro e performance', mix: 1 },
   { t: 'Prova delle sei', a: 'aiko', type: 'video', disc: 'Danza', mix: 1 },
   { t: 'Ciotola di Oaxaca', a: 'ruben', type: 'image', disc: 'Artigianato', w: 1000, h: 1000, mix: 1 },
@@ -257,6 +261,35 @@ const heart = (w, withCount = false, cls = '') => {
 };
 const shareBtn = w => `<button class="act" data-act="share" data-id="${w.id}" aria-label="Condividi"><i class="ph-light ph-arrow-bend-up-right"></i></button>`;
 const commentBtn = w => `<button class="act" data-act="comments" data-id="${w.id}" aria-label="Commenti"><i class="ph-light ph-chat-circle"></i></button>`;
+// a work's authors, each name linking to its profile; in the narrow post header a collaboration uses first names ("Ploy e Ananya")
+const byline = (w, cls = 'x-name') => [w.a, w.co].filter(Boolean).map(aid => `<a class="${cls}" href="${profileHref(aid)}">${w.co && cls ? ARTISTS[aid].name.split(' ')[0] : ARTISTS[aid].name}</a>`).join(' <span class="x-and">e</span> ');
+const authorOf = (w, aid) => w.a === aid || w.co === aid;
+// The colour of a work (Spotify-style): the most common saturated colour of a tiny copy of the image, cached per image
+const TINTS = new Map();
+function tintOf(src) {
+  if (!TINTS.has(src)) TINTS.set(src, new Promise(res => {
+    const im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = () => {
+      try {
+        const c = document.createElement('canvas'); c.width = c.height = 24;
+        const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0, 24, 24);
+        const d = x.getImageData(0, 0, 24, 24).data, bins = {};
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i + 1], b = d[i + 2], sat = Math.max(r, g, b) - Math.min(r, g, b);
+          const k = (r >> 5) << 6 | (g >> 5) << 3 | b >> 5, bin = bins[k] ||= [0, 0, 0, 0];
+          const wt = 1 + sat / 16; // colourful pixels count more, so a grey sky doesn't win over a red boat
+          bin[0] += r * wt; bin[1] += g * wt; bin[2] += b * wt; bin[3] += wt;
+        }
+        const top = Object.values(bins).sort((p, q) => q[3] - p[3])[0];
+        res(top.slice(0, 3).map(v => Math.round(v / top[3])));
+      } catch { res(null); } // a picture from a site that doesn't allow reading it
+    };
+    im.onerror = () => res(null);
+    im.src = src;
+  }));
+  return TINTS.get(src);
+}
 const avatarRing = (aid, cls = '') => `<a class="avatar-ring ${cls}" href="${profileHref(aid)}" aria-label="${ARTISTS[aid].name}">${img(avatar(aid), '')}</a>`;
 const saveBtn = w => {
   const on = saved.has(w.id);

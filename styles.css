@@ -1015,3 +1015,86 @@ body.out .dock { display: none; } /* reading the rules before entering: no app n
 /* the NOVAE star as a text icon: takes the colour of the text around it (gold on the critic tag) */
 .nstar { display: inline-block; width: .92em; height: 1em; vertical-align: -.12em; background: currentColor; -webkit-mask: url(assets/svg/stella.svg) center / contain no-repeat; mask: url(assets/svg/stella.svg) center / contain no-repeat; }
 .who-tag .nstar { width: 9px; height: 10px; vertical-align: 0; }
+
+/* The colour of the work (js/base.js tintOf): the work page fades from it into the usual background */
+@property --tint { syntax: '<color>'; inherits: true; initial-value: #141414; }
+body { transition: --tint .8s var(--ease-out); }
+body[data-screen="opera"] { background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 55%, var(--bg)) 0, var(--bg) 85vh) no-repeat, var(--bg); }
+body[data-screen="opera"] .player { border-bottom-color: transparent; }
+
+/* Prima e dopo: the sketch on the left of the bar, the finished work on the right */
+.cmp, .steps { position: absolute; inset: 0; }
+.cmp img, .steps img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.player.rich img { opacity: 1; }
+.player.rich::before, .player.rich::after { display: none; }
+.cmp .cmp-before { clip-path: inset(0 calc(100% - var(--x)) 0 0); }
+.cmp-line { position: absolute; top: 0; bottom: 0; left: var(--x); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 8px rgba(0, 0, 0, .5); pointer-events: none; }
+.cmp-line::after { content: ""; position: absolute; top: 50%; left: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 2px solid #fff; background: rgba(0, 0, 0, .35) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 7l-5 5 5 5M15 7l5 5-5 5'/%3E%3C/svg%3E") center / 20px no-repeat; backdrop-filter: blur(4px); }
+.cmp-tag { position: absolute; top: 10px; left: 10px; padding: 3px 9px; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; pointer-events: none; }
+.cmp-tag.after { left: auto; right: 10px; }
+.player .cmp-tag { top: auto; bottom: 12px; }
+/* the bar covers the whole picture; its handle is as tall as the picture, so a drag anywhere moves it */
+.cmp-range { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; -webkit-appearance: none; appearance: none; background: none; touch-action: pan-y; }
+.cmp-range::-webkit-slider-thumb { -webkit-appearance: none; width: 56px; height: 100vh; }
+.cmp-range::-moz-range-thumb { width: 56px; height: 100vh; border: 0; }
+.cmp-range:focus-visible + .cmp-line, .cmp:has(.cmp-range:focus-visible) .cmp-line::after { outline: 2px solid var(--accent-hi); }
+
+/* Processo: the stages crossfade, dots below */
+.steps img { opacity: 0; transition: opacity .5s var(--ease-out); }
+.steps img.on.loaded { opacity: 1; }
+.steps-tag { position: absolute; top: 10px; left: 10px; display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.steps-dots { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; justify-content: center; gap: 5px; }
+.steps-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .45); transition: background .3s, transform .3s var(--ease-out); }
+.steps-dots i.on { background: #fff; transform: scale(1.25); }
+@media (prefers-reduced-motion: reduce) { .steps img { transition: none; } }
+
+/* Collaborations: the second author's small avatar on the first, "e" between the names */
+.x-ava .avatar-ring.co { position: relative; width: 30px; height: 30px; padding: 2px; border-width: 1.5px; margin: -16px 0 0 32px; background: var(--bg); }
+.x-and { color: var(--ink-3); font-weight: 400; }
+.reel-by { display: flex; flex-wrap: wrap; gap: 0 5px; }
+
+/* Profile: sort pills and the "Mostra" button on one row */
+.prof-sort > span { display: flex; gap: 8px; }
+.prof-sort > [data-act="show"] { display: flex; align-items: center; gap: 6px; }
+.prof-sort > [data-act="show"] i { font-size: 15px; }
+
+/* Publish: the optional extras */
+.pub-more { border-top: var(--stroke) solid var(--line); padding-top: 12px; }
+.pub-more summary { cursor: pointer; font-size: 14px; color: var(--ink-2); padding: 4px 0; }
+.pub-more[open] summary { margin-bottom: 12px; }
+.pub-more .field + .field { margin-top: 14px; }
+.pub-extra { position: relative; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: var(--stroke) dashed var(--line-hi); border-radius: 12px; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.pub-extra:focus-within { border-color: var(--ink-2); }
+.pub-extra input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.pub-extra i { font-size: 22px; }
+.pub-more .x-note { display: block; margin-top: 6px; }
+
+/* Biglietto da visita */
+.card-wrap { display: grid; justify-items: center; gap: 12px; text-align: center; }
+.card-wrap canvas { width: min(100%, 300px); height: auto; aspect-ratio: 4 / 5; border-radius: 14px; border: var(--stroke) solid var(--line); }
+.card-wrap .btn-accent { width: 100%; padding: 14px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.card-wrap .btn-accent:disabled { opacity: .5; }
+.my-qr .btn-ghost { width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; }
+
+/* Mostra: one work per wall, lit from above, with a museum label; the wall takes the work's colour */
+.show { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; outline: none; color: #fff;
+  background: radial-gradient(ellipse 70% 55% at 50% 38%, color-mix(in srgb, var(--tint) 30%, #1c1c1c), #0a0a0a 75%);
+  transition: --tint .9s var(--ease-out); animation: lightbox-in .22s var(--ease-out); }
+.show.out { opacity: 0; transition: opacity .2s var(--ease-out); }
+.show-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(10px + env(safe-area-inset-top)) 8px 0 20px; }
+.show-head p { display: grid; min-width: 0; }
+.show-head strong { font-size: 17px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.show-head span { font-size: 12px; color: rgba(255, 255, 255, .6); letter-spacing: .08em; text-transform: uppercase; }
+.show-head b { font-weight: 600; }
+.show-head .icon-btn { font-size: 26px; color: #fff; }
+.show-wall { flex: 1; min-height: 0; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior: contain; scrollbar-width: none; }
+.show-wall::-webkit-scrollbar { display: none; }
+.show-room { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; display: grid; grid-template-rows: minmax(0, auto) auto; justify-items: center; align-content: center; gap: 28px; padding: 18px 24px 26px; }
+.show-frame { max-width: 100%; max-height: 100%; padding: clamp(10px, 3vw, 18px); background: #f2efe8; box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .8), 0 0 0 1px rgba(0, 0, 0, .3); display: grid; min-height: 0; }
+.show-frame img { max-width: min(78vw, 720px); max-height: calc(100dvh - 260px); width: auto; height: auto; object-fit: contain; display: block; border: 1px solid rgba(0, 0, 0, .15); }
+.show-room figcaption { display: grid; gap: 2px; min-width: 180px; max-width: min(84vw, 360px); padding: 10px 14px; background: #f2efe8; color: #1b1b1b; text-align: left; box-shadow: 0 8px 18px -8px rgba(0, 0, 0, .6); }
+.show-room figcaption strong { font-size: 15px; font-weight: 600; }
+.show-room figcaption span { font-size: 13px; color: #555; }
+.show-room figcaption small { font-size: 11px; color: #888; letter-spacing: .08em; }
+.show-hint { display: flex; align-items: center; justify-content: center; gap: 6px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); font-size: 12px; color: rgba(255, 255, 255, .55); }
+@media (prefers-reduced-motion: reduce) { .show { animation: none; } }

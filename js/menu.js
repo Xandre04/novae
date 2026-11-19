@@ -16,9 +16,12 @@ function drawInviteQR(c, text) {
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (q.isDark(y, x)) ctx.fillRect((x + pad) * m, (y + pad) * m, m + .5, m + .5);
   const s = Math.round(N * .2), o = (N - s) / 2; // logo plate: about 4% of the code, well inside what level H recovers
   ctx.fillStyle = '#ecebe6'; ctx.fillRect((o + pad) * m, (o + pad) * m, s * m, s * m);
-  const star = new Image();
-  star.onload = () => { const h = s * m * .9, w = h * star.width / star.height; ctx.drawImage(star, (c.width - w) / 2, (c.height - h) / 2, w, h); };
-  star.src = STAR_SRC;
+  return new Promise(done => { // resolves once the star is on it (the business card copies the finished code)
+    const star = new Image();
+    star.onload = () => { const h = s * m * .9, w = h * star.width / star.height; ctx.drawImage(star, (c.width - w) / 2, (c.height - h) / 2, w, h); done(); };
+    star.onerror = done;
+    star.src = STAR_SRC;
+  });
 }
 function drawQR(c = $('#qr')) {
   const ctx = c.getContext('2d');
