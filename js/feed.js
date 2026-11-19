@@ -49,10 +49,10 @@ const CAT_ICONS = {
 };
 // hand-drawn icons (assets/categorie/<slug>.svg) and their ink colour; the other categories use the Phosphor icon in a plain ring
 const CAT_COLORS = {
-  'Pittura e illustrazione': '#e17d3d', 'Musica': '#7656b6', 'Letteratura': '#437a54', 'Cinema e video': '#5f86cf', 'Fotografia': '#3b9ab4',
-  'Design': '#c69f31', 'Architettura': '#6c767f', 'Moda': '#d36497', 'Scultura': '#ab8869',
+  'Pittura e illustrazione': '#e17d3d', 'Musica': '#7351b5', 'Letteratura': '#417951', 'Cinema e video': '#5f86cf', 'Fotografia': '#3899b4',
+  'Design': '#c69d2e', 'Architettura': '#69747f', 'Moda': '#d55d95', 'Scultura': '#ab8869',
   'Fumetto': '#deb440', 'Danza': '#d57aaa', 'Street art': '#d04c38', 'Artigianato': '#85633f',
-  'Arti digitali e tecnologiche': '#4c7cd4', 'Installazione e arti ambientali': '#84a259', 'Animazione': '#b775d3', 'Teatro e performance': '#833f6a',
+  'Arti digitali e tecnologiche': '#4a7bd5', 'Installazione e arti ambientali': '#83a258', 'Animazione': '#b771d4', 'Teatro e performance': '#833b69',
 };
 const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.svg" alt="" aria-hidden="true">`
   : `<span class="cat-ico ring" aria-hidden="true"><i class="ph-light ph-${CAT_ICONS[d]}"></i></span>`;
