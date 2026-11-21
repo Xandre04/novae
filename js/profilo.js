@@ -87,9 +87,17 @@ function submitCol() {
   const name = $('#colName').value.trim(), picked = $$('#colForm .col-pick input:checked').map(i => i.value);
   if (!name) { $('#colErr').textContent = 'Dai un nome alla costellazione.'; $('#colName').focus(); return; }
   if (picked.length < 2) { $('#colErr').textContent = 'Scegli almeno due opere.'; return; }
-  MY_COLS.unshift({ id: 'c' + Date.now(), name: esc(name), desc: esc($('#colDesc').value.trim()), works: picked });
+  const col = { id: 'c' + Date.now(), name: esc(name), desc: esc($('#colDesc').value.trim()), works: picked };
+  MY_COLS.unshift(col);
   saveCols(); closeSheet(); toast('Costellazione pubblicata'); buzz();
-  profTab = 'Opere'; profCol = MY_COLS[0].id; refresh();
+  picked.forEach(wid => {
+    const w = byId[wid];
+    const recipients = w ? [w.a, w.co].filter(aid => aid && aid !== 'me') : [];
+    if (recipients.length) {
+      window.NovaePush?.notifyEvent('E10', { workId: w.id, workTitle: w.t, colId: col.id, colName: name, actorId: 'me', actorName: ARTISTS.me.name }, { recipients, actorId: 'me' });
+    }
+  });
+  profTab = 'Opere'; profCol = col.id; refresh();
 }
 
 let profSort = 'recenti'; // Opere filter: recenti / stelle
@@ -99,7 +107,7 @@ const byRecent = (x, y) => (y.ts || 0) - (x.ts || 0) || x.ago - y.ago;
 // sample reposts for other profiles; yours are the works you reposted
 const repostsOf = aid => aid === 'me' ? WORKS.filter(w => reposted.has(w.id) && canSee(w))
   : FEED.filter(w => w.a !== aid && canSee(w)).filter((_, i) => (i + aid.length) % 4 === 0).slice(0, 6);
-function renderProfile(aid) {
+function renderProfile(aid, focus) {
   const other = aid && aid !== 'me' && ARTISTS[aid];
   const id = other ? aid : 'me';
   const a = ARTISTS[id];
@@ -107,7 +115,13 @@ function renderProfile(aid) {
   const locked = other && type === 'utente' && !followed.has(aid); // a user's works: followers only
   const sortFn = profSort === 'stelle' ? (x, y) => y.rating - x.rating : byRecent;
   const cols = type === 'artista' ? colsOf(id) : [];
-  if (profColOf !== id) { profCol = null; profColOf = id; } // a new profile starts on "Tutte"
+  if (focus) {
+    profColOf = id;
+    if (focus === 'repost') { profTab = 'Repost'; profCol = null; }
+    else if (cols.some(c => c.id === focus)) { profTab = 'Opere'; profCol = focus; }
+  } else if (profColOf !== id) {
+    profCol = null; profColOf = id; // a new profile starts on "Tutte"
+  }
   const col = cols.find(c => c.id === profCol) || null;
   // Opere and Costellazioni are one view: the strip picks which works the grid shows
   const works = locked ? [] : (col ? colWorks(col) : WORKS.filter(w => authorOf(w, id))).slice().sort(sortFn); // a collaboration shows on both profiles
@@ -168,6 +182,16 @@ function renderProfile(aid) {
     ${profTab === 'Recensioni' && reviews.length ? `<div class="reviews">${reviews.map(reviewHtml).join('')}</div>`
       : list.length ? `<div class="grid3">${list.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumb(w), w.t)}${w.audience === 'followers' ? '<i class="ph-fill ph-lock-simple grid-lock" aria-label="Solo follower"></i>' : ''}</a>`).join('')}</div>`
       : `<div class="empty">${starSvg()}<strong>${empty[0]}</strong><p>${empty[1]}</p>${emptyBtn}</div>`}`;
+  if (focus) {
+    setTimeout(() => {
+      if (cur.name !== 'artista' && cur.name !== 'profilo') return;
+      if (focus === 'repost') $('.seg', $('#profile'))?.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+      else {
+        $('.col-chip.on', $('#profile'))?.scrollIntoView({ inline: 'center', block: 'nearest' });
+        $('.col-head', $('#profile'))?.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
+    }, 90);
+  }
 }
 
 /* ---------------- Publish + edit profile (local only, this device) ---------------- */
@@ -256,6 +280,9 @@ function submitPublish(f) {
     Object.assign(w, { t, disc: $('#pubDisc').value, desc: $('#pubDesc').value.trim() || w.desc, img: f.dataset.img, thumb: f.dataset.img, w: +f.dataset.w, h: +f.dataset.h,
       before: pubExtra.before, steps: pubExtra.steps, co: $('#pubCo').value || undefined, cm: pubCm() });
     if (!saveMine()) { Object.assign(w, before); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: usa un\'immagine più leggera.'; return; }
+    if (w.co && w.co !== before.co && w.co !== 'me') {
+      window.NovaePush?.notifyEvent('E5', { workId: w.id, workTitle: w.t, actorName: ARTISTS.me.name }, { recipients: [w.co], actorId: 'me' });
+    }
     closeSheet(); toast('Opera aggiornata'); refresh();
     return;
   }
@@ -269,6 +296,9 @@ function submitPublish(f) {
   MINE.unshift(w);
   if (!saveMine()) { MINE.shift(); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: elimina una tua opera e riprova.'; return; }
   WORKS.unshift(w); byId[w.id] = w;
+  if (w.co && w.co !== 'me') {
+    window.NovaePush?.notifyEvent('E5', { workId: w.id, workTitle: w.t, actorName: ARTISTS.me.name }, { recipients: [w.co], actorId: 'me' });
+  }
   toast('Opera pubblicata'); buzz();
   closeSheet(() => { if (location.hash === '#scopri') renderFeed(); else location.hash = '#scopri'; });
 }
@@ -383,6 +413,7 @@ function renderMessages(tid) {
   const th = THREADS.find(t => t.id === tid) || (tid && ARTISTS[tid] ? { id: tid, msgs: [], time: 'ora', unread: 0 } : null);
   if (th) {
     th.unread = 0;
+    window.NovaePush?.syncAppBadge();
     const a = ARTISTS[th.id];
     root.innerHTML = `
       <div class="chat">
@@ -419,8 +450,36 @@ function install() {
 }
 function renderSettings() {
   const code = store.get('novae.in') || 'NVE-ALFA';
-  const toggles = store.get('novae.toggles') ? JSON.parse(store.get('novae.toggles')) : { priv: false, notif: true, auto: true, rate: true };
-  const sw = (k, label, sub) => `<div class="set-row"><span>${label}<small>${sub}</small></span><label class="switch"><input type="checkbox" data-toggle="${k}" ${toggles[k] ? 'checked' : ''} aria-label="${label}"><span></span></label></div>`;
+  const toggles = store.get('novae.toggles') ? JSON.parse(store.get('novae.toggles')) : { priv: false, notif: false, auto: true, rate: true };
+  const push = window.NovaePush;
+  const pushStatus = push ? push.getStatus() : 'unsupported';
+  const pushOn = pushStatus === 'active';
+  const pushSub = {
+    active: 'Attive su questo dispositivo',
+    'ios-install': 'Su iPhone aggiungi prima NOVAE alla schermata Home',
+    denied: 'Bloccate dal browser: riattivale nelle impostazioni',
+    unsupported: 'Non supportate da questo browser',
+    off: 'Messaggi, recensioni, commenti e attività',
+  }[pushStatus];
+  const pushNote = pushStatus === 'ios-install'
+    ? '<div class="push-note"><span>Per ricevere notifiche su iPhone aggiungi NOVAE alla schermata Home da Safari (Condividi → Aggiungi alla schermata Home).</span><button type="button" class="btn-ghost" data-act="install">Come aggiungerla</button></div>'
+    : pushStatus === 'denied'
+      ? '<div class="push-note"><span>Hai bloccato le notifiche: riattivale dalle impostazioni di Safari o del dispositivo.</span></div>'
+      : '';
+  const pushPrefs = push ? push.getPrefs() : {};
+  let pushTestHtml = '';
+  /* TEST-PUSH-UI-START */
+  if (pushOn && push) {
+    pushTestHtml = `<div class="push-test">
+      <select id="pushTestEvent" aria-label="Evento di test">${push.events.map(ev => `<option value="${ev.id}">${ev.id} · ${T(ev.label)}</option>`).join('')}</select>
+      <button type="button" class="btn-ghost" data-act="push-test">Invia notifica di test</button>
+    </div>`;
+  }
+  /* TEST-PUSH-UI-END */
+  const pushSubList = pushOn && push
+    ? `<div class="push-sublist">${push.events.map(ev => `<div class="set-row"><span>${ev.label}<small>${ev.sub}</small></span><label class="switch"><input type="checkbox" data-push-pref="${ev.id}" ${pushPrefs[ev.id] ? 'checked' : ''} aria-label="${ev.label}"><span></span></label></div>`).join('')}${pushTestHtml}</div>`
+    : '';
+  const sw = (k, label, sub, checked = toggles[k]) => `<div class="set-row"><span>${label}<small>${sub}</small></span><label class="switch"><input type="checkbox" data-toggle="${k}" ${checked ? 'checked' : ''} aria-label="${label}"><span></span></label></div>`;
   $('#settings').innerHTML = `
     <div class="set-head">${crop('impostazioni')}<h1>Impostazioni</h1></div>
     <div class="set-group"><h2>Account</h2>
@@ -429,7 +488,9 @@ function renderSettings() {
       <div class="set-row"><span>Lingua<small>Interfaccia</small></span><select aria-label="Lingua" data-lang><option value="it" ${LANG === 'it' ? 'selected' : ''}>Italiano</option><option value="en" ${LANG === 'en' ? 'selected' : ''}>English</option></select></div>
     </div>
     <div class="set-group"><h2>Esperienza</h2>
-      ${sw('notif', 'Notifiche Novae', 'Quando un artista che segui pubblica')}
+      ${sw('notif', 'Notifiche Novae', pushSub, pushOn)}
+      ${pushNote}
+      ${pushSubList}
       ${sw('auto', 'Riproduzione automatica', 'Video e audio nel feed')}
       ${sw('rate', 'Mostra valutazioni', 'Le stelle rosse sopra le opere')}
     </div>

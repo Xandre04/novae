@@ -115,7 +115,7 @@ const mockReplies = w => {
   if (!w.ts && !out.some(rp => typeOf(rp.a) === 'critico')) out.splice(1, 0, { a: 'giulia', text: REVIEW_TEXTS[(w.likes || 0) % REVIEW_TEXTS.length], ago: 22, likes: 341, rating: Math.max(3, Math.round(w.rating || 4)) });
   return out;
 };
-const replyHtml = rp => `<div class="x-reply ${typeOf(rp.a) === 'critico' ? 'is-critic' : ''}">
+const replyHtml = rp => `<div class="x-reply ${typeOf(rp.a) === 'critico' ? 'is-critic' : ''}" data-author="${rp.a}">
     <div class="x-ava">${avatarRing(rp.a, 'sm')}</div>
     <div><p class="x-meta"><a class="x-name" href="${profileHref(rp.a)}">${ARTISTS[rp.a].name}</a> ${whoTag(rp.a)} <span class="x-time">· ${rp.ts ? agoText(rp) : agoText({ ago: rp.ago })}</span></p>
       ${rp.rating ? `<div class="x-reply-rating">${rating(rp.rating, 14)}</div>` : ''}
@@ -124,7 +124,7 @@ const replyHtml = rp => `<div class="x-reply ${typeOf(rp.a) === 'critico' ? 'is-
   </div>`;
 // star picker for critics (the only ones who can give stars)
 const starPicker = n => `<div class="star-pick" role="radiogroup" aria-label="Le tue stelle">${[1, 2, 3, 4, 5].map(i => `<button type="button" role="radio" aria-checked="${i === n}" aria-label="${i} ${i === 1 ? 'stella' : 'stelle'}" data-act="pick-star" data-v="${i}" class="${i <= n ? 'on' : ''}"><img src="${STAR_SRC}" alt=""></button>`).join('')}</div>`;
-function renderThread(id) {
+function renderThread(id, focus) {
   const w = byId[id];
   const root = $('#thread');
   document.body.classList.remove('pt-picking'); // a half-chosen point doesn't follow you to another post
@@ -160,6 +160,20 @@ function renderThread(id) {
     </form>
     <div class="x-replies">${[...mine.reverse(), ...mockReplies(w)].map(replyHtml).join('') || '<p class="x-none">Ancora nessuna risposta. Scrivi la prima.</p>'}</div>`;
   if (focusReply) { focusReply = false; requestAnimationFrame(() => $('#replyInput')?.focus({ preventScroll: true })); }
+  if (focus) {
+    setTimeout(() => {
+      if (cur.name !== 'post' || cur.param !== w.id) return;
+      const hit = focus === 'critico' ? $('.x-reply.is-critic', root)
+        : focus.startsWith('c:') ? $$('.x-reply', root).find(el => el.dataset.author === focus.slice(2))
+        : $('.x-reply', root);
+      if (hit) {
+        hit.classList.add('notif-hit');
+        hit.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+        const chip = $('.pt-chip', hit);
+        if (chip) setTimeout(() => showPt(+chip.dataset.x, +chip.dataset.y), 450);
+      }
+    }, 90);
+  }
 }
 /* Comments on a point of the work, shown like a video timestamp: a small "Qui" chip in the text. Tapping it flashes
    a ring on that spot of the picture for a moment, so nothing is ever drawn on the work itself. */
@@ -207,6 +221,13 @@ function submitReply(f) {
   const pt = f.dataset.pt ? f.dataset.pt.split(',').map(Number) : undefined;
   (REPLIES_MINE[id] ||= []).push({ text: text.replace(/&/g, '&amp;').replace(/</g, '&lt;'), ts: Date.now(), rating: stars, pt });
   store.set('novae.replies', JSON.stringify(REPLIES_MINE));
+  const w = byId[id];
+  const recipients = w ? [w.a, w.co].filter(aid => aid && aid !== 'me') : [];
+  if (stars > 0 && typeOf('me') === 'critico') {
+    window.NovaePush?.notifyEvent('E2', { workId: id, workTitle: w?.t || '', actorId: 'me', actorName: ARTISTS.me.name, stars }, { recipients, actorId: 'me' });
+  } else {
+    window.NovaePush?.notifyEvent('E3', { workId: id, workTitle: w?.t || '', actorId: 'me', actorName: ARTISTS.me.name, text, hasPoint: !!pt, pt }, { recipients, actorId: 'me' });
+  }
   renderThread(id);
   toast(stars ? `Recensione pubblicata con ${stars} ${stars === 1 ? 'stella' : 'stelle'}` : 'Risposta pubblicata');
 }

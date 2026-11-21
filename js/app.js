@@ -16,7 +16,7 @@ const RENDER = {
   opera: renderDetail,
   novae: initGlobe,
   mercato: renderMarket,
-  profilo: () => renderProfile(),
+  profilo: extra => renderProfile(undefined, extra),
   artista: renderProfile,
   messaggi: renderMessages,
   impostazioni: renderSettings,
@@ -32,7 +32,7 @@ function route() {
   if (curHash !== null) scrollMemo.set(curHash, window.scrollY);
   curHash = location.hash;
   if (trail.length > 1 && trail[trail.length - 2] === curHash) trail.pop(); else trail.push(curHash);
-  let [name, param] = decodeURIComponent(location.hash.slice(1)).split('/');
+  let [name, param, extra] = decodeURIComponent(location.hash.slice(1)).split('/');
   if (name === 'seguiti') name = 'stile'; // old link to the followed-artists works
   document.body.classList.toggle('out', !store.get('novae.in'));
   if (!store.get('novae.in') && name !== 'doc') name = 'invito'; // rules, terms and privacy are readable before entering
@@ -47,7 +47,7 @@ function route() {
   document.title = name === 'hub' ? 'NOVAE' : `${TITLES[name] || ''} | NOVAE`;
   if (HUB.some(h => h.k === name)) { prefs.lastHub = name; savePrefs(); }
   cur = { name, param };
-  RENDER[name](param);
+  RENDER[name](param, extra);
   markScrollable();
   const y = scrollMemo.get(curHash) || 0;
   window.scrollTo(0, 0);
@@ -102,7 +102,7 @@ function goBack(fallback) {
 
 /* double-tap / double-click to like, with a heart burst */
 let dblTimer = null, dblEl = null;
-function setLike(w, on) {
+function setLike(w, on, actorId = 'me') {
   on ? liked.add(w.id) : liked.delete(w.id);
   saveLikes();
   $$(`[data-act="like"][data-id="${w.id}"]`).forEach(b => {
@@ -111,7 +111,11 @@ function setLike(w, on) {
     b.classList.remove('pop'); void b.offsetWidth; if (on) b.classList.add('pop');
   });
   $$(`[data-count="${w.id}"]`).forEach(s => s.textContent = s.dataset.short ? short(likeCount(w)) : fmt(likeCount(w)));
-  if (on) buzz();
+  if (on) {
+    buzz();
+    const recipients = [w.a, w.co].filter(aid => aid && aid !== actorId);
+    window.NovaePush?.notifyEvent('E8', { workId: w.id, workTitle: w.t, actorId, actorName: ARTISTS[actorId]?.name || ARTISTS.me.name }, { recipients, actorId });
+  }
 }
 function burst(host, e) {
   const r = host.getBoundingClientRect();
@@ -188,7 +192,11 @@ document.addEventListener('click', e => {
       $$(`[data-act="repost"][data-id="${w.id}"]`).forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
       $$(`[data-rp="${w.id}"]`).forEach(s => s.textContent = s.dataset.short ? short(repostCount(w)) : fmt(repostCount(w)));
       toast(on ? 'Ripubblicata per chi ti segue' : 'Ripubblicazione annullata');
-      if (on) buzz();
+      if (on) {
+        buzz();
+        const recipients = [w.a, w.co].filter(aid => aid && aid !== 'me');
+        window.NovaePush?.notifyEvent('E9', { workId: w.id, workTitle: w.t, actorId: 'me', actorName: ARTISTS.me.name }, { recipients, actorId: 'me' });
+      }
       break;
     }
     case 'not-interested': {
@@ -342,10 +350,16 @@ document.addEventListener('click', e => {
       followed.has(id) ? followed.delete(id) : followed.add(id);
       saveFollowed();
       toast(followed.has(id) ? `Ora segui ${ARTISTS[id].name}` : `Non segui più ${ARTISTS[id].name}`);
-      if (followed.has(id)) buzz();
+      if (followed.has(id)) {
+        buzz();
+        if (id && id !== 'me') window.NovaePush?.notifyEvent('E6', { actorId: 'me', actorName: ARTISTS.me.name }, { recipients: [id], actorId: 'me' });
+      }
       refresh();
       break;
     }
+    /* TEST-PUSH-UI-START */
+    case 'push-test': window.NovaePush?.sendTest($('#pushTestEvent')?.value); break;
+    /* TEST-PUSH-UI-END */
     case 'buy': toast('Acquisto in crediti disponibile a breve'); break;
     case 'logout': store.del('novae.in'); location.hash = '#invito'; break;
     case 'soon': toast('Presto disponibile'); break;
@@ -368,10 +382,14 @@ document.addEventListener('submit', e => {
     if (f.dataset.thread) {
       const th = THREADS.find(t => t.id === f.dataset.thread);
       th.msgs.push(['me', text]); th.time = 'ora';
+      window.NovaePush?.notifyEvent('E1', { threadId: th.id, senderName: ARTISTS.me.name, text }, { recipients: [th.id], actorId: 'me' });
       renderMessages(th.id);
       $('#msgInput').focus();
     } else {
       f.insertAdjacentHTML('beforebegin', `<div class="comment"><span class="avatar-ring sm" style="display:grid;place-items:center;--w:24px">${crop('profilo')}</span><div><strong>Tu</strong><p>${text.replace(/</g, '&lt;')}</p></div></div>`);
+      const cw = byId[f.dataset.comment];
+      const recipients = cw ? [cw.a, cw.co].filter(aid => aid && aid !== 'me') : [];
+      window.NovaePush?.notifyEvent('E3', { workId: f.dataset.comment, workTitle: cw?.t || '', actorId: 'me', actorName: ARTISTS.me.name, text, hasPoint: false }, { recipients, actorId: 'me' });
       input.value = '';
     }
   }
@@ -382,9 +400,11 @@ document.addEventListener('change', e => {
   if (e.target.id === 'bnFile') { onBannerFile(e.target.files[0]); return; }
   if (e.target.id === 'pubBefore' || e.target.id === 'pubSteps') { onPubExtra(e.target); return; }
   if (e.target.matches('[data-lang]')) { store.set('novae.lang', e.target.value); location.reload(); return; }
+  if (e.target.dataset.pushPref) { window.NovaePush?.setEventPref(e.target.dataset.pushPref, e.target.checked); return; }
   const k = e.target.dataset.toggle;
   if (!k) return;
-  const t = store.get('novae.toggles') ? JSON.parse(store.get('novae.toggles')) : { priv: false, notif: true, auto: true, rate: true };
+  if (k === 'notif' && window.NovaePush) { window.NovaePush.handleMasterToggle(e.target); return; }
+  const t = store.get('novae.toggles') ? JSON.parse(store.get('novae.toggles')) : { priv: false, notif: false, auto: true, rate: true };
   t[k] = e.target.checked;
   store.set('novae.toggles', JSON.stringify(t));
 });

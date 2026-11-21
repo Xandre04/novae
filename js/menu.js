@@ -54,7 +54,9 @@ $('#gateForm').addEventListener('submit', e => {
     return;
   }
   help.classList.remove('err');
-  store.set('novae.in', v.toUpperCase());
+  const code = v.toUpperCase();
+  store.set('novae.in', code);
+  window.NovaePush?.notifyEvent('E7', { code, actorName: ARTISTS.me.name }, { recipients: ['inviter'], actorId: 'me' });
   const gate = $('.gate');
   gate.classList.add('leaving');
   setTimeout(() => {

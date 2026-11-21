@@ -586,6 +586,13 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .set-row select { background: var(--bg-2); border: 1.5px solid #4a4845; border-radius: 999px; padding: 8px 14px; color: var(--ink); font: inherit; }
 .invite-code { font-family: var(--hand); font-size: 20px; letter-spacing: .18em; color: var(--ink); }
 .danger { color: #ff8a9c; }
+.push-note { margin: 4px 0 10px; padding: 12px 14px; border: 1px solid #2b2a28; border-radius: 12px; background: #1a1918; color: var(--ink-3); font-size: 13px; line-height: 1.45; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.push-sublist { margin: 2px 0 8px 6px; padding-left: 14px; border-left: 1px solid #2a2927; }
+.push-sublist .set-row { padding: 10px 0; font-size: 14px; }
+/* TEST-PUSH-UI-START */
+.push-test { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 0 6px; border-top: 1px dashed #2e2d2b; }
+.push-test select { flex: 1; min-width: 170px; background: var(--bg-2); border: 1.5px solid #4a4845; border-radius: 999px; padding: 8px 14px; color: var(--ink); font: inherit; font-size: 13px; }
+/* TEST-PUSH-UI-END */
 
 /* ---------- Search ---------- */
 .search { position: fixed; inset: 0; z-index: 50; background: rgba(20,20,20,.94); backdrop-filter: blur(8px); overflow-y: auto; }
@@ -862,6 +869,7 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 .who-tag.t-critico { color: #e8c37a; background: rgba(232, 195, 122, .12); border: 1px solid rgba(232, 195, 122, .4); }
 .who-tag.t-artista { color: var(--accent-hi); background: rgba(150, 1, 37, .14); border: 1px solid rgba(214, 28, 64, .4); }
 .x-reply.is-critic { background: linear-gradient(90deg, rgba(232, 195, 122, .06), transparent 60%); box-shadow: inset 2px 0 0 rgba(232, 195, 122, .55); }
+.x-reply.notif-hit { background: linear-gradient(90deg, rgba(150, 1, 37, .24), transparent 80%); box-shadow: inset 3px 0 0 var(--accent-hi); }
 .x-reply-rating { margin: 4px 0 2px; }
 .x-meta .who-tag { letter-spacing: .08em; }
 /* stars only for critics */

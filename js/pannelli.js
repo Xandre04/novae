@@ -93,7 +93,10 @@ function closeSheet(then) {
 }
 /* ---------------- Three bars in the dock: Notifiche, Crea, Codice QR, Segnala un problema ---------------- */
 const REPO_ISSUES = 'https://github.com/Xandre04/novae/issues/new';
-const markBars = () => $('.dock-menu').classList.toggle('unread', !store.get('novae.notif'));
+const markBars = () => {
+  $('.dock-menu').classList.toggle('unread', !store.get('novae.notif'));
+  window.NovaePush?.syncAppBadge();
+};
 function openBars() {
   const fresh = !store.get('novae.notif');
   openSheet(`<h3>Menu</h3><div class="action-list">
@@ -117,6 +120,7 @@ function openNotifs() {
   openSheet(`<h3>Notifiche</h3><div class="notifs">${items.map(([aid, text, href, time], i) => `<a class="notif ${fresh && i < 2 ? 'new' : ''}" href="${href}" data-act="sheet-close">
     <img class="notif-ava" src="${avatar(aid)}" alt=""><p><strong>${ARTISTS[aid].name}</strong> ${text}<small>${time}</small></p></a>`).join('')}</div>`);
   store.set('novae.notif', '1');
+  window.NovaePush?.clearPushUnread();
   markBars();
 }
 function openCreate() {
@@ -356,8 +360,11 @@ function submitReport(f) {
   if (!reason) { $('#reportErr').textContent = 'Scegli un motivo.'; return; }
   // ponytail: no server yet, so reports stay on this phone; with the backend they go to the moderators' queue
   const reports = readJSON('novae.reports', []);
-  reports.push({ id: f.dataset.id, reason, text: $('#reportText').value.trim().slice(0, 500), ts: Date.now() });
+  const reportText = $('#reportText').value.trim().slice(0, 500);
+  reports.push({ id: f.dataset.id, reason, text: reportText, ts: Date.now() });
   store.set('novae.reports', JSON.stringify(reports));
+  const rw = byId[f.dataset.id];
+  window.NovaePush?.notifyEvent('E11', { workId: f.dataset.id, workTitle: rw?.t || '', reason, text: reportText }, { recipients: ['moderators'], actorId: 'me' });
   if ($('#reportHide').checked) { hidden.add(f.dataset.id); store.set('novae.hidden', JSON.stringify([...hidden])); }
   closeSheet();
   toast('Segnalazione salvata. Grazie');
