@@ -58,12 +58,13 @@ const CAT_ICONS = {
   'Street art': 'spray-bottle', 'Artigianato': 'hammer', 'Installazione e arti ambientali': 'tree', 'Arti digitali e tecnologiche': 'cpu',
   'Videogiochi e arti interattive': 'game-controller', 'Arti culinarie': 'cooking-pot', 'Body art': 'drop', 'Arte memetica': 'smiley',
 };
-// hand-drawn icons (assets/categorie/<slug>.svg) and their ink colour; the other categories use the Phosphor icon in a plain ring
+// hand-drawn icons (assets/categorie/<slug>.svg) and their ink colour
 const CAT_COLORS = {
-  'Pittura e illustrazione': '#e17d3d', 'Musica': '#7351b5', 'Letteratura': '#417951', 'Cinema e video': '#5f86cf', 'Fotografia': '#3899b4',
-  'Design': '#c69d2e', 'Architettura': '#69747f', 'Moda': '#d55d95', 'Scultura': '#ab8869',
-  'Fumetto': '#deb440', 'Danza': '#d57aaa', 'Street art': '#d04c38', 'Artigianato': '#85633f',
-  'Arti digitali e tecnologiche': '#4a7bd5', 'Installazione e arti ambientali': '#83a258', 'Animazione': '#b771d4', 'Teatro e performance': '#833b69',
+  'Pittura e illustrazione': '#dd7a3f', 'Musica': '#7656b6', 'Letteratura': '#427a53', 'Cinema e video': '#5f86cf', 'Fotografia': '#399ab4',
+  'Design': '#c69f31', 'Architettura': '#6a747f', 'Moda': '#d36095', 'Scultura': '#ab8666',
+  'Fumetto': '#e5bb47', 'Animazione': '#b773d3', 'Teatro e performance': '#833d69', 'Danza': '#d87dac',
+  'Street art': '#d9533c', 'Artigianato': '#856545', 'Installazione e arti ambientali': '#84a258', 'Arti digitali e tecnologiche': '#4b7cd4',
+  'Videogiochi e arti interattive': '#1ca198', 'Arti culinarie': '#c27e36', 'Body art': '#9e4d5a', 'Arte memetica': '#90c233',
 };
 const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.svg" alt="" aria-hidden="true">`
   : `<span class="cat-ico ring" aria-hidden="true"><i class="ph-light ph-${CAT_ICONS[d]}"></i></span>`;
