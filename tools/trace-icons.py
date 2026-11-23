@@ -168,7 +168,7 @@ if __name__ == '__main__':
     only = sys.argv[1:]
     def want(n): return not only or n in only
     for name, args in {
-        'impostazioni': ('assets/icone/sezioni/impostazioni.jpg', .480, .494, .085),
+        # impostazioni.svg: a geometric gear drawn as SVG (8 even teeth), not traced any more
         # profilo.svg: traced once, then a minimal red tie was added by hand: don't trace it again
     }.items():
         if want(name): im = window(*args); write(f'assets/svg/{name}.svg', im.size, [(INK, white(im))])
