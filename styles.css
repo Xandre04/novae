@@ -185,7 +185,7 @@ body[data-screen="impostazioni"] #sky { opacity: 0; }
 .hub-circle.i-galleria { --w: calc(var(--hw) * .122); }
 .hub-circle.i-messaggi { --w: calc(var(--hw) * .118); }
 .hub-circle.i-novae { --w: calc(var(--hw) * .122); }
-.hub-circle.i-scopri { --w: calc(var(--hw) * .128); }
+.hub-circle.i-scopri { --w: calc(var(--hw) * .136); }
 .hub-circle.i-profilo { --w: calc(var(--hw) * .126); } /* whole silhouette, as on the Profilo screen (84px crop in a 124px ring) */
 
 .hub-label {
@@ -244,6 +244,7 @@ body[data-screen="invito"] .dock, body[data-screen="hub"] .dock { display: none;
 }
 .arc:not(.open) .arc-item { opacity: 0 !important; pointer-events: none !important; transition: opacity .2s; }
 .arc-circle { width: 60px; height: 60px; border-radius: 50%; border: var(--stroke) solid var(--line); background: var(--bg-2); display: grid; place-items: center; --w: 38px; transition: border-color .2s, box-shadow .2s; }
+.arc-circle.i-scopri { --w: 41px; }
 .arc-circle .star-svg { width: 60%; height: 60%; }
 .arc-item.sel .arc-circle { border-color: var(--ink); box-shadow: 0 0 0 5px rgba(214,28,64,.16); }
 .arc-item:not(.sel):hover .arc-circle { border-color: var(--line-hi); }
