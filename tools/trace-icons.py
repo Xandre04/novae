@@ -174,7 +174,7 @@ if __name__ == '__main__':
         'videogiochi-e-arti-interattive': 'videogiochi e arte interattiva.jpg',
         'arti-culinarie': 'cucina.jpg',
         'body-art': 'body art.jpg',
-        'arte-memetica': 'arte memetica.jpg',
+        'arte-memetica': 'arte-memetica.webp',
     }
     if 'categorie' in only:
         only = list(CATS)
