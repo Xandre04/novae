@@ -172,7 +172,8 @@ if __name__ == '__main__':
         'profilo': ('assets/icone/sezioni/profilo.jpg', .5159, .4860, .10),
     }.items():
         if want(name): im = window(*args); write(f'assets/svg/{name}.svg', im.size, [(INK, white(im))])
-    for name in ('scopri', 'profilo-avatar'):
+    # scopri.svg (an eye with the NOVAE star as pupil) is drawn by hand as SVG: not traced
+    for name in ('profilo-avatar',):
         if want(name): im = flat(f'assets/icone/sezioni/{name}.png'); write(f'assets/svg/{name}.svg', im.size, [(INK, white(im))])
     # stella.svg, wordmark.svg and stile.svg are redrawn by hand with clean lines: edited as SVG, not traced again.
     # Galleria, Mercato and Messaggi: clean two-colour drawings (light grey + red) inside a ring. The menu draws its own

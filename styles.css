@@ -185,8 +185,7 @@ body[data-screen="impostazioni"] #sky { opacity: 0; }
 .hub-circle.i-galleria { --w: calc(var(--hw) * .122); }
 .hub-circle.i-messaggi { --w: calc(var(--hw) * .118); }
 .hub-circle.i-novae { --w: calc(var(--hw) * .122); }
-/* Scopri: centred, and bigger than the ring so the drawing crosses it, as in the menu sketch */
-.hub-circle.i-scopri { --w: calc(var(--hw) * .183); }
+.hub-circle.i-scopri { --w: calc(var(--hw) * .128); }
 .hub-circle.i-profilo { --w: calc(var(--hw) * .126); } /* whole silhouette, as on the Profilo screen (84px crop in a 124px ring) */
 
 .hub-label {
