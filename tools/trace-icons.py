@@ -169,7 +169,7 @@ if __name__ == '__main__':
     def want(n): return not only or n in only
     for name, args in {
         'impostazioni': ('assets/icone/sezioni/impostazioni.jpg', .480, .494, .085),
-        'profilo': ('assets/icone/sezioni/profilo.jpg', .5159, .4860, .10),
+        # profilo.svg: traced once, then a minimal red tie was added by hand: don't trace it again
     }.items():
         if want(name): im = window(*args); write(f'assets/svg/{name}.svg', im.size, [(INK, white(im))])
     # scopri.svg (an eye with the NOVAE star as pupil) is drawn by hand as SVG: not traced
