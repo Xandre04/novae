@@ -430,7 +430,7 @@ window.NOVAE_PUSH_CONFIG = NOVAE_PUSH_CONFIG;
   async function showLocal(ev, payload) {
     const built = ev.build(payload || {});
     const title = T(built.title);
-    const body = built.body;
+    const body = T(built.body);
     const url = built.url || '#scopri';
     const opts = {
       body,

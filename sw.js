@@ -2,7 +2,7 @@
 // Our own files are always revalidated with the server (cache: 'no-cache' -> a quick 304 when nothing changed),
 // so there are no ?v= version numbers to bump: a push is enough.
 // ponytail: the cache grows with every image seen (picsum); add a size cap or skip third-party images if it gets heavy.
-const CACHE = 'novae-v36';
+const CACHE = 'novae';
 const PUSH_ICON = './assets/app/icon-192.png';
 const SHELL = ['./', 'index.html', 'styles.css', 'i18n.js', 'manifest.webmanifest', 'assets/svg/stella.svg', PUSH_ICON,
   ...['base', 'push', 'menu', 'feed', 'galleria', 'novae', 'profilo', 'pannelli', 'app'].map(f => `./js/${f}.js`)];

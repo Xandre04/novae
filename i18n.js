@@ -135,6 +135,8 @@ window.NOVAE_I18N = { en: {} };
     'Notifiche su iPhone': 'Notifications on iPhone',
     "Su iOS le notifiche funzionano solo dall'app nella schermata Home. In Safari tocca": 'On iOS notifications only work from the Home Screen app. In Safari tap',
     'Aggiungi NOVAE alla schermata Home per attivare le notifiche': 'Add NOVAE to your Home Screen to enable notifications',
+    'Qualcuno': 'Someone', 'Un critico': 'A critic', 'Un artista': 'An artist', 'la tua opera': 'your work', "un'opera": 'a work',
+    'una costellazione': 'a constellation', 'segnalata': 'reported', 'Ti ha scritto un nuovo messaggio': 'Sent you a new message',
     'Notifiche attivate': 'Notifications enabled', 'Notifiche disattivate': 'Notifications disabled',
     'Notifiche bloccate: riattivale nelle impostazioni del dispositivo': 'Notifications blocked: re-enable them in device settings',
     'Notifiche non supportate da questo browser': 'Notifications are not supported in this browser',
@@ -223,6 +225,17 @@ window.NOVAE_I18N = { en: {} };
     [/^Nuova recensione · (\d+)★$/, (m, n) => `New review · ${n}★`],
     [/^Commento su "(.+)"$/, (m, t) => `Comment on "${t}"`],
     [/^Segnalazione \((.+)\)$/, (m, r) => `Report (${r})`],
+    // notification texts (js/push.js); names and titles stay as they are, the stand-ins ("Qualcuno", "la tua opera") are translated
+    [/^(.+) ha recensito "(.+)"$/, (m, a, t) => `${tr(a)} reviewed "${tr(t)}"`],
+    [/^(.+) ha indicato un punto: "(.*)"$/, (m, a, x) => `${tr(a)} pointed at a spot: "${x}"`],
+    [/^(.+) ti ha aggiunto a "(.+)"$/, (m, a, t) => `${tr(a)} added you to "${tr(t)}"`],
+    [/^(.+) ha iniziato a seguirti$/, (m, a) => `${tr(a)} started following you`],
+    [/^(.+) è entrato su NOVAE col tuo codice(.*)$/, (m, a, c) => `${tr(a)} joined NOVAE with your code${c}`],
+    [/^(.+) ha messo mi piace a "(.+)"$/, (m, a, t) => `${tr(a)} liked "${tr(t)}"`],
+    [/^(.+) ha ripubblicato "(.+)"$/, (m, a, t) => `${tr(a)} reposted "${tr(t)}"`],
+    [/^(.+) ha aggiunto "(.+)" a "(.+)"$/, (m, a, t, c) => `${tr(a)} added "${tr(t)}" to "${tr(c)}"`],
+    [/^Opera "(.+)" inviata alla moderazione$/, (m, t) => `Work "${tr(t)}" sent to moderation`],
+    [/^Qualcuno: "(.*)"$/, (m, x) => `Someone: "${x}"`],
     [/^(.+) \| NOVAE$/, (m, t) => `${tr(t)} | NOVAE`],
   ];
   const norm = s => s.replace(/[‘’]/g, "'");
