@@ -229,7 +229,9 @@ const saved = new Set(readJSON('novae.saved', []));
 const saveSaved = () => store.set('novae.saved', JSON.stringify([...saved]));
 
 // You: editable profile + the works you publish (images kept as compressed data URLs, on this device only)
-const profile = Object.assign({ name: T('Il tuo nome'), handle: LANG === 'en' ? 'yourname' : 'tuonome', bio: T('Scrivi qui chi sei e cosa crei. Gli altri artisti lo leggeranno prima di seguirti.'), type: 'artista', banner: '' }, readJSON('novae.profile', {}));
+const profile = Object.assign({ name: T('Il tuo nome'), handle: LANG === 'en' ? 'yourname' : 'tuonome', bio: '', link: '', type: 'artista', banner: '' }, readJSON('novae.profile', {}));
+// the old default bio was a placeholder saved as real text: it's an empty bio (the profile invites you to write one)
+if (/^(Scrivi qui chi sei e cosa crei|Write who you are and what you make)/.test(profile.bio)) profile.bio = '';
 ARTISTS.me = { name: profile.name, handle: profile.handle, country: 'Italia', bio: profile.bio, type: profile.type };
 const MINE = readJSON('novae.mine', []);
 MINE.forEach(w => { w.disc = discOf(w.disc); WORKS.unshift(w); byId[w.id] = w; });

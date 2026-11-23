@@ -7,6 +7,10 @@
    button: the post's comments page (#post/id), like on X. */
 const reposted = new Set(readJSON('novae.reposted', []));
 const hidden = new Set(readJSON('novae.hidden', [])); // "Non mi interessa"
+// from the "•••" menu of a profile: muted = their works leave your feed; blocked = their works leave everywhere
+const muted = new Set(readJSON('novae.muted', [])), blocked = new Set(readJSON('novae.blocked', []));
+const saveMuted = () => store.set('novae.muted', JSON.stringify([...muted]));
+const saveBlocked = () => store.set('novae.blocked', JSON.stringify([...blocked]));
 const REPLIES_MINE = readJSON('novae.replies', {}); // your replies, per work
 const repostCount = w => Math.floor(w.likes / 11) + (reposted.has(w.id) ? 1 : 0);
 // short counts like X: 842, 4,2K, 242K, 1,3M
@@ -41,7 +45,7 @@ const mediaFrame = w => {
   return `<a class="x-media ph-img" href="#vista/${w.id}" data-dbl="${w.id}" ${style} aria-label="Apri ${w.t} a schermo intero">${workMedia(w, src)}${mediaOverlay(w)}</a>`;
 };
 // who can see a work: a "utente" publishes only for followers
-const canSee = w => w.audience !== 'followers' || w.a === 'me' || followed.has(w.a);
+const canSee = w => !blocked.has(w.a) && (w.audience !== 'followers' || w.a === 'me' || followed.has(w.a));
 const audTag = w => w.audience === 'followers' ? '<span class="aud-tag" title="Visibile solo a chi segue l\'autore"><i class="ph-light ph-lock-simple"></i>Follower</span>' : '';
 // comment tag: colour + star by profile type (critics gold, artists red, users plain)
 const whoTag = aid => {
@@ -87,7 +91,7 @@ function postX(w) {
 }
 // Sfoglia (list) / Scorri (full-screen) switch at the top of Scopri, like Instagram's "Per te / Amici": same works, two ways to browse
 const modeTabs = on => `<nav class="mode-tabs" aria-label="Modo di vista"><a href="#scopri" ${on === 'feed' ? 'class="on" aria-current="page"' : ''}>Sfoglia</a><a href="#vista" ${on === 'reel' ? 'class="on" aria-current="page"' : ''}>Scorri</a></nav>`;
-const feedList = () => [...MINE, ...FEED].filter(w => !hidden.has(w.id) && canSee(w));
+const feedList = () => [...MINE, ...FEED].filter(w => !hidden.has(w.id) && !muted.has(w.a) && canSee(w));
 function renderFeed() {
   const list = feedList();
   $('#feed').className = 'xfeed';
@@ -262,7 +266,7 @@ function reelHtml(w) {
   </section>`;
 }
 function renderVista(id) {
-  const all = [...MINE, ...FEED].filter(w => (!hidden.has(w.id) && canSee(w)) || w.id === id);
+  const all = [...MINE, ...FEED].filter(w => (!hidden.has(w.id) && !muted.has(w.a) && canSee(w)) || w.id === id);
   const start = byId[id] || all[0];
   const list = all.includes(start) ? all : [start, ...all]; // e.g. a film opened from Cinema e video
   const root = $('#vista');

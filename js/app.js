@@ -232,6 +232,12 @@ document.addEventListener('click', e => {
     case 'create': openCreate(); break;
     case 'my-qr': openMyQR(); break;
     case 'card': openCard(); break;
+    case 'prof-more': openProfMore(el.dataset.a); break;
+    case 'share-profile': shareProfile(el.dataset.a); break;
+    case 'mute': toggleMute(el.dataset.a); break;
+    case 'block': blockUser(el.dataset.a); break;
+    case 'unblock': unblockUser(el.dataset.a); break;
+    case 'report-user': openReportUser(el.dataset.a); break;
     case 'card-save': saveCard(); break;
     case 'show': openShow(showList); break;
     case 'cmp': break;
@@ -355,6 +361,7 @@ document.addEventListener('click', e => {
         if (id && id !== 'me') window.NovaePush?.notifyEvent('E6', { actorId: 'me', actorName: ARTISTS.me.name }, { recipients: [id], actorId: 'me' });
       }
       refresh();
+      if (followed.has(id)) $(`#profile [data-act="follow"][data-a="${id}"]`)?.classList.add('pop'); // small press-back on the new state
       break;
     }
     /* TEST-PUSH-UI-START */

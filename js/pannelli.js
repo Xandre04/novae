@@ -355,9 +355,75 @@ function openReport(w) {
       <button class="btn-accent" type="submit">Invia segnalazione</button>
     </form>`);
 }
+/* ---------------- A profile's "•••" menu: share, mute, block, report (always in the same place, top right) ---------------- */
+function openProfMore(aid) {
+  const a = ARTISTS[aid], first = a.name.split(' ')[0];
+  openSheet(`<h3>${a.name}</h3><div class="action-list">
+    <button data-act="share-profile" data-a="${aid}"><i class="ph-light ph-arrow-bend-up-right"></i>Condividi profilo</button>
+    <button data-act="mute" data-a="${aid}"><i class="ph-light ph-speaker-${muted.has(aid) ? 'high' : 'slash'}"></i><span>${muted.has(aid) ? `Riattiva ${first}` : `Silenzia ${first}`}<small>${muted.has(aid) ? 'Le sue opere tornano nel tuo feed' : 'Le sue opere spariscono dal tuo feed, non lo saprà'}</small></span></button>
+    ${blocked.has(aid) ? `<button data-act="unblock" data-a="${aid}"><i class="ph-light ph-prohibit"></i>Sblocca ${first}</button>`
+      : `<button class="danger" data-act="block" data-a="${aid}"><i class="ph-light ph-prohibit"></i><span>Blocca ${first}<small>Non vedi più le sue opere e non può scriverti</small></span></button>`}
+    <button class="danger" data-act="report-user" data-a="${aid}"><i class="ph-light ph-flag"></i>Segnala profilo</button>
+  </div>`);
+}
+function shareProfile(aid) {
+  const url = `${location.origin}${location.pathname}#artista/${aid}`;
+  closeSheet();
+  if (navigator.share) navigator.share({ title: `${ARTISTS[aid].name} su NOVAE`, url }).catch(() => {});
+  else navigator.clipboard?.writeText(url).then(() => toast('Link copiato'), () => toast(url));
+}
+function toggleMute(aid) {
+  muted.has(aid) ? muted.delete(aid) : muted.add(aid);
+  saveMuted();
+  toast(muted.has(aid) ? `${ARTISTS[aid].name} silenziato` : `${ARTISTS[aid].name} di nuovo nel tuo feed`);
+  closeSheet(() => refresh());
+}
+function blockUser(aid) {
+  blocked.add(aid); saveBlocked();
+  followed.delete(aid); saveFollowed(); // blocking also stops following
+  toast(`${ARTISTS[aid].name} bloccato`);
+  closeSheet(() => refresh());
+}
+function unblockUser(aid) {
+  blocked.delete(aid); saveBlocked();
+  toast(`${ARTISTS[aid].name} sbloccato`);
+  closeSheet(() => refresh());
+}
+// reporting a person, not a work: its own reasons, and the option to block at the same time
+const USER_REASONS = [
+  ['spam', 'Spam o account falso'],
+  ['finto', 'Si spaccia per qualcun altro'],
+  ['odio', 'Insulti, odio o molestie'],
+  ['copia', 'Pubblica opere che non sono sue'],
+  ['sesso', 'Contenuti sessuali espliciti'],
+  ['altro', 'Altro'],
+];
+function openReportUser(aid) {
+  const a = ARTISTS[aid];
+  openSheet(`<h3>Segnala ${a.name}</h3>
+    <form class="pub" id="reportForm" data-user="${aid}" novalidate>
+      <div class="report-reasons" role="radiogroup" aria-label="Motivo">${USER_REASONS.map(([v, l]) =>
+        `<label><input type="radio" name="reason" value="${v}"><span>${l}</span></label>`).join('')}</div>
+      <div class="field"><label for="reportText">Dettagli (facoltativo)</label><textarea id="reportText" maxlength="500" rows="2" placeholder="Cosa c’è che non va?"></textarea></div>
+      <label class="report-hide"><input type="checkbox" id="reportHide"><span>Blocca anche ${a.name.split(' ')[0]}</span></label>
+      <p class="report-note">Non saprà che sei stato tu. Le <a href="#doc/regole">Regole della community</a> spiegano cosa succede dopo. Nell’alpha la segnalazione resta sul tuo telefono: arriverà ai moderatori quando ci sarà il server.</p>
+      <p class="pub-err" id="reportErr" role="alert"></p>
+      <button class="btn-accent" type="submit">Invia segnalazione</button>
+    </form>`);
+}
+function submitUserReport(f, reason) {
+  const aid = f.dataset.user;
+  const reports = readJSON('novae.reports', []);
+  reports.push({ user: aid, reason, text: $('#reportText').value.trim().slice(0, 500), ts: Date.now() });
+  store.set('novae.reports', JSON.stringify(reports));
+  if ($('#reportHide').checked) { blocked.add(aid); saveBlocked(); followed.delete(aid); saveFollowed(); }
+  toast('Segnalazione salvata. Grazie');
+  closeSheet(() => refresh());
+}
 function submitReport(f) {
   const reason = f.querySelector('input[name=reason]:checked')?.value;
   if (!reason) { $('#reportErr').textContent = 'Scegli un motivo.'; return; }
+  if (f.dataset.user) { submitUserReport(f, reason); return; }
   // ponytail: no server yet, so reports stay on this phone; with the backend they go to the moderators' queue
   const reports = readJSON('novae.reports', []);
   const reportText = $('#reportText').value.trim().slice(0, 500);

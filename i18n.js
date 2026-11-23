@@ -186,6 +186,14 @@ window.NOVAE_I18N = { en: {} };
     'Contenuto sessuale esplicito': 'Explicit sexual content', 'Non è sua: opera copiata da qualcun altro': 'Not theirs: copied from someone else',
     'Generata con IA senza dirlo': 'Made with AI without saying so', 'Mostra dati personali di qualcuno': 'Shows someone\'s personal data',
     'Dettagli (facoltativo)': 'Details (optional)', 'Cosa c\'è che non va?': 'What\'s wrong?', 'Non mostrarmi più questa opera': 'Don\'t show me this work again',
+    'Seguito da': 'Followed by', 'e un altro': 'and one other', 'Sblocca': 'Unblock', 'Condividi profilo': 'Share profile', 'Segnala profilo': 'Report profile',
+    'Aggiungi una bio per farti trovare': 'Add a bio so people can find you', 'Chi sei e cosa crei, in poche parole': 'Who you are and what you make, in a few words',
+    'Il tuo sito o portfolio': 'Your website or portfolio', 'Il link non sembra un indirizzo web.': "That link doesn't look like a web address.",
+    'Le sue opere tornano nel tuo feed': 'Their works come back to your feed', 'Le sue opere spariscono dal tuo feed, non lo saprà': "Their works leave your feed; they won't know",
+    'Non vedi più le sue opere e non può scriverti': "You won't see their works and they can't message you",
+    'Non vedi le sue opere e non può scriverti. Puoi sbloccarlo quando vuoi.': "You don't see their works and they can't message you. You can unblock them any time.",
+    'Spam o account falso': 'Spam or fake account', 'Si spaccia per qualcun altro': 'Pretends to be someone else', 'Pubblica opere che non sono sue': "Posts works that aren't theirs",
+    'Contenuti sessuali espliciti': 'Explicit sexual content', 'Non saprà che sei stato tu. Le': "They won't know it was you. The",
     'Chi pubblica non saprà che sei stato tu. Le': 'The person who posted won\'t know it was you. The',
     'spiegano cosa succede dopo. Nell\'alpha la segnalazione resta sul tuo telefono: arriverà ai moderatori quando ci sarà il server.': 'explain what happens next. In the alpha the report stays on your phone: it will reach the moderators once there is a server.',
     'Invia segnalazione': 'Send report', 'Scegli un motivo.': 'Pick a reason.', 'Segnalazione salvata. Grazie': 'Report saved. Thank you',
@@ -205,6 +213,15 @@ window.NOVAE_I18N = { en: {} };
     [/^Apri (.+) a schermo intero$/, (m, t) => `Open ${t} full screen`],
     [/^Segui (.+)$/, (m, n) => `Follow ${n}`],
     [/^Segnala “(.+)”$/, (m, t) => `Report “${t}”`],
+    // profile: "•••" menu, block, mute, followers in common
+    [/^e altri (\d+)$/, (m, n) => `and ${n} others`],
+    [/^Silenzia (.+)$/, (m, n) => isName(n) ? `Mute ${n}` : m], [/^Riattiva (.+)$/, (m, n) => isName(n) ? `Unmute ${n}` : m],
+    [/^Blocca anche (.+)$/, (m, n) => isName(n) ? `Also block ${n}` : m], [/^Blocca (.+)$/, (m, n) => isName(n) ? `Block ${n}` : m],
+    [/^Sblocca (.+)$/, (m, n) => isName(n) ? `Unblock ${n}` : m], [/^Hai bloccato (.+)$/, (m, n) => isName(n) ? `You blocked ${n}` : m],
+    [/^Segnala (.+)$/, (m, n) => isName(n) ? `Report ${n}` : m],
+    // only for people's names, so a work titled "… bloccato" stays as it is (people's words are never translated)
+    [/^(.+) silenziato$/, (m, n) => isName(n) ? `${n} muted` : m], [/^(.+) di nuovo nel tuo feed$/, (m, n) => isName(n) ? `${n} is back in your feed` : m],
+    [/^(.+) sbloccato$/, (m, n) => isName(n) ? `${n} unblocked` : m], [/^(.+) bloccato$/, (m, n) => isName(n) ? `${n} blocked` : m],
     [/^Eliminare "(.+)"\?$/, (m, t) => `Delete "${t}"?`],
     [/^(.+) condivide le sue opere solo con i suoi follower\.$/, (m, n) => `${n} only shares their works with followers.`],
     [/^(@\S+), (.+)$/, (m, h, c) => COUNTRIES[c] ? `${h}, ${COUNTRIES[c]}` : m],
@@ -238,6 +255,7 @@ window.NOVAE_I18N = { en: {} };
     [/^Qualcuno: "(.*)"$/, (m, x) => `Someone: "${x}"`],
     [/^(.+) \| NOVAE$/, (m, t) => `${tr(t)} | NOVAE`],
   ];
+  const isName = n => typeof ARTISTS !== 'undefined' && Object.values(ARTISTS).some(x => x.name === n || x.name.split(' ')[0] === n);
   const norm = s => s.replace(/[‘’]/g, "'");
   const D = Object.fromEntries(Object.entries(dict).map(([k, v]) => [norm(k), v]));
   function tr(s) {

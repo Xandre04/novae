@@ -100,6 +100,16 @@ function submitCol() {
   profTab = 'Opere'; profCol = col.id; refresh();
 }
 
+// "Seguito da Aiko, Livia e altri 2": the people you follow who follow them too (sample: a fixed pick per profile)
+function mutualHtml(aid) {
+  const r = rng([...aid].reduce((s, ch) => s + ch.charCodeAt(0), 0));
+  const mutual = [...followed].filter(x => x !== aid && ARTISTS[x] && r() < .6);
+  if (!mutual.length) return '';
+  const names = mutual.slice(0, 2).map(x => `<strong>${ARTISTS[x].name.split(' ')[0]}</strong>`);
+  const rest = mutual.length - names.length;
+  return `<p class="mutual"><span class="mutual-ava" aria-hidden="true">${mutual.slice(0, 3).map(x => `<img src="${avatar(x)}" alt="">`).join('')}</span>
+    <span>Seguito da ${names.join(rest ? ', ' : ' e ')}${rest ? ` e ${rest === 1 ? 'un altro' : `altri ${rest}`}` : ''}</span></p>`;
+}
 let profSort = 'recenti'; // Opere filter: recenti / stelle
 let showList = { works: [], name: '' }; // the works on screen in the profile, for "Mostra" (pannelli.js: openShow)
 let profCol = null, profColOf = null; // constellation picked in the Opere strip, and whose profile it belongs to
@@ -147,41 +157,49 @@ function renderProfile(aid, focus) {
   }[profTab];
   const emptyBtn = locked ? `<button class="btn-accent" data-act="follow" data-a="${aid}">Segui</button>`
     : !other && profTab === 'Opere' ? `<button class="btn-accent" data-act="publish">${type === 'utente' ? 'Pubblica per i follower' : 'Pubblica opera'}</button>` : '';
-  const showStrip = profTab === 'Opere' && type === 'artista' && (cols.length || !other);
+  // your constellation strip only once you have two works to join (before that the "first work" invite comes first)
+  const showStrip = profTab === 'Opere' && type === 'artista' && (cols.length || (!other && own.length >= 2));
   const colHead = col ? `<div class="col-head">
       <p class="col-title"><img src="${STAR_SRC}" alt="" aria-hidden="true">${col.name}<small>${works.length} ${label(works.length, 'opere')}</small></p>
       ${col.desc ? `<p class="col-desc">${col.desc}</p>` : ''}
       ${MY_COLS.includes(col) ? `<button class="link-btn" data-act="del-col" data-col="${col.id}">Elimina costellazione</button>` : ''}
     </div>` : '';
   const banner = other ? pic('banner-' + aid, 1200, 420) : profile.banner;
+  const isBlocked = other && blocked.has(aid);
+  const fans = n => fmt(n + (other && followed.has(aid) ? 1 : 0)); // following them counts at once
   const thumb = thumbOf;
   const stats = {
-    artista: [[own.length, 'opere'], [other ? fmt(own.reduce((s, w) => s + likeCount(w), 0)) : savedList.length, other ? 'cuori' : 'salvate'], [other ? fmt(120 + works.length * 37) : followed.size, other ? 'seguaci' : 'seguiti']],
-    critico: [[reviews.length, 'recensioni'], [other ? fmt(860) : savedList.length, other ? 'lettori' : 'salvate'], [other ? fmt(412) : followed.size, other ? 'seguaci' : 'seguiti']],
-    utente: [[other ? fmt(214) : liked.size, 'mi piace'], [other ? fmt(37) : savedList.length, other ? 'seguaci' : 'salvate'], [other ? fmt(64) : followed.size, 'seguiti']],
+    artista: [[own.length, 'opere'], [other ? fmt(own.reduce((s, w) => s + likeCount(w), 0)) : savedList.length, other ? 'cuori' : 'salvate'], [other ? fans(120 + own.length * 37) : followed.size, other ? 'seguaci' : 'seguiti']],
+    critico: [[reviews.length, 'recensioni'], [other ? fmt(860) : savedList.length, other ? 'lettori' : 'salvate'], [other ? fans(412) : followed.size, other ? 'seguaci' : 'seguiti']],
+    utente: [[other ? fmt(214) : liked.size, 'mi piace'], [other ? fans(37) : savedList.length, other ? 'seguaci' : 'salvate'], [other ? fmt(64) : followed.size, 'seguiti']],
   }[type];
   $('#profile').innerHTML = `
     <div class="prof-banner ${banner ? 'has' : ''}" ${banner ? `style="background-image:url('${banner}')"` : ''}>
-      ${other ? '' : `<button class="banner-edit" data-act="edit-profile" aria-label="Cambia banner"><i class="ph-light ph-image"></i></button>`}
+      ${other ? `<button class="banner-edit" data-act="prof-more" data-a="${aid}" aria-label="Altre azioni"><i class="ph-light ph-dots-three"></i></button>`
+        : `<button class="banner-edit" data-act="edit-profile" aria-label="Cambia banner"><i class="ph-light ph-image"></i></button>`}
     </div>
     <div class="prof-top">
       ${other ? `<span class="avatar-ring lg">${img(avatar(aid), '')}</span>` : `<span class="prof-ring">${crop('profilo')}<button class="edit" data-act="edit-profile" aria-label="Modifica profilo"><i class="ph-light ph-pencil-simple"></i></button></span>`}
       <h1>${a.name}</h1>
       <span class="type-badge t-${type}"><i class="ph-light ph-${T.icon}"></i>${T.label}</span>
-      <span class="handle">@${a.handle}, ${a.country}</span>
-      <p class="bio">${a.bio}</p>
+      <p class="handle">@${a.handle}<span class="place"><i class="ph-light ph-map-pin"></i>${a.country}</span></p>
+      ${a.bio ? `<p class="bio">${a.bio}</p>` : other ? '' : '<button class="bio-empty" data-act="edit-profile"><i class="ph-light ph-plus"></i>Aggiungi una bio per farti trovare</button>'}
+      ${!other && profile.link ? `<a class="prof-link" href="${esc(profile.link)}" target="_blank" rel="noopener nofollow ugc"><i class="ph-light ph-link-simple"></i>${esc(profile.link.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''))}</a>` : ''}
+      ${other && !isBlocked ? mutualHtml(aid) : ''}
       <div class="stats">${stats.map(([n, l]) => `<div><strong>${n}</strong><span>${label(n, l)}</span></div>`).join('')}</div>
       <div class="prof-cta">${other
-        ? `<button class="${followed.has(aid) ? 'btn-ghost' : 'btn-accent'}" data-act="follow" data-a="${aid}" aria-pressed="${followed.has(aid)}">${followed.has(aid) ? 'Segui già' : 'Segui'}</button><a class="btn-ghost" href="#messaggi/${aid}">Messaggio</a>`
+        ? isBlocked ? `<button class="btn-ghost" data-act="unblock" data-a="${aid}">Sblocca</button>`
+          : `<button class="${followed.has(aid) ? 'btn-ghost' : 'btn-accent'}" data-act="follow" data-a="${aid}" aria-pressed="${followed.has(aid)}">${followed.has(aid) ? 'Segui già' : 'Segui'}</button><a class="btn-ghost" href="#messaggi/${aid}">Messaggio</a>`
         : `${type === 'artista' ? '<button class="btn-accent" data-act="publish">Pubblica opera</button>' : type === 'critico' ? '<a class="btn-accent" href="#scopri">Scrivi una recensione</a>' : '<button class="btn-accent" data-act="publish">Pubblica per i follower</button>'}<button class="btn-ghost" data-act="edit-profile">Modifica profilo</button>`}</div>
     </div>
+    ${isBlocked ? `<div class="empty">${starSvg()}<strong>Hai bloccato ${first}</strong><p>Non vedi le sue opere e non può scriverti. Puoi sbloccarlo quando vuoi.</p></div>` : `
     <div class="seg" role="tablist" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(t => `<button role="tab" aria-selected="${t === profTab}" data-act="ptab" data-v="${t}" data-a="${aid || ''}">${t}</button>`).join('')}</div>
     ${showStrip ? colStrip(cols, col, !other) : ''}
     ${colHead}
     ${profTab === 'Opere' && works.length > 1 ? `<div class="prof-sort"><span role="radiogroup" aria-label="Ordina le opere">${[['recenti', 'Recenti'], ['stelle', 'Stelle']].map(([v, l]) => `<button role="radio" aria-checked="${profSort === v}" data-act="psort" data-v="${v}" data-a="${aid || ''}">${l}</button>`).join('')}</span><button data-act="show"><i class="ph-light ph-frame-corners"></i>Mostra</button></div>` : ''}
     ${profTab === 'Recensioni' && reviews.length ? `<div class="reviews">${reviews.map(reviewHtml).join('')}</div>`
       : list.length ? `<div class="grid3">${list.map(w => `<a href="#opera/${w.id}" class="ph-img">${img(thumb(w), w.t)}${w.audience === 'followers' ? '<i class="ph-fill ph-lock-simple grid-lock" aria-label="Solo follower"></i>' : ''}</a>`).join('')}</div>`
-      : `<div class="empty">${starSvg()}<strong>${empty[0]}</strong><p>${empty[1]}</p>${emptyBtn}</div>`}`;
+      : `<div class="empty">${starSvg()}<strong>${empty[0]}</strong><p>${empty[1]}</p>${emptyBtn}</div>`}`}`;
   if (focus) {
     setTimeout(() => {
       if (cur.name !== 'artista' && cur.name !== 'profilo') return;
@@ -328,7 +346,8 @@ function openEditProfile() {
         <small class="x-note">Compare sulle targhette delle tue opere nella Mostra e sul biglietto da visita.</small></div>
       <div class="field"><label for="pfName">Nome</label><input id="pfName" maxlength="40" value="${esc(profile.name)}" autocomplete="name"></div>
       <div class="field"><label for="pfHandle">Nome utente</label><input id="pfHandle" maxlength="24" value="${esc(profile.handle)}" autocomplete="username" spellcheck="false"></div>
-      <div class="field"><label for="pfBio">Bio</label><textarea id="pfBio" maxlength="160" rows="3">${esc(profile.bio)}</textarea></div>
+      <div class="field"><label for="pfBio">Bio</label><textarea id="pfBio" maxlength="160" rows="3" placeholder="Chi sei e cosa crei, in poche parole">${esc(profile.bio)}</textarea></div>
+      <div class="field"><label for="pfLink">Link</label><input id="pfLink" type="url" inputmode="url" maxlength="200" placeholder="Il tuo sito o portfolio" value="${esc(profile.link || '')}" autocomplete="url" spellcheck="false"></div>
       <p class="pub-err" id="pfErr" role="alert"></p>
       <button class="btn-accent" type="submit">Salva</button>
     </form>`);
@@ -399,7 +418,10 @@ function submitProfile() {
   if (!name) { $('#pfErr').textContent = 'Il nome non può essere vuoto.'; return; }
   if (!/^[a-z0-9._]{3,24}$/.test(handle)) { $('#pfErr').textContent = 'Nome utente: 3-24 caratteri tra lettere, numeri, punto e trattino basso.'; return; }
   const type = $('#profForm input[name="pfType"]:checked')?.value || profile.type;
-  const next = { ...profile, name, handle, type, bio: $('#pfBio').value.trim() || profile.bio, banner: $('#profForm').dataset.banner || '', signature: sigOut() };
+  let link = $('#pfLink').value.trim();
+  if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+  try { if (link) link = new URL(link).href; } catch { $('#pfErr').textContent = 'Il link non sembra un indirizzo web.'; $('#pfLink').focus(); return; }
+  const next = { ...profile, name, handle, type, bio: $('#pfBio').value.trim(), link, banner: $('#profForm').dataset.banner || '', signature: sigOut() };
   try { localStorage.setItem('novae.profile', JSON.stringify(next)); }
   catch { $('#pfErr').textContent = 'Spazio pieno su questo dispositivo: scegli un banner più leggero.'; return; }
   Object.assign(profile, next);
@@ -410,7 +432,7 @@ function submitProfile() {
 /* ---------------- 12. Messaggi ---------------- */
 function renderMessages(tid) {
   const root = $('#messages');
-  const th = THREADS.find(t => t.id === tid) || (tid && ARTISTS[tid] ? { id: tid, msgs: [], time: 'ora', unread: 0 } : null);
+  const th = blocked.has(tid) ? null : THREADS.find(t => t.id === tid) || (tid && ARTISTS[tid] ? { id: tid, msgs: [], time: 'ora', unread: 0 } : null);
   if (th) {
     th.unread = 0;
     window.NovaePush?.syncAppBadge();
@@ -427,7 +449,7 @@ function renderMessages(tid) {
   }
   root.innerHTML = `
     <div class="msg-head">${crop('messaggi')}<h1>Messaggi</h1><button class="icon-btn" data-act="soon" aria-label="Nuovo messaggio"><i class="ph-light ph-note-pencil"></i></button></div>
-    ${THREADS.map(t => {
+    ${THREADS.filter(t => !blocked.has(t.id)).map(t => { // a blocked person can't write to you: no chat
       const last = t.msgs[t.msgs.length - 1];
       return `<a class="thread ${t.unread ? 'unread' : ''}" href="#messaggi/${t.id}">${avatarRing(t.id, 'sm').replace(/<a /, '<span ').replace(/<\/a>$/, '</span>').replace(/href="[^"]*"/, '')}
         <div style="min-width:0"><strong>${ARTISTS[t.id].name}</strong><p>${last ? (last[0] === 'me' ? 'Tu: ' : '') + last[1] : ''}</p></div>

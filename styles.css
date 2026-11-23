@@ -1134,3 +1134,26 @@ body.pt-picking #thread .x-media { cursor: crosshair; outline: 2px dashed var(--
 .pub-cm span { color: var(--ink-3); }
 .ar-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin: 14px 0; }
 .ar-btn i { font-size: 20px; }
+
+/* Profile: handle and place on one line, an inviting empty bio, one link, followers in common */
+.prof-top .handle { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 10px; }
+.prof-top .place { display: inline-flex; align-items: center; gap: 3px; }
+.prof-top .place i { font-size: 14px; }
+.bio-empty { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 8px 14px; border: var(--stroke) dashed var(--line-hi); border-radius: 999px; color: var(--ink-2); font-size: 13px; }
+.bio-empty:hover { border-color: var(--ink-2); color: var(--ink); }
+.prof-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; color: var(--ink); font-size: 14px; font-weight: 500; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prof-link i { color: var(--ink-3); font-size: 16px; flex: none; }
+.prof-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.mutual { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--ink-3); font-size: 13px; }
+.mutual strong { color: var(--ink-2); font-weight: 600; }
+.mutual-ava { display: flex; flex: none; }
+.mutual-ava img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 2px solid var(--bg); }
+.mutual-ava img + img { margin-left: -8px; }
+/* the tabs stay at the top while you scroll the works */
+#profile .seg { position: sticky; top: 0; z-index: 5; background: var(--bg); }
+/* following: the button presses back once */
+.prof-cta .pop { animation: follow-pop .32s var(--ease-out); }
+@keyframes follow-pop { 40% { transform: scale(.94); } }
+@media (prefers-reduced-motion: reduce) { .prof-cta .pop { animation: none; } }
+.action-list button > span { display: grid; text-align: left; }
+.action-list button > span small { margin-top: 2px; font-size: 12px; color: var(--ink-3); font-weight: 400; }
