@@ -4,7 +4,9 @@
 // ponytail: the cache grows with every image seen (picsum); add a size cap or skip third-party images if it gets heavy.
 const CACHE = 'novae';
 const PUSH_ICON = './assets/app/icon-192.png';
-const SHELL = ['./', 'index.html', 'styles.css', 'i18n.js', 'manifest.webmanifest', 'assets/svg/stella.svg', PUSH_ICON,
+// the small icon in Android's status bar, next to the clock: white on transparent, Android only keeps the shape
+const PUSH_BADGE = './assets/app/badge-96.png';
+const SHELL = ['./', 'index.html', 'styles.css', 'i18n.js', 'manifest.webmanifest', 'assets/svg/stella.svg', PUSH_ICON, PUSH_BADGE,
   ...['base', 'push', 'menu', 'feed', 'galleria', 'novae', 'profilo', 'pannelli', 'app'].map(f => `./js/${f}.js`)];
 
 self.addEventListener('install', e => {
@@ -42,7 +44,7 @@ self.addEventListener('push', e => {
   const opts = {
     body: data.body || '',
     icon: PUSH_ICON,
-    badge: PUSH_ICON,
+    badge: PUSH_BADGE,
     tag: data.tag || (data.eventId ? `novae-${data.eventId}` : 'novae'),
     renotify: !!data.renotify,
     data: { url, eventId: data.eventId || '' },

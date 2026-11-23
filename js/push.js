@@ -11,6 +11,7 @@ window.NOVAE_PUSH_CONFIG = NOVAE_PUSH_CONFIG;
 
 (() => {
   const PUSH_ICON = './assets/app/icon-192.png';
+  const PUSH_BADGE = './assets/app/badge-96.png'; // Android status bar: white star on transparent (see sw.js)
   const PREFS_KEY = 'novae.pushPrefs';
   const UNREAD_KEY = 'novae.pushUnread';
   const TOGGLES_KEY = 'novae.toggles';
@@ -460,7 +461,7 @@ window.NOVAE_PUSH_CONFIG = NOVAE_PUSH_CONFIG;
     const opts = {
       body,
       icon: PUSH_ICON,
-      badge: PUSH_ICON,
+      badge: PUSH_BADGE,
       tag: `novae-${ev.id}-${Date.now()}`,
       data: { url, eventId: ev.id },
     };
