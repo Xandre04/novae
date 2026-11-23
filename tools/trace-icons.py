@@ -136,20 +136,47 @@ def strip_hand_ring(alpha):
     norm = Image.composite(norm, Image.new('L', (TARGET, TARGET), 0), disk)
     return norm.filter(ImageFilter.GaussianBlur(.7)).point(lambda v: 0 if v > 118 else 255)
 
+def two_tone(name):
+    im = flat(f'assets/icone/sezioni/{name}.webp', (255, 255, 255))
+    px = im.load(); W, H = im.size
+    grey, red = Image.new('L', im.size, 0), Image.new('L', im.size, 0)
+    gp, rp, reds = grey.load(), red.load(), []
+    for y in range(H):
+        for x in range(W):
+            r, g, b = px[x, y]
+            if r - g > 50: rp[x, y] = 255; reds.append((r, g, b))
+            elif max(r, g, b) < 244 and max(r, g, b) - min(r, g, b) < 30: gp[x, y] = 255
+    x0, y0, x1, y1 = grey.getbbox()                     # the ring is the outermost shape
+    cx, cy, ro = (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0 + y1 - y0) / 4
+    t = 0                                               # ring thickness, measured along the horizontal radius
+    while gp[int(x0 + t), int(cy)]: t += 1
+    cut = ro - t - 4                                    # erase everything from just inside the ring outwards
+    for y in range(H):
+        for x in range(W):
+            if gp[x, y] and math.hypot(x - cx, y - cy) > cut: gp[x, y] = 0
+    # square crop around what's left (the drawing), like the other section icons: the menu sizes them by --w
+    bx0, by0, bx1, by1 = Image.composite(grey, red, grey).getbbox()
+    side = max(bx1 - bx0, by1 - by0) * 1.06; mx, my = (bx0 + bx1) / 2, (by0 + by1) / 2
+    box = tuple(round(v) for v in (mx - side / 2, my - side / 2, mx + side / 2, my + side / 2))
+    ink_red = '#%02x%02x%02x' % tuple(int(statistics.median(ch)) for ch in zip(*reds))
+    write(f'assets/svg/{name}.svg', (box[2] - box[0], box[3] - box[1]), [(INK, grey.crop(box)), (ink_red, red.crop(box))])
+
 if __name__ == '__main__':
     import sys
     only = sys.argv[1:]
     def want(n): return not only or n in only
     for name, args in {
         'impostazioni': ('assets/icone/sezioni/impostazioni.jpg', .480, .494, .085),
-        'messaggi': ('assets/icone/sezioni/messaggi.jpg', .502, .4975, .13),
         'profilo': ('assets/icone/sezioni/profilo.jpg', .5159, .4860, .10),
     }.items():
         if want(name): im = window(*args); write(f'assets/svg/{name}.svg', im.size, [(INK, white(im))])
-    for name in ('galleria', 'scopri', 'profilo-avatar'):
+    for name in ('scopri', 'profilo-avatar'):
         if want(name): im = flat(f'assets/icone/sezioni/{name}.png'); write(f'assets/svg/{name}.svg', im.size, [(INK, white(im))])
-    # stella.svg, wordmark.svg, stile.svg and mercato.svg are redrawn by hand with clean lines (the clean star is
-    # also inside stile and mercato): they are edited as SVG now, not traced again from assets/icone/sezioni.
+    # stella.svg, wordmark.svg and stile.svg are redrawn by hand with clean lines: edited as SVG, not traced again.
+    # Galleria, Mercato and Messaggi: clean two-colour drawings (light grey + red) inside a ring. The menu draws its own
+    # ring, so the drawn one is erased and the icon is cropped to the drawing.
+    for name in ('galleria', 'mercato', 'messaggi'):
+        if want(name): two_tone(name)
     # categories traced from the drawings in assets/icone/categorie/
     os.makedirs('assets/categorie', exist_ok=True)
     INK_OVERRIDE = {'cinema-e-video': '#5f86cf'}  # the drawing's navy (#2b4574) is too dark on the #141414 background
