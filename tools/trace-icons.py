@@ -148,9 +148,11 @@ def two_tone(name):
             elif max(r, g, b) < 244 and max(r, g, b) - min(r, g, b) < 30: gp[x, y] = 255
     x0, y0, x1, y1 = grey.getbbox()                     # the ring is the outermost shape
     cx, cy, ro = (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0 + y1 - y0) / 4
-    t = 0                                               # ring thickness, measured along the horizontal radius
-    while gp[int(x0 + t), int(cy)]: t += 1
-    cut = ro - t - 4                                    # erase everything from just inside the ring outwards
+    x = x0                                              # ring thickness, measured along the horizontal radius
+    while x < cx and not gp[x, int(cy)]: x += 1         # (a soft edge may leave the very first pixels empty)
+    t = 0
+    while gp[x + t, int(cy)]: t += 1
+    cut = ro - (x - x0) - t - 4                         # erase everything from just inside the ring outwards
     for y in range(H):
         for x in range(W):
             if gp[x, y] and math.hypot(x - cx, y - cy) > cut: gp[x, y] = 0
@@ -175,7 +177,7 @@ if __name__ == '__main__':
     # stella.svg, wordmark.svg and stile.svg are redrawn by hand with clean lines: edited as SVG, not traced again.
     # Galleria, Mercato and Messaggi: clean two-colour drawings (light grey + red) inside a ring. The menu draws its own
     # ring, so the drawn one is erased and the icon is cropped to the drawing.
-    for name in ('galleria', 'mercato', 'messaggi'):
+    for name in ('galleria', 'mercato', 'messaggi', 'novae'):
         if want(name): two_tone(name)
     # categories traced from the drawings in assets/icone/categorie/
     os.makedirs('assets/categorie', exist_ok=True)

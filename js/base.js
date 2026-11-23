@@ -56,7 +56,7 @@ const crop = (name, extra = '') => `<img class="crop ${extra}" src="assets/svg/$
 const STAR_SRC = 'assets/svg/stella.svg';
 const starSvg = (cls = '') => `<img class="star-svg ${cls}" src="${STAR_SRC}" alt="" aria-hidden="true" draggable="false">`;
 const icon = key => {
-  if (key === 'novae') return starSvg();
+  if (key === 'novae') return crop('novae'); // telescope and stars (the NOVAE star stays the logo in the middle)
   if (key === 'galleria' || key === 'scopri') return `<img class="icon-png" src="assets/svg/${key}.svg" alt="" aria-hidden="true" draggable="false">`;
   return crop(key);
 };
