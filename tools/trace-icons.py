@@ -167,7 +167,7 @@ if __name__ == '__main__':
         'animazione': 'animazione.jpg',
         'teatro-e-performance': 'teatro e performance.jpg',
         'danza': 'danza.jpg',
-        'street-art': 'graffiti.jpg',
+        'street-art': 'street-art.webp',
         'artigianato': 'artigianato.jpg',
         'installazione-e-arti-ambientali': 'arti ambientali.jpg',
         'arti-digitali-e-tecnologiche': 'arti-digitali-e-tecnologiche.jpg',
