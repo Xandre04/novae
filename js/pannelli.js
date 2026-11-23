@@ -120,7 +120,7 @@ function openNotifs() {
   openSheet(`<h3>Notifiche</h3><div class="notifs">${items.map(([aid, text, href, time], i) => `<a class="notif ${fresh && i < 2 ? 'new' : ''}" href="${href}" data-act="sheet-close">
     <img class="notif-ava" src="${avatar(aid)}" alt=""><p><strong>${ARTISTS[aid].name}</strong> ${text}<small>${time}</small></p></a>`).join('')}</div>`);
   store.set('novae.notif', '1');
-  window.NovaePush?.clearPushUnread();
+  window.NovaePush?.seenAll(); // seen here: off the phone's notification list and the app badge
   markBars();
 }
 function openCreate() {

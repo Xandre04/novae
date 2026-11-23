@@ -426,6 +426,31 @@ window.NOVAE_PUSH_CONFIG = NOVAE_PUSH_CONFIG;
     } catch { /* unsupported */ }
   }
 
+  /* ---------------- Seen in the app: off the phone ---------------- */
+  // The notifications already on the phone go away once you've seen them in the app: all of them when you open
+  // Notifiche, the ones about a page (same post, chat or profile) when you open that page.
+  const pageOf = url => url.split('/').slice(0, 2).join('/');
+  async function closeShown(match) {
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration();
+      const list = (await reg?.getNotifications?.()) || [];
+      const done = list.filter(n => !match || match(n.data?.url || ''));
+      done.forEach(n => n.close());
+      return done.length;
+    } catch { return 0; } // no service worker or no getNotifications: nothing to close
+  }
+  async function seenAll() {
+    await closeShown();
+    clearPushUnread();
+    syncAppBadge();
+  }
+  async function seenPage(hash = location.hash) {
+    const n = await closeShown(url => pageOf(url) === pageOf(hash));
+    if (n) { bumpPushUnread(-n); syncAppBadge(); }
+  }
+  addEventListener('hashchange', () => seenPage());
+  seenPage(); // opened straight on a page, e.g. from a notification
+
   /* ---------------- Local SW notification & unified event dispatcher ---------------- */
   async function showLocal(ev, payload) {
     const built = ev.build(payload || {});
@@ -562,5 +587,6 @@ window.NOVAE_PUSH_CONFIG = NOVAE_PUSH_CONFIG;
     /* TEST-PUSH-UI-END */
     syncAppBadge,
     clearPushUnread,
+    seenAll,
   };
 })();
