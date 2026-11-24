@@ -252,10 +252,10 @@ function submitReply(f) {
 let reelObserver;
 function reelHtml(w) {
   const a = ARTISTS[w.a];
-  const src = w.ts ? w.img : pic(w.id, 900, 1600); // portrait crop of the same photo
+  const src = w.ts ? w.img : pic(w.id, 720, 1280); // portrait crop of the same photo (sharp on a phone, a third lighter than 900x1600)
   const canFollow = w.a !== 'me' && !followed.has(w.a);
   return `<section class="reel" data-id="${w.id}" data-type="${w.type}" aria-label="${w.t} \u2014 ${a.name}">
-    <div class="reel-media ph-img" data-dbl="${w.id}">${hasMaking(w) ? carousel(w, img(src, w.t)) : img(src, w.t)}</div>
+    <div class="reel-media ph-img" data-dbl="${w.id}">${(hasMaking(w) ? carousel(w, img(src, w.t)) : img(src, w.t)).replace(/ src="/g, ' data-src="')}</div>
     <span class="reel-shade" aria-hidden="true"></span>
     ${w.type !== 'image' ? '<span class="reel-paused" aria-hidden="true"><i class="ph-fill ph-play"></i></span><div class="progress"><span></span></div>' : ''}
     <div class="reel-rail">
@@ -275,6 +275,17 @@ function reelHtml(w) {
     </div>
   </section>`;
 }
+// Only the reels near the one on screen hold their pictures (the pictures carry data-src): on a phone, 40 full-screen
+// images at once ran out of memory and Safari closed the page. Near ones load, far ones are let go.
+function windowReels(reels, at) {
+  $$('.reel', reels).forEach((r, j) => {
+    const d = Math.abs(j - at);
+    $$('.reel-media img[data-src]', r).forEach(im => {
+      if (d <= 2) { if (!im.getAttribute('src')) im.src = im.dataset.src; }
+      else if (d > 4 && im.getAttribute('src')) { im.removeAttribute('src'); im.classList.remove('loaded'); im.parentElement.classList.remove('loaded'); }
+    });
+  });
+}
 function renderVista(id) {
   const all = [...MINE, ...FEED].filter(w => (!hidden.has(w.id) && !muted.has(w.a) && canSee(w)) || w.id === id);
   const start = byId[id] || all[0];
@@ -287,6 +298,9 @@ function renderVista(id) {
     <div class="reels" id="reels">${list.map(reelHtml).join('')}</div>`;
   const reels = $('#reels');
   reels.scrollTop = reels.querySelector(`[data-id="${start.id}"]`).offsetTop;
+  windowReels(reels, list.indexOf(start));
+  let wr = 0; // as you scroll, the reel on screen decides which pictures are held (once per frame)
+  reels.addEventListener('scroll', () => { if (!wr) wr = requestAnimationFrame(() => { wr = 0; windowReels(reels, Math.round(reels.scrollTop / reels.clientHeight)); }); }, { passive: true });
   root.dataset.id = start.id;
   if (!store.get('novae.reelHint')) { root.classList.add('hint'); store.set('novae.reelHint', '1'); }
   reelObserver?.disconnect();

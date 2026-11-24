@@ -42,6 +42,7 @@ function route() {
   setArc(false);
   closeSheet();
   $('#search').hidden = true;
+  if (document.body.dataset.screen === 'vista' && screen !== 'vista') { reelObserver?.disconnect(); $('#vista').innerHTML = ''; } // let go of the reels' pictures
   $$('.screen').forEach(s => s.classList.toggle('active', s.dataset.screen === screen));
   document.body.dataset.screen = screen;
   document.title = name === 'hub' ? 'NOVAE' : `${TITLES[name] || ''} | NOVAE`;
