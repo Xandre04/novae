@@ -35,15 +35,15 @@ const workMedia = (w, src) => {
   const all = [...w.steps, src];
   return `<div class="steps" data-k="0">${all.map((s, i) => img(s, i === all.length - 1 ? w.t : '', i ? '' : 'on')).join('')}<span class="steps-tag"><i class="ph-light ph-film-strip"></i>Processo</span><span class="steps-dots" aria-hidden="true">${all.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</span></div>`;
 };
-// "In the making": the work first, then what's behind it; swipe sideways (or the arrows with a mouse), dots below
+// "Correlati": the work first, then what's behind it; swipe sideways (or the arrows with a mouse), dots below
 const hasMaking = w => !w.before && w.making?.length; // not on "prima e dopo": its bar takes the sideways drag
 const carousel = (w, first) => `<div class="car" data-car="${w.id}">
     <div class="car-slide">${first}</div>
-    ${w.making.map(m => `<div class="car-slide">${img(m.src, m.cap || '')}<span class="mk-tag"><i class="ph-light ph-film-strip"></i>In the making</span>${m.cap ? `<span class="mk-cap">${m.cap}</span>` : ''}</div>`).join('')}
+    ${w.making.map(m => `<div class="car-slide">${img(m.src, m.cap || '')}<span class="mk-tag"><i class="ph-light ph-film-strip"></i>Correlati</span>${m.cap ? `<span class="mk-cap">${m.cap}</span>` : ''}</div>`).join('')}
   </div>
   <span class="car-dots" aria-hidden="true">${[0, ...w.making].map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</span>
   <button class="car-arrow prev" data-act="car-step" data-dir="-1" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
-  <button class="car-arrow next" data-act="car-step" data-dir="1" aria-label="In the making"><i class="ph-light ph-caret-right"></i></button>`;
+  <button class="car-arrow next" data-act="car-step" data-dir="1" aria-label="Correlati"><i class="ph-light ph-caret-right"></i></button>`;
 // the frame takes the work's own shape: wide works are wide, tall works are tall and narrower
 const mediaFrame = w => {
   const ratio = Math.max(.56, Math.min(1.91, (w.w || 1200) / (w.h || 900)));

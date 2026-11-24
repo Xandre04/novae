@@ -141,7 +141,7 @@ function addWork(o) {
   const stage = (blur, gray) => `${pic(w.id, o.w || 1200, o.h || 900, gray)}${gray ? '&' : '?'}blur=${blur}`;
   if (o.demo === 'cmp') w.before = stage(3, true);
   if (o.demo === 'steps') w.steps = [stage(10, true), stage(4, true), stage(1, true), stage(2)];
-  // "In the making": what's behind the work, one swipe to the side of the post (every other sample work)
+  // "Correlati": what's behind the work, one swipe to the side of the post (every other sample work)
   if (!o.demo && o.type !== 'audio' && wid % 2 === 0) w.making = [{ src: stage(6, true), cap: 'Bozza' }, { src: pic('studio-' + w.id, o.w || 1200, o.h || 900), cap: 'Nello studio' }];
   WORKS.push(w);
   byId[w.id] = w;

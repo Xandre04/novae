@@ -249,7 +249,7 @@ function openPublish(w) {
         <div class="field"><span class="field-label">Processo</span>
           <label class="pub-extra"><input type="file" accept="image/*" multiple id="pubSteps"><i class="ph-light ph-film-strip"></i><span id="pubStepsTxt"></span></label>
           <small class="x-note">Da 2 a 6 foto delle fasi, in ordine: scorrono come un piccolo video e finiscono sull'opera.</small></div>
-        <div class="field"><span class="field-label">In the making</span>
+        <div class="field"><span class="field-label">Correlati</span>
           <label class="pub-extra"><input type="file" accept="image/*" multiple id="pubMaking"><i class="ph-light ph-film-strip"></i><span id="pubMakingTxt"></span></label>
           <small class="x-note">Fino a 4 foto di com'è nata (studio, schizzi, materiali): si vedono scorrendo di lato il post.</small></div>
         <div class="field"><label for="pubCo">Insieme a</label><select id="pubCo"><option value="">Nessuno</option>${AIDS.filter(id => typeOf(id) === 'artista').map(id => `<option value="${id}" ${w?.co === id ? 'selected' : ''}>${ARTISTS[id].name}</option>`).join('')}</select>
@@ -264,7 +264,7 @@ function openPublish(w) {
 }
 const pubCm = () => { const cm = [+$('#pubCmW').value, +$('#pubCmH').value]; return cm.every(n => n > 0 && n <= 2000) ? cm : undefined; };
 // extras of the work being published: a sketch for "prima e dopo" or the stages of the process (one or the other)
-let pubExtra = {}, pubMaking = null; // pubMaking: the "In the making" photos, alongside either extra
+let pubExtra = {}, pubMaking = null; // pubMaking: the "Correlati" photos, alongside either extra
 function pubExtraText() {
   $('#pubBeforeTxt').textContent = T(pubExtra.before ? 'Bozza aggiunta. Tocca per cambiarla' : 'Aggiungi la bozza');
   $('#pubStepsTxt').textContent = pubExtra.steps ? `${pubExtra.steps.length} ${T('fasi aggiunte. Tocca per cambiarle')}` : T('Aggiungi le fasi');

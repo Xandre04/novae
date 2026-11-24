@@ -1160,7 +1160,7 @@ body.pt-picking #thread .x-media { cursor: crosshair; outline: 2px dashed var(--
 .action-list button > span { display: grid; text-align: left; }
 .action-list button > span small { margin-top: 2px; font-size: 12px; color: var(--ink-3); font-weight: 400; }
 
-/* "In the making" carousel inside a post (feed.js): swipe sideways, dots below, arrows with a mouse */
+/* "Correlati" carousel inside a post (feed.js): swipe sideways, dots below, arrows with a mouse */
 .car { position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
 .car::-webkit-scrollbar { display: none; }
 .car-slide { position: relative; flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; }
