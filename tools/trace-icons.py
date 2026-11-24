@@ -169,7 +169,6 @@ if __name__ == '__main__':
     def want(n): return not only or n in only
     for name, args in {
         # impostazioni.svg: a geometric gear drawn as SVG (8 even teeth), not traced any more
-        # profilo.svg: traced once, outline smoothed and a minimal red tie added by hand: don't trace it again
     }.items():
         if want(name): im = window(*args); write(f'assets/svg/{name}.svg', im.size, [(INK, white(im))])
     # scopri.svg (open door from assets/icone/sezioni/scopri.jpg) is kept as clean geometric SVG: not traced again
@@ -178,7 +177,7 @@ if __name__ == '__main__':
     # stella.svg, wordmark.svg and stile.svg are redrawn by hand with clean lines: edited as SVG, not traced again.
     # Galleria, Mercato and Messaggi: clean two-colour drawings (light grey + red) inside a ring. The menu draws its own
     # ring, so the drawn one is erased and the icon is cropped to the drawing.
-    for name in ('galleria', 'mercato', 'messaggi', 'novae'):
+    for name in ('galleria', 'mercato', 'messaggi', 'novae', 'profilo'):
         if want(name): two_tone(name)
     # categories traced from the drawings in assets/icone/categorie/
     os.makedirs('assets/categorie', exist_ok=True)
