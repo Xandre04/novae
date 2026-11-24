@@ -46,6 +46,10 @@ window.NOVAE_I18N = { en: {} };
     'Misure, bozza, processo, collaborazione': 'Size, sketch, process, collaboration',
     'Vedila sul tuo muro': 'See it on your wall', "Preparo l'opera per il tuo muro": 'Getting the work ready for your wall', 'Non riesco a preparare questa immagine': "I can't prepare this image",
     'Roma': 'Rome', 'Milano': 'Milan', 'Marsiglia': 'Marseille', 'Lione': 'Lyon', 'San Paolo': 'São Paulo', // cities on the globe
+    'Museo': 'Museum', 'Arte contemporanea': 'Contemporary art', 'Arte digitale': 'Digital art', "Luogo d'arte": 'Art site', 'Torna al globo': 'Back to the globe',
+    'Firenze': 'Florence', 'Venezia': 'Venice', 'Napoli': 'Naples', 'Parigi': 'Paris', 'Nuova Delhi': 'New Delhi', 'Città del Messico': 'Mexico City', 'Tempio Bianco': 'White Temple',
+    'Bosco sacro di Osun': 'Osun Sacred Grove', 'Museo Nazionale': 'National Museum', "Museo d'arte di Kyoto": 'Kyoto Museum of Art', "Naoshima, l'isola dell'arte": 'Naoshima, the art island',
+    'Murales di Orgosolo': 'Orgosolo murals', 'Murales dei Quartieri Spagnoli': 'Spanish Quarter murals', 'Murales di Orozco': 'Orozco murals',
     'In the making': 'In the making', 'Bozza': 'Sketch', 'Nello studio': 'In the studio', 'Aggiungi le foto': 'Add the photos', 'foto aggiunte. Tocca per cambiarle': 'photos added. Tap to change them',
     "Fino a 4 foto di com'è nata (studio, schizzi, materiali): si vedono scorrendo di lato il post.": 'Up to 4 photos of how it was made (studio, sketches, materials): people see them by swiping the post sideways.',
     'Inquadra il codice': 'Scan the code', 'per entrare su NOVAE': 'to get into NOVAE', 'il social di chi crea': 'the social network for makers',
@@ -216,6 +220,7 @@ window.NOVAE_I18N = { en: {} };
     [/^Apri (.+) a schermo intero$/, (m, t) => `Open ${t} full screen`],
     [/^Segui (.+)$/, (m, n) => `Follow ${n}`],
     [/^Segnala “(.+)”$/, (m, t) => `Report “${t}”`],
+    [/^Artisti NOVAE in (.+)$/, (m, c) => `NOVAE artists in ${tr(c)}`],
     // profile: "•••" menu, block, mute, followers in common
     [/^e altri (\d+)$/, (m, n) => `and ${n} others`],
     [/^Silenzia (.+)$/, (m, n) => isName(n) ? `Mute ${n}` : m], [/^Riattiva (.+)$/, (m, n) => isName(n) ? `Unmute ${n}` : m],

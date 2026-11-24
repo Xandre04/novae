@@ -59,7 +59,7 @@ NOVAE si installa dal sito, senza store: icona sulla schermata Home, schermo int
   - **Sfoglia**: il feed a post, in stile X. Tocca l'immagine per aprire il feed come una mostra, partendo da quell'opera (cornice, targhetta con autore, parete del suo colore); tocca il resto del post o il fumetto per i commenti.
   - **Scorri**: le opere a schermo intero una dopo l'altra, come Reels e TikTok. Tocca per mettere in pausa, doppio tocco per il mi piace.
 - **Galleria**: le stelle del cielo dietro una categoria prendono il suo colore. Le 21 categorie, da Pittura e illustrazione ad Arte memetica, ognuna con la sua icona e il suo colore. In **Cinema e video**: serie, film e classifica, con le righe a gradini per genere.
-- **Novae**: il pianeta. Giralo (ha un po' di slancio) e scopri gli artisti di ogni paese: scegliendo un paese compaiono stelle bianche sulle città dove lavorano, e toccandole si apre l'artista.
+- **Novae**: il pianeta. Giralo (ha un po' di slancio) e scopri gli artisti di ogni paese: scegliendo un paese il globo fa zoom su di lui e compaiono stelle bianche sui suoi luoghi d'arte (musei, street art, gallerie, biennali); toccandole si apre una scheda.
 - **Scheda opera**: player, descrizione completa e opere correlate. Lo sfondo prende il colore principale dell'opera, come Spotify con le copertine.
 - **Mercato**: opere in vendita, con prezzi in crediti.
 - **Stile**: in arrivo.

@@ -1195,3 +1195,12 @@ body.pt-picking #thread .x-media { cursor: crosshair; outline: 2px dashed var(--
 #globe .poi:focus-visible use { filter: drop-shadow(0 0 6px var(--accent-hi)); }
 @keyframes poi-in { from { opacity: 0; transform: scale(.3); } }
 @media (prefers-reduced-motion: reduce) { #globe .poi-in { animation: none; } }
+
+/* Novae: back to the whole world when zoomed in; a point of interest's sheet */
+.globe-out { position: absolute; right: 4%; top: 4%; width: 40px; height: 40px; border-radius: 50%; background: rgba(20, 20, 20, .85); border: var(--stroke) solid var(--line); font-size: 22px; }
+.globe-out[hidden] { display: none; }
+.poi-type { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-weight: 600; color: var(--ink); }
+.poi-type i { font-size: 20px; color: var(--accent-hi); }
+.poi-type > span { width: 100%; font-weight: 400; color: var(--ink-3); font-size: 14px; }
+.poi-sheet { display: grid; gap: 14px; }
+.poi-sheet .country-artists { justify-content: flex-start; }

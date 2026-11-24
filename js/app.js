@@ -241,6 +241,7 @@ document.addEventListener('click', e => {
     case 'card-save': saveCard(); break;
     case 'show': openShow(showList); break;
     case 'cmp': break;
+    case 'globe-out': zoomOut(); break;
     case 'car-step': { // a mouse has no sideways swipe: the arrows move the carousel one slide
       e.preventDefault();
       const car = el.parentElement.querySelector('.car');

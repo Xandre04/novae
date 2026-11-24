@@ -4,7 +4,63 @@
 
 /* ---------------- 9. Scopri ---------------- */
 const startC = COUNTRIES[prefs.country] || COUNTRIES[0];
-const globe = { ready: false, loading: false, idx: COUNTRIES.indexOf(startC), rot: [-startC.c[0], -startC.c[1], 0] };
+const globe = { ready: false, loading: false, idx: COUNTRIES.indexOf(startC), rot: [-startC.c[0], -startC.c[1], 0], scale: 258 };
+const WORLD = 258; // the globe's radius with nothing chosen; picking a country zooms in on it
+// Points of interest: real places of art in each country (museums, street art, galleries, biennials)
+const POIS = {
+  Italia: [
+    { name: 'Uffizi', type: 'Museo', city: 'Firenze', ll: [11.2553, 43.7678] },
+    { name: 'Biennale', type: 'Biennale', city: 'Venezia', ll: [12.357, 45.43] },
+    { name: 'Pinacoteca di Brera', type: 'Museo', city: 'Milano', ll: [9.1879, 45.4719] },
+    { name: 'MAXXI', type: 'Arte contemporanea', city: 'Roma', ll: [12.4664, 41.9284] },
+    { name: 'Murales di Orgosolo', type: 'Street art', city: 'Orgosolo', ll: [9.3536, 40.2063] },
+    { name: 'Murales dei Quartieri Spagnoli', type: 'Street art', city: 'Napoli', ll: [14.2466, 40.8433] },
+  ],
+  Thailandia: [
+    { name: 'Bangkok Art and Culture Centre', type: 'Galleria', city: 'Bangkok', ll: [100.53, 13.7467] },
+    { name: 'MAIIAM', type: 'Arte contemporanea', city: 'Chiang Mai', ll: [99.0889, 18.771] },
+    { name: 'Tempio Bianco', type: 'Luogo d\'arte', city: 'Chiang Rai', ll: [99.7631, 19.8244] },
+  ],
+  Giappone: [
+    { name: 'teamLab Planets', type: 'Arte digitale', city: 'Tokyo', ll: [139.7895, 35.6491] },
+    { name: 'Naoshima, l\'isola dell\'arte', type: 'Arte contemporanea', city: 'Naoshima', ll: [133.995, 34.46] },
+    { name: 'Museo d\'arte di Kyoto', type: 'Museo', city: 'Kyoto', ll: [135.7826, 35.0124] },
+  ],
+  India: [
+    { name: 'National Gallery of Modern Art', type: 'Museo', city: 'Nuova Delhi', ll: [77.2346, 28.61] },
+    { name: 'CSMVS', type: 'Museo', city: 'Mumbai', ll: [72.8326, 18.9269] },
+    { name: 'Kochi-Muziris Biennale', type: 'Biennale', city: 'Kochi', ll: [76.26, 9.9658] },
+  ],
+  Nigeria: [
+    { name: 'Nike Art Gallery', type: 'Galleria', city: 'Lagos', ll: [3.492, 6.44] },
+    { name: 'Bosco sacro di Osun', type: 'Luogo d\'arte', city: 'Osogbo', ll: [4.551, 7.755] },
+    { name: 'Museo Nazionale', type: 'Museo', city: 'Benin City', ll: [5.623, 6.335] },
+  ],
+  Francia: [
+    { name: 'Louvre', type: 'Museo', city: 'Parigi', ll: [2.3376, 48.8606] },
+    { name: 'Fresque des Lyonnais', type: 'Street art', city: 'Lione', ll: [4.827, 45.768] },
+    { name: 'MuCEM', type: 'Museo', city: 'Marsiglia', ll: [5.361, 43.2967] },
+    { name: 'Fondation Maeght', type: 'Arte contemporanea', city: 'Saint-Paul-de-Vence', ll: [7.1146, 43.702] },
+  ],
+  Brasile: [
+    { name: 'Beco do Batman', type: 'Street art', city: 'San Paolo', ll: [-46.6912, -23.5558] },
+    { name: 'Museu do Amanhã', type: 'Museo', city: 'Rio de Janeiro', ll: [-43.1795, -22.894] },
+    { name: 'Inhotim', type: 'Arte contemporanea', city: 'Brumadinho', ll: [-44.2236, -20.1236] },
+  ],
+  Messico: [
+    { name: 'Museo Frida Kahlo', type: 'Museo', city: 'Città del Messico', ll: [-99.1626, 19.3551] },
+    { name: 'Murales di Orozco', type: 'Street art', city: 'Guadalajara', ll: [-103.3366, 20.6766] },
+    { name: 'MACO', type: 'Arte contemporanea', city: 'Oaxaca', ll: [-96.7253, 17.0627] },
+  ],
+};
+const POI_ICONS = { Museo: 'bank', 'Street art': 'spray-bottle', Galleria: 'frame-corners', Biennale: 'globe-hemisphere-west', 'Arte contemporanea': 'cube', 'Arte digitale': 'cpu', "Luogo d'arte": 'tree' };
+function openPoi(p) {
+  const c = COUNTRIES[globe.idx], ids = artistsIn(c);
+  openSheet(`<h3>${p.name}</h3><div class="poi-sheet">
+    <p class="poi-type"><i class="ph-light ph-${POI_ICONS[p.type] || 'star'}"></i>${p.type}<span><span>${p.city}</span>, <span>${c.it}</span></span></p>
+    ${ids.length ? `<p class="x-note">Artisti NOVAE in ${c.it}</p><div class="country-artists">${ids.map(id => `<a class="c-artist" href="#artista/${id}" data-act="sheet-close"><span class="avatar-ring">${img(avatar(id), '')}</span>${ARTISTS[id].name.split(' ')[0]}</a>`).join('')}</div>` : ''}
+  </div>`);
+}
 function artistsIn(c) { return AIDS.filter(id => ARTISTS[id].country === c.it); }
 function updateCountryUi() {
   const c = COUNTRIES[globe.idx];
@@ -24,11 +80,13 @@ async function initGlobe() {
     const feats = topojson.feature(world, world.objects.countries).features;
     const land = topojson.mesh(world, world.objects.countries, (a, b) => a === b);
     const borders = topojson.mesh(world, world.objects.countries, (a, b) => a !== b);
-    const proj = d3.geoOrthographic().scale(258).translate([270, 270]).clipAngle(90).rotate(globe.rot);
+    const proj = d3.geoOrthographic().scale(WORLD).translate([270, 270]).clipAngle(90).rotate(globe.rot);
     const path = d3.geoPath(proj);
     const svg = d3.select('#globe');
-    svg.append('circle').attr('class', 'sphere').attr('cx', 270).attr('cy', 270).attr('r', 258);
-    const g = svg.append('g').attr('filter', 'url(#chalk)');
+    svg.append('circle').attr('class', 'sphere').attr('cx', 270).attr('cy', 270).attr('r', WORLD);
+    // zoomed in, the map grows inside the globe's circle, like looking through a lens
+    svg.append('defs').append('clipPath').attr('id', 'globeClip').append('circle').attr('cx', 270).attr('cy', 270).attr('r', WORLD);
+    const g = svg.append('g').attr('filter', 'url(#chalk)').attr('clip-path', 'url(#globeClip)');
     const grat = g.append('path').attr('class', 'grat').datum(d3.geoGraticule10());
     const hits = g.append('g').selectAll('path').data(feats).join('path').attr('class', 'hit')
       .on('click', (e, f) => {
@@ -41,35 +99,42 @@ async function initGlobe() {
     const r = rng(9);
     const markers = COUNTRIES.flatMap(c => artistsIn(c).map(() => [c.c[0] + (r() - .5) * 6, c.c[1] + (r() - .5) * 4]))
       .concat(Array.from({ length: 10 }, () => [r() * 360 - 180, r() * 120 - 50]));
-    const mk = svg.append('g').selectAll('image').data(markers).join('image').attr('href', STAR_SRC).attr('class', 'mk').attr('width', 18).attr('height', 20);
-    // points of interest of the chosen country: a white star on each city where its artists work, with the name
-    const poiG = svg.append('g').attr('class', 'pois');
+    const mk = svg.append('g').attr('clip-path', 'url(#globeClip)').selectAll('image').data(markers).join('image').attr('href', STAR_SRC).attr('class', 'mk').attr('width', 18).attr('height', 20);
+    // points of interest of the chosen country: white stars on its museums, street art, galleries..., with the name
+    const poiG = svg.append('g').attr('class', 'pois').attr('clip-path', 'url(#globeClip)');
     globe.showPois = () => {
-      const byCity = {};
-      artistsIn(COUNTRIES[globe.idx]).forEach(id => { const a = ARTISTS[id]; if (a.ll) (byCity[a.city] ||= { city: a.city, ll: a.ll, ids: [] }).ids.push(id); });
       poiG.selectAll('*').remove();
-      Object.values(byCity).forEach((p, i) => {
-        const g = poiG.append('g').attr('class', 'poi').datum(p).attr('tabindex', 0).attr('role', 'link')
-          .attr('aria-label', `${p.city}: ${p.ids.map(id => ARTISTS[id].name).join(', ')}`)
-          .on('click', () => { location.hash = '#artista/' + p.ids[0]; });
-        const inner = g.append('g').attr('class', 'poi-in').style('animation-delay', `${200 + i * 140}ms`);
-        inner.append('circle').attr('r', 16).attr('class', 'poi-hit');
+      (POIS[COUNTRIES[globe.idx].it] || []).forEach((p, i) => {
+        const g = poiG.append('g').attr('class', 'poi').datum(p).attr('tabindex', 0).attr('role', 'button')
+          .attr('aria-label', `${p.name}, ${T(p.type)}`).on('click', () => openPoi(p));
+        const inner = g.append('g').attr('class', 'poi-in').style('animation-delay', `${700 + i * 140}ms`);
+        inner.append('circle').attr('r', 18).attr('class', 'poi-hit');
         inner.append('use').attr('href', '#star4').attr('x', -11).attr('y', -11).attr('width', 22).attr('height', 22);
-        inner.append('text').attr('x', 15).attr('y', 5).text(p.city);
+        inner.append('text').attr('x', 15).attr('y', 5).text(p.name);
       });
       drawFrame();
     };
     // While the globe moves: no chalk filter (it re-renders the whole map every frame) and no invisible
     // tap areas; both come back once it stops. One redraw per frame at most.
+    const out = document.createElement('button'); // back to the whole world, when zoomed in
+    out.className = 'globe-out icon-btn'; out.dataset.act = 'globe-out'; out.setAttribute('aria-label', 'Torna al globo');
+    out.innerHTML = '<i class="ph-light ph-globe-hemisphere-west"></i>'; out.hidden = true;
+    $('.globe-wrap').append(out);
+    globe.feats = feats;
     const drawFrame = () => {
-      proj.rotate(globe.rot);
+      proj.rotate(globe.rot).scale(globe.scale);
+      out.hidden = globe.scale < WORLD * 1.15;
       grat.attr('d', path); coast.attr('d', path); bord.attr('d', path);
       const cur = feats.find(f => f.properties.name === COUNTRIES[globe.idx].en);
       sel.datum(cur).attr('d', cur ? path : null);
       const center = [-globe.rot[0], -globe.rot[1]];
-      poiG.selectAll('.poi').each(function (p) {
+      const pois = poiG.selectAll('.poi'), xs = pois.data().map(p => proj(p.ll)[0]);
+      const mid = (Math.min(...xs) + Math.max(...xs)) / 2; // names point away from the middle of the country's places
+      pois.each(function (p) {
         const [x, y] = proj(p.ll);
         this.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+        const left = x < mid, t = this.querySelector('text');
+        t.setAttribute('x', left ? -15 : 15); t.setAttribute('text-anchor', left ? 'end' : 'start');
         this.style.display = d3.geoDistance(p.ll, center) < Math.PI / 2 - .05 ? '' : 'none';
       });
       mk.each(function (p) {
@@ -113,27 +178,41 @@ async function initGlobe() {
       }));
     settle();
     globe.ready = true;
-    globe.showPois();
+    selectCountry(globe.idx); // zoom in on the country picked last time
     $('#globeMsg').textContent = '';
   } catch {
     $('#globeMsg').textContent = 'Non riesco a caricare il globo';
   } finally { globe.loading = false; }
 }
+// where to look for a country: centred on it, zoomed so the country and its places fill about half the globe
+function zoomFor(c) {
+  const to = [-c.c[0], -c.c[1], 0];
+  const p = d3.geoOrthographic().scale(WORLD).translate([270, 270]).clipAngle(90).rotate(to);
+  const f = globe.feats.find(x => x.properties.name === c.en);
+  let [[x0, y0], [x1, y1]] = f ? d3.geoPath(p).bounds(f) : [[270, 270], [270, 270]];
+  (POIS[c.it] || []).forEach(q => { const [x, y] = p(q.ll); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+  return [to, WORLD * Math.max(1, Math.min(9, 290 / Math.max(x1 - x0, y1 - y0, 1)))];
+}
+// fly: rotate and zoom together, pulling back a little halfway so a long trip doesn't race across a zoomed map
+function flyTo(to, scale) {
+  if (reduceMotion) { globe.rot = to; globe.scale = scale; globe.draw(); return; }
+  globe.anim?.stop();
+  const rot = d3.interpolate(globe.rot, to), zoom = d3.interpolate(globe.scale, scale);
+  const dip = Math.min(.6, d3.geoDistance([-globe.rot[0], -globe.rot[1]], [-to[0], -to[1]]) * .5);
+  const t = globe.anim = d3.timer(el => {
+    const k = Math.min(1, el / 1300), e = d3.easeCubicInOut(k);
+    globe.rot = rot(e);
+    globe.scale = Math.max(WORLD, zoom(e) * (1 - dip * Math.sin(Math.PI * k)));
+    globe.draw();
+    if (k === 1) t.stop();
+  });
+}
+function zoomOut() { if (globe.ready) flyTo(globe.rot, WORLD); }
 function selectCountry(i) {
   globe.idx = (i + COUNTRIES.length) % COUNTRIES.length;
   prefs.country = globe.idx; savePrefs();
   updateCountryUi();
   if (!globe.ready) return;
   globe.showPois();
-  const c = COUNTRIES[globe.idx];
-  const to = [-c.c[0], -c.c[1], 0];
-  if (reduceMotion) { globe.rot = to; globe.draw(); return; }
-  globe.anim?.stop();
-  const interp = d3.interpolate(globe.rot, to);
-  const t = globe.anim = d3.timer(el => {
-    const k = Math.min(1, el / 1100);
-    globe.rot = interp(d3.easeCubicInOut(k));
-    globe.draw();
-    if (k === 1) t.stop();
-  });
+  flyTo(...zoomFor(COUNTRIES[globe.idx]));
 }
