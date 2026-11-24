@@ -237,6 +237,62 @@ async function saveCard() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+/* ---------------- Dittico: two works side by side ---------------- */
+// "Metti accanto a…": pick the second work among yours, your saved ones and the feed
+function openPairPicker(w) {
+  const pool = (list, title) => {
+    const ws = list.filter(x => x && x.id !== w.id && !x.pair && canSee(x));
+    return ws.length ? `<h4 class="pair-h">${title}</h4><div class="pair-grid">${ws.map(x => `<button class="pair-pick" data-act="pair-with" data-id="${w.id}" data-b="${x.id}"><img src="${thumbOf(x)}" alt=""><span>${x.t}</span></button>`).join('')}</div>` : '';
+  };
+  const mine = WORKS.filter(x => x.a === 'me'), keep = WORKS.filter(x => saved.has(x.id) && x.a !== 'me');
+  openSheet(`<h3>Scegli l'opera da mettere accanto</h3>
+    <p class="x-note">Le vedrai affiancate: poi scegli se pubblicarle come dittico o solo guardarle.</p>
+    ${pool(mine, 'Le tue opere')}${pool(keep, 'Salvate')}${pool(feedList().filter(x => !mine.includes(x) && !keep.includes(x)).slice(0, 24), 'Dal feed')}`);
+}
+// the two works side by side, full screen; withPublish: the one who put them together can publish them as a dittico
+function openDiptych(A, B, withPublish) {
+  const box = document.createElement('div');
+  box.className = 'mostra dittico'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', T('Dittico')); box.tabIndex = -1;
+  box.innerHTML = `<header class="show-head"><p><strong>Dittico</strong><span>${A.t} · ${B.t}</span></p><button class="icon-btn" data-close aria-label="Chiudi"><i class="ph-light ph-x"></i></button></header>
+    <div class="dip-wall">${[A, B].map(w => `<figure class="dip-room">
+      <div class="show-frame"><img src="${w.img}" alt="${w.t}" decoding="async"></div>
+      <figcaption><strong>${w.t}</strong><em>${[w.a, w.co].filter(Boolean).map(a => ARTISTS[a].name).join(' e ')}</em><span>${T(w.disc)}, ${w.year}</span></figcaption>
+    </figure>`).join('')}</div>
+    ${withPublish && typeOf('me') !== 'critico' ? '<div class="dip-actions"><button class="btn-ghost" data-close>Guarda soltanto</button><button class="btn-accent" data-dip-publish>Pubblica come dittico</button></div>' : ''}`;
+  const close = then => { box.classList.add('out'); setTimeout(() => box.remove(), 200); removeEventListener('keydown', key); releaseBack(then); };
+  const key = e => { if (e.key === 'Escape') close(); };
+  $$('[data-close]', box).forEach(b => b.addEventListener('click', () => close()));
+  box.querySelector('[data-dip-publish]')?.addEventListener('click', () => close(() => openDiptychPublish(A, B)));
+  box.addEventListener('click', e => { if (e.target.matches('.dip-wall, .dip-room')) close(); });
+  addEventListener('keydown', key);
+  document.body.append(box); box.focus(); holdBack(close);
+}
+function openDiptychPublish(A, B) {
+  openSheet(`<h3>Pubblica il dittico</h3>
+    <form class="pub" id="dipForm" data-a="${A.id}" data-b="${B.id}" novalidate>
+      <div class="dip-preview"><img src="${thumbOf(A)}" alt=""><img src="${thumbOf(B)}" alt=""></div>
+      <div class="field"><label for="dipT">Titolo</label><input id="dipT" maxlength="60" autocomplete="off" value="${esc(`${A.t} + ${B.t}`.slice(0, 60))}"></div>
+      <div class="field"><label for="dipDesc">Descrizione</label><textarea id="dipDesc" maxlength="400" rows="3" placeholder="Perché stanno bene insieme? (facoltativo)"></textarea></div>
+      <p class="pub-err" id="dipErr" role="alert"></p>
+      <button class="btn-accent" type="submit">Pubblica il dittico</button>
+    </form>`);
+}
+function submitDiptych(f) {
+  const A = byId[f.dataset.a], B = byId[f.dataset.b], t = $('#dipT').value.trim();
+  if (!t) { $('#dipErr').textContent = 'Dai un titolo al dittico.'; $('#dipT').focus(); return; }
+  const w = {
+    id: 'u' + Date.now(), t, a: 'me', type: 'image', disc: A.disc, desc: $('#dipDesc').value.trim() || `${A.t} accanto a ${B.t}.`,
+    img: A.img, thumb: thumbOf(A), w: 1600, h: 1000, pair: [A.id, B.id],
+    likes: 0, rating: 0, views: 0, comments: 0, price: 0, year: new Date().getFullYear(), ts: Date.now(),
+    audience: typeOf('me') === 'utente' ? 'followers' : 'public',
+  };
+  MINE.unshift(w);
+  if (!saveMine()) { MINE.shift(); $('#dipErr').textContent = 'Spazio pieno su questo dispositivo: elimina una tua opera e riprova.'; return; }
+  WORKS.unshift(w); byId[w.id] = w;
+  toast('Dittico pubblicato'); buzz();
+  closeSheet(() => { if (location.hash === '#scopri') renderFeed(); else location.hash = '#scopri'; });
+}
+
 /* ---------------- Mostra: works as an exhibition, one per wall, with a museum label ---------------- */
 // From a profile (its works) or from Sfoglia (the feed, starting on the tapped work). Swipe or use the arrow keys;
 // the wall takes the colour of the work on it; a tap on the empty wall, Esc or the back button closes it.

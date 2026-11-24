@@ -29,7 +29,10 @@ const xActions = (w, big = false) => {
 };
 // A "prima e dopo" (drag the bar to compare sketch and finished work) or a process (the stages play one after the other,
 // see the ticker in app.js); any other work is just its picture
+const pairOf = w => (w.pair || []).map(id => byId[id]).filter(Boolean); // a dittico's two works
 const workMedia = (w, src) => {
+  const pair = pairOf(w);
+  if (pair.length === 2) return `<div class="dip">${pair.map(p => img(p.ts ? p.img : p.thumb, p.t)).join('')}</div>`;
   if (w.before) return `<div class="cmp" style="--x:50%">${img(src, w.t)}${img(w.before, '', 'cmp-before')}<span class="cmp-line" aria-hidden="true"></span><span class="cmp-tag" aria-hidden="true">Prima</span><span class="cmp-tag after" aria-hidden="true">Dopo</span><input type="range" class="cmp-range" data-act="cmp" min="0" max="100" value="50" aria-label="Prima e dopo: trascina per confrontare"></div>`;
   if (!w.steps?.length) return img(src, w.t);
   const all = [...w.steps, src];
@@ -83,6 +86,13 @@ const CAT_COLORS = {
 const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.svg" alt="" aria-hidden="true">`
   : `<span class="cat-ico ring" aria-hidden="true"><i class="ph-light ph-${CAT_ICONS[d]}"></i></span>`;
 const catTag = w => CAT_ICONS[w.disc] ? `<a class="cat-tag" href="#galleria/${slugOf(w.disc)}"${CAT_COLORS[w.disc] ? ` style="--c:${CAT_COLORS[w.disc]}"` : ''}>${CAT_COLORS[w.disc] ? `<img src="assets/categorie/${slugOf(w.disc)}.svg" alt="" aria-hidden="true">` : `<i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>`}${w.disc}</a>` : '';
+// "Risposta a …" under the title of a work that answers another one
+const replyLine = w => byId[w.replyTo] ? `<a class="reply-to" href="#post/${w.replyTo}"><i class="ph-light ph-arrow-bend-down-right"></i>Risposta a <b>${byId[w.replyTo].t}</b></a>` : '';
+// the chain of works answering a work, and the answers to those (up to 4 levels)
+const artReplies = (id, depth = 0) => WORKS.filter(r => r.replyTo === id && canSee(r)).map(r => {
+  const sub = depth < 3 ? artReplies(r.id, depth + 1) : '';
+  return `<li><a class="ar-item" href="#post/${r.id}">${img(thumbOf(r), '')}<span><strong>${r.t}</strong><small>${ARTISTS[r.a].name}</small></span></a>${sub ? `<ul>${sub}</ul>` : ''}</li>`;
+}).join('');
 function postX(w) {
   return `<article class="xpost" data-thread="${w.id}">
     <div class="x-ava">${avatarRing(w.a)}${w.co ? avatarRing(w.co, 'co') : ''}</div>
@@ -92,6 +102,7 @@ function postX(w) {
         ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
       </div>
       <p class="x-title">${w.t}</p>
+      ${replyLine(w)}
       <p class="x-tags">${catTag(w)}${audTag(w)}</p>
       <p class="x-desc">${w.desc}</p>
       ${mediaFrame(w)}
@@ -158,6 +169,7 @@ function renderThread(id, focus) {
           ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
         </div>
         <p class="x-title">${w.t}</p>
+        ${replyLine(w)}
       <p class="x-tags">${catTag(w)}${audTag(w)}</p>
         <p class="x-desc open">${w.desc}</p>
         ${mediaFrame(w)}
@@ -165,6 +177,11 @@ function renderThread(id, focus) {
         ${xActions(w, true)}
       </div>
     </article>
+    ${(() => { const chain = artReplies(w.id), n = WORKS.filter(r => r.replyTo === w.id && canSee(r)).length; return `<section class="art-replies">
+      <h3><i class="ph-light ph-paint-brush-broad"></i>Risposte d'arte${n ? `<span> · ${n}</span>` : ''}</h3>
+      ${chain ? `<ul class="ar-chain">${chain}</ul>` : '<p class="x-note">Nessuna ancora. Rispondi con una tua opera: comparirà qui.</p>'}
+      <button class="btn-ghost ar-btn" data-act="art-reply" data-id="${w.id}"><i class="ph-light ph-arrow-bend-down-right"></i>Rispondi con un'opera</button>
+    </section>`; })()}
     <form class="x-compose ${critic ? 'critic' : ''}" data-reply="${w.id}" data-stars="0">
       <img class="x-me" src="${avatar('me')}" alt="">
       <label for="replyInput" class="sr-only">${critic ? 'La tua recensione' : 'La tua risposta'}</label>
@@ -255,7 +272,7 @@ function reelHtml(w) {
   const src = w.ts ? w.img : pic(w.id, 720, 1280); // portrait crop of the same photo (sharp on a phone, a third lighter than 900x1600)
   const canFollow = w.a !== 'me' && !followed.has(w.a);
   return `<section class="reel" data-id="${w.id}" data-type="${w.type}" aria-label="${w.t} \u2014 ${a.name}">
-    <div class="reel-media ph-img" data-dbl="${w.id}">${img(src, w.t).replace(' src="', ' data-src="')}</div>
+    <div class="reel-media ph-img" data-dbl="${w.id}">${(w.pair ? `<div class="dip dip-v">${pairOf(w).map(p => img(p.ts ? p.img : pic(p.id, 720, 640), p.t)).join('')}</div>` : img(src, w.t)).replace(/ src="/g, ' data-src="')}</div>
     <span class="reel-shade" aria-hidden="true"></span>
     ${w.type !== 'image' ? '<span class="reel-paused" aria-hidden="true"><i class="ph-fill ph-play"></i></span><div class="progress"><span></span></div>' : ''}
     <div class="reel-rail">

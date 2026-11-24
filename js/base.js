@@ -208,6 +208,17 @@ FEED.splice(2, 0, byId.w1);
 FEED.splice(6, 0, byId.w9);
 // and spread the per-category samples through it, one every other post
 FEED.filter(w => w.mix).forEach((w, k) => { FEED.splice(FEED.indexOf(w), 1); FEED.splice(1 + k * 2, 0, w); });
+// Risposte d'arte: a work can answer another one (a small sample chain, and one more pair)
+const byTitle = t => FEED.find(w => w.t === t);
+[['Muro di via Allende', 'Crepa n. 3'], ['Neon su Rua Augusta', 'Muro di via Allende'], ['Cappotto di rete', 'Sedia per chi aspetta']]
+  .forEach(([r, o]) => { if (byTitle(r) && byTitle(o)) byTitle(r).replyTo = byTitle(o).id; });
+// a sample dittico: two works side by side, posted as one (added last, so the other ids stay the same)
+{
+  const d = addWork({ t: 'Due porti', a: 'nicolo', type: 'image', disc: 'Pittura e illustrazione', w: 1600, h: 1000 });
+  d.pair = [byTitle('Porto di Catania, ore 6').id, byTitle('Crepa n. 3').id];
+  d.desc = 'Lo stesso mare visto due volte, a dieci anni di distanza.';
+  FEED.splice(5, 0, d);
+}
 
 const COUNTRIES = [
   { it: 'Thailandia', en: 'Thailand', c: [100.9, 15.2] },

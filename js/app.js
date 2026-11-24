@@ -168,6 +168,8 @@ document.addEventListener('click', e => {
     dblEl = dbl;
     dblTimer = setTimeout(() => {
       dblTimer = null;
+      const tapped = byId[dbl.dataset.dbl];
+      if (dbl.matches('.x-media') && tapped?.pair) { const [a, b] = pairOf(tapped); if (a && b) openDiptych(a, b); return; } // a dittico: its two works side by side
       if (dbl.matches('.x-media')) { // Sfoglia: the feed as an exhibition, from this work
         const works = feedList();
         openShow({ works, name: T('Sfoglia'), start: Math.max(0, works.findIndex(w => w.id === dbl.dataset.dbl)) });
@@ -297,6 +299,8 @@ document.addEventListener('click', e => {
       // three dots: Salva, Segnala, Non mi interessa (your own works: Salva, Elimina)
       openSheet(`<h3>${w.t}</h3><div class="action-list">
         <button data-act="save" data-id="${w.id}"><i class="${saved.has(w.id) ? 'ph-fill' : 'ph-light'} ph-bookmark-simple"></i>${saved.has(w.id) ? 'Rimuovi dai salvati' : 'Salva'}</button>
+        <button data-act="art-reply" data-id="${w.id}"><i class="ph-light ph-arrow-bend-down-right"></i>Rispondi con un'opera</button>
+        ${w.pair ? '' : `<button data-act="pair" data-id="${w.id}"><i class="ph-light ph-columns"></i>Metti accanto a…</button>`}
         ${w.a === 'me'
           ? `<button data-act="edit-work" data-id="${w.id}"><i class="ph-light ph-pencil-simple"></i>Modifica opera</button>
              <button class="danger" data-act="delete" data-id="${w.id}"><i class="ph-light ph-trash"></i>Elimina opera</button>`
@@ -342,6 +346,9 @@ document.addEventListener('click', e => {
     }
     case 'vista-step': stepVista(+el.dataset.dir); break;
     case 'edit-work': openPublish(w); break;
+    case 'art-reply': closeSheet(() => openPublish(null, el.dataset.id)); break;
+    case 'pair': closeSheet(() => openPairPicker(w)); break;
+    case 'pair-with': closeSheet(() => openDiptych(byId[el.dataset.id], byId[el.dataset.b], true)); break;
     case 'pick-star': {
       const f = el.closest('form'), n = +el.dataset.v;
       f.dataset.stars = f.dataset.stars == n ? 0 : n; // tap the same star again to clear
@@ -405,6 +412,7 @@ document.addEventListener('submit', e => {
   if (f.id === 'colForm') { e.preventDefault(); submitCol(); return; }
   if (f.id === 'problemForm') { e.preventDefault(); submitProblem(); return; }
   if (f.id === 'reportForm') { e.preventDefault(); submitReport(f); return; }
+  if (f.id === 'dipForm') { e.preventDefault(); submitDiptych(f); return; }
   if (f.classList.contains('composer')) {
     e.preventDefault();
     const input = f.querySelector('input');
