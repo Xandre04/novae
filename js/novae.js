@@ -124,6 +124,8 @@ async function initGlobe() {
     const drawFrame = () => {
       proj.rotate(globe.rot).scale(globe.scale);
       out.hidden = globe.scale < WORLD * 1.15;
+      const fade = Math.max(0, Math.min(1, (globe.scale / WORLD - 1.1) / .4)); // the places fade with the zoom: gone at world level
+      poiG.attr('opacity', fade).style('pointer-events', fade < .5 ? 'none' : null);
       grat.attr('d', path); coast.attr('d', path); bord.attr('d', path);
       const cur = feats.find(f => f.properties.name === COUNTRIES[globe.idx].en);
       sel.datum(cur).attr('d', cur ? path : null);
@@ -214,5 +216,7 @@ function selectCountry(i) {
   updateCountryUi();
   if (!globe.ready) return;
   globe.showPois();
+  const sel = document.querySelector('#globe .sel'); // a red glow pulses around the new country, then stays soft
+  if (sel) { sel.classList.toggle('pulse', false); void sel.getBoundingClientRect(); sel.classList.toggle('pulse', true); }
   flyTo(...zoomFor(COUNTRIES[globe.idx]));
 }

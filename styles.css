@@ -485,7 +485,13 @@ body[data-screen="disciplina"] .rail { right: max(4px, calc(50% - 560px + 2px));
 #globe .land { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-linejoin: round; }
 #globe .hit { fill: transparent; stroke: none; cursor: pointer; }
 #globe .hit:hover { fill: rgba(236,235,230,.05); }
-#globe .sel { fill: rgba(179,18,47,.12); stroke: var(--accent-hi); stroke-width: 2.5; stroke-linejoin: round; }
+#globe .sel { fill: rgba(179,18,47,.12); stroke: var(--accent-hi); stroke-width: 2.5; stroke-linejoin: round; filter: drop-shadow(0 0 5px rgba(214, 28, 64, .55)); }
+#globe .sel.pulse { animation: country-glow 1.6s var(--ease-out); }
+@keyframes country-glow {
+  0% { filter: drop-shadow(0 0 0 rgba(214, 28, 64, 0)); fill: rgba(179, 18, 47, .12); }
+  35% { filter: drop-shadow(0 0 16px rgba(214, 28, 64, .95)) drop-shadow(0 0 4px rgba(255, 120, 140, .8)); fill: rgba(179, 18, 47, .38); }
+}
+@media (prefers-reduced-motion: reduce) { #globe .sel.pulse { animation: none; } }
 #globe .mk { pointer-events: none; }
 .globe-msg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-3); font-family: var(--hand); pointer-events: none; }
 .country-nav { display: flex; align-items: center; gap: 6px; margin-top: 36px; width: min(100%, 440px); }

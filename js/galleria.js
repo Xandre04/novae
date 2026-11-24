@@ -15,12 +15,15 @@ function renderStile() {
 
 // In Galleria the stars of the sky that sit behind a category light up in its colour, and change as the list scrolls
 let skyRaf = 0;
+// Inside a category page every star takes the category's colour
 function tintSky() {
   skyRaf = 0;
-  const rows = document.body.dataset.screen === 'galleria' ? $$('#disciplines .disc').map(r => [r.getBoundingClientRect(), r.style.getPropertyValue('--c')]) : [];
+  const scr = document.body.dataset.screen;
+  const rows = scr === 'galleria' ? $$('#disciplines .disc').map(r => [r.getBoundingClientRect(), r.style.getPropertyValue('--c')]) : [];
+  const whole = scr === 'disciplina' ? CAT_COLORS[DISCIPLINES.find(d => slugOf(d) === cur.param) || CINEMA] : '';
   $$('#sky svg').forEach(s => {
     const b = s.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2;
-    const c = rows.find(([r]) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom)?.[1];
+    const c = whole || rows.find(([r]) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom)?.[1];
     s.classList.toggle('tinted', !!c);
     s.style.color = c || '';
   });
@@ -50,6 +53,7 @@ function renderCine(slug) {
   const name = DISCIPLINES.find(d => slugOf(d) === slug) || CINEMA; // unknown or old links (#galleria/cinematografia) -> Cinema e video
   const root = $('#cine');
   document.title = `${name} | NOVAE`;
+  queueSky(); // the stars take the category's colour
   if (name !== CINEMA) {
     // every other category: its works in a grid, or "In arrivo" while it's empty
     const ws = WORKS.filter(w => w.disc === name && canSee(w)).sort(byRecent);
