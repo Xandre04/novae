@@ -118,12 +118,17 @@ async function initGlobe() {
     // tap areas; both come back once it stops. One redraw per frame at most.
     const out = document.createElement('button'); // back to the whole world, when zoomed in
     out.className = 'globe-out icon-btn'; out.dataset.act = 'globe-out'; out.setAttribute('aria-label', 'Torna al globo');
-    out.innerHTML = '<i class="ph-light ph-globe-hemisphere-west"></i>'; out.hidden = true;
+    // one button, two jobs: zoomed in it goes back to the world, at world level it zooms in on the chosen country
     $('.globe-wrap').append(out);
     globe.feats = feats;
     const drawFrame = () => {
       proj.rotate(globe.rot).scale(globe.scale);
-      out.hidden = globe.scale < WORLD * 1.15;
+      const zoomed = globe.scale >= WORLD * 1.15;
+      if (out.dataset.zoomed !== String(zoomed)) {
+        out.dataset.zoomed = zoomed; out.dataset.act = zoomed ? 'globe-out' : 'globe-in';
+        out.setAttribute('aria-label', zoomed ? 'Torna al globo' : 'Avvicinati al paese');
+        out.innerHTML = `<i class="ph-light ph-${zoomed ? 'globe-hemisphere-west' : 'magnifying-glass-plus'}"></i>`;
+      }
       const fade = Math.max(0, Math.min(1, (globe.scale / WORLD - 1.1) / .4)); // the places fade with the zoom: gone at world level
       poiG.attr('opacity', fade).style('pointer-events', fade < .5 ? 'none' : null);
       grat.attr('d', path); coast.attr('d', path); bord.attr('d', path);
@@ -190,8 +195,10 @@ async function initGlobe() {
 function zoomFor(c) {
   const to = [-c.c[0], -c.c[1], 0];
   const p = d3.geoOrthographic().scale(WORLD).translate([270, 270]).clipAngle(90).rotate(to);
-  const f = globe.feats.find(x => x.properties.name === c.en);
-  let [[x0, y0], [x1, y1]] = f ? d3.geoPath(p).bounds(f) : [[270, 270], [270, 270]];
+  let f = globe.feats.find(x => x.properties.name === c.en);
+  if (f?.geometry.type === 'MultiPolygon') // only the land near the country's centre: France without French Guiana, etc.
+    f = { type: 'Feature', geometry: { type: 'MultiPolygon', coordinates: f.geometry.coordinates.filter(poly => d3.geoDistance(d3.geoCentroid({ type: 'Polygon', coordinates: poly }), c.c) < .3) } };
+  let [[x0, y0], [x1, y1]] = f?.geometry.coordinates.length ? d3.geoPath(p).bounds(f) : [[270, 270], [270, 270]];
   (POIS[c.it] || []).forEach(q => { const [x, y] = p(q.ll); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
   return [to, WORLD * Math.max(1, Math.min(9, 290 / Math.max(x1 - x0, y1 - y0, 1)))];
 }
@@ -210,6 +217,7 @@ function flyTo(to, scale) {
   });
 }
 function zoomOut() { if (globe.ready) flyTo(globe.rot, WORLD); }
+function zoomIn() { if (globe.ready) flyTo(...zoomFor(COUNTRIES[globe.idx])); }
 function selectCountry(i) {
   globe.idx = (i + COUNTRIES.length) % COUNTRIES.length;
   prefs.country = globe.idx; savePrefs();

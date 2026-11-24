@@ -253,6 +253,7 @@ document.addEventListener('click', e => {
     case 'show': openShow(showList); break;
     case 'cmp': break;
     case 'globe-out': zoomOut(); break;
+    case 'globe-in': zoomIn(); break;
     case 'car-step': { // a mouse has no sideways swipe: the arrows move the carousel one slide
       e.preventDefault();
       const car = el.parentElement.querySelector('.car');
