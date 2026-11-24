@@ -159,19 +159,29 @@ async function initGlobe() {
       clearTimeout(idleT); idleT = setTimeout(settle, 200);
     };
     globe.draw = draw;
+    // zoom by hand: pinch with two fingers, or the mouse wheel / a trackpad pinch; from the whole world to 9x
+    const setScale = s => { globe.anim?.stop(); globe.scale = Math.max(WORLD, Math.min(WORLD * 9, s)); draw(); };
+    const gap = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    let pinch = null, pinched = false; // while two fingers pinch, the globe doesn't spin
+    const el = svg.node();
+    el.addEventListener('touchstart', e => { if (e.touches.length === 2) { pinch = { d: gap(e.touches) || 1, s: globe.scale }; pinched = true; globe.anim?.stop(); } }, { passive: true });
+    el.addEventListener('touchmove', e => { if (pinch && e.touches.length === 2) { e.preventDefault(); setScale(pinch.s * gap(e.touches) / pinch.d); } }, { passive: false });
+    el.addEventListener('touchend', e => { if (e.touches.length < 2) pinch = null; if (!e.touches.length) pinched = false; });
+    el.addEventListener('wheel', e => { e.preventDefault(); setScale(globe.scale * Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0015))); }, { passive: false });
     // drag to spin; on release it keeps going and slows down (momentum)
     const spin = (dx, dy) => { globe.rot = [globe.rot[0] + dx, Math.max(-70, Math.min(70, globe.rot[1] + dy)), 0]; draw(); };
     let vel = [0, 0], lastT = 0; // degrees per ms
     svg.call(d3.drag().clickDistance(4)
       .on('start', () => { globe.anim?.stop(); vel = [0, 0]; lastT = performance.now(); })
       .on('drag', e => {
+        if (pinched) return;
         const k = 100 / proj.scale(), dx = e.dx * k, dy = -e.dy * k, now = performance.now(), dt = Math.max(8, now - lastT);
         lastT = now;
         vel = [vel[0] * .4 + dx / dt * .6, vel[1] * .4 + dy / dt * .6]; // smoothed, so one jittery event doesn't fling it
         spin(dx, dy);
       })
       .on('end', () => {
-        if (reduceMotion || performance.now() - lastT > 90) return; // the finger stopped before lifting: no fling
+        if (pinched || reduceMotion || performance.now() - lastT > 90) return; // the finger stopped before lifting: no fling
         const cap = v => Math.max(-1.2, Math.min(1.2, v));
         vel = vel.map(cap);
         let prev = 0;
