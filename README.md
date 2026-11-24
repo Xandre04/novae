@@ -75,8 +75,6 @@ NOVAE si installa dal sito, senza store: icona sulla schermata Home, schermo int
   - **Prima e dopo**: la bozza accanto all'opera finita, con una barra da trascinare per confrontarle;
   - **Processo**: da 2 a 6 foto delle fasi, che scorrono come un piccolo video e finiscono sull'opera;
   - **Insieme a**: un secondo artista; l'opera compare su tutti e due i profili.
-- **Risposte d'arte**: dai tre puntini o dalla pagina del post, *Rispondi con un'opera*. La risposta mostra "Risposta a …" e sotto l'opera originale compare la catena delle risposte (anche le risposte alle risposte).
-- **Dittico**: dai tre puntini, *Metti accanto a…* e scegli una seconda opera (tue, salvate o dal feed): le vedi affiancate a tutto schermo, poi scegli se solo guardarle o pubblicarle come dittico.
 - **Guardare un profilo come una mostra**: *Mostra*, sopra le opere. Un'opera alla volta a schermo intero, con cornice e targhetta (titolo, categoria, anno); la parete prende il colore dell'opera. Doppio tocco o due dita per avvicinarsi e vedere i dettagli.
 - **Firmare**: in *Modifica profilo* si disegna la firma col dito; compare sulle targhette delle proprie opere nella Mostra e sul biglietto da visita.
 - **Commentare un punto dell'opera**: sotto la risposta, *Indica un punto dell'opera*, poi tocca l'immagine. Nel commento compare un "Qui", come i minuti nei commenti di YouTube: toccandolo, un cerchio lampeggia per un attimo su quel punto. Sull'opera non resta disegnato niente.

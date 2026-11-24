@@ -231,12 +231,9 @@ function compressImage(file, max = 1080) {
 }
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 // new work, or (with w) edit one of yours: same form, prefilled
-// replyTo: the id of the work this one answers (Risposte d'arte)
-function openPublish(w, replyTo) {
-  const to = byId[replyTo];
-  openSheet(`<h3>${w ? 'Modifica opera' : to ? 'Rispondi con un\'opera' : 'Nuova opera'}</h3>
-    <form class="pub" id="pubForm" novalidate ${w ? `data-edit="${w.id}" data-img="${w.img}" data-w="${w.w}" data-h="${w.h}"` : ''} ${to ? `data-reply-to="${to.id}"` : ''}>
-      ${to ? `<p class="pub-reply"><i class="ph-light ph-arrow-bend-down-right"></i>In risposta a «${esc(to.t)}» di ${ARTISTS[to.a].name}</p>` : ''}
+function openPublish(w) {
+  openSheet(`<h3>${w ? 'Modifica opera' : 'Nuova opera'}</h3>
+    <form class="pub" id="pubForm" novalidate ${w ? `data-edit="${w.id}" data-img="${w.img}" data-w="${w.w}" data-h="${w.h}"` : ''}>
       ${!w && typeOf('me') === 'utente' ? '<p class="pub-note"><i class="ph-light ph-lock-simple"></i>Come utente, le tue opere le vede solo chi ti segue.</p>' : ''}
       <label class="pub-drop ${w ? 'has' : ''}" id="pubDrop"><input type="file" accept="image/*" id="pubFile" aria-label="Immagine dell'opera"><img id="pubPrev" alt="" ${w ? `src="${w.img}"` : 'hidden'}><span><i class="ph-light ph-image-square"></i>Scegli un'immagine</span>${w ? '<em class="pub-change">Cambia immagine</em>' : ''}</label>
       <div class="field"><label for="pubT">Titolo</label><input id="pubT" maxlength="60" placeholder="Come si chiama?" autocomplete="off" value="${w ? esc(w.t) : ''}"></div>
@@ -319,7 +316,6 @@ function submitPublish(f) {
     likes: 0, rating: 0, views: 0, comments: 0, price: 0, year: new Date().getFullYear(), ts: Date.now(),
     audience: typeOf('me') === 'utente' ? 'followers' : 'public', // users publish only for their followers
     before: pubExtra.before, steps: pubExtra.steps, co: $('#pubCo').value || undefined, cm: pubCm(), making: pubMaking || undefined,
-    replyTo: f.dataset.replyTo || undefined,
   };
   MINE.unshift(w);
   if (!saveMine()) { MINE.shift(); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: elimina una tua opera e riprova.'; return; }

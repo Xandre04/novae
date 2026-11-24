@@ -111,7 +111,7 @@ function renderDetail(id) {
   const related = WORKS.filter(x => x !== w && (x.genre ? x.genre === w.genre : x.disc === w.disc || x.a === w.a)).slice(0, 6);
   $('#detail').dataset.id = w.id;
   $('#detail').innerHTML = `
-    <div class="player ph-img ${w.before || w.steps || w.pair ? 'rich' : ''}" data-dbl="${w.id}">
+    <div class="player ph-img ${w.before || w.steps ? 'rich' : ''}" data-dbl="${w.id}">
       <button class="back icon-btn" data-act="back" data-fallback="#scopri" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
       ${workMedia(w, w.img)}
       ${w.type !== 'image' ? `<button class="vista-play" data-act="play" aria-label="Riproduci"><i class="ph-light ph-play"></i></button><div class="progress"><span></span></div>` : ''}
