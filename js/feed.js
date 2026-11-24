@@ -255,7 +255,7 @@ function reelHtml(w) {
   const src = w.ts ? w.img : pic(w.id, 720, 1280); // portrait crop of the same photo (sharp on a phone, a third lighter than 900x1600)
   const canFollow = w.a !== 'me' && !followed.has(w.a);
   return `<section class="reel" data-id="${w.id}" data-type="${w.type}" aria-label="${w.t} \u2014 ${a.name}">
-    <div class="reel-media ph-img" data-dbl="${w.id}">${(hasMaking(w) ? carousel(w, img(src, w.t)) : img(src, w.t)).replace(/ src="/g, ' data-src="')}</div>
+    <div class="reel-media ph-img" data-dbl="${w.id}">${img(src, w.t).replace(' src="', ' data-src="')}</div>
     <span class="reel-shade" aria-hidden="true"></span>
     ${w.type !== 'image' ? '<span class="reel-paused" aria-hidden="true"><i class="ph-fill ph-play"></i></span><div class="progress"><span></span></div>' : ''}
     <div class="reel-rail">
@@ -277,6 +277,8 @@ function reelHtml(w) {
 }
 // Only the reels near the one on screen hold their pictures (the pictures carry data-src): on a phone, 40 full-screen
 // images at once ran out of memory and Safari closed the page. Near ones load, far ones are let go.
+// (No "Correlati" carousel in Scorri: a sideways snapping scroller inside the vertical snapping reels crashed iPhone Safari.
+// They stay in Sfoglia.)
 function windowReels(reels, at) {
   $$('.reel', reels).forEach((r, j) => {
     const d = Math.abs(j - at);

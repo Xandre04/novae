@@ -42,7 +42,11 @@ function route() {
   setArc(false);
   closeSheet();
   $('#search').hidden = true;
-  if (document.body.dataset.screen === 'vista' && screen !== 'vista') { reelObserver?.disconnect(); $('#vista').innerHTML = ''; } // let go of the reels' pictures
+  // leaving Scorri or Sfoglia lets go of their pictures (both are drawn again on the way back): two full feeds in memory
+  // at once were too much for iPhone Safari
+  const was = document.body.dataset.screen;
+  if (was === 'vista' && screen !== 'vista') { reelObserver?.disconnect(); $('#vista').innerHTML = ''; }
+  if (was === 'scopri' && screen !== 'scopri') $('#feed').innerHTML = '';
   $$('.screen').forEach(s => s.classList.toggle('active', s.dataset.screen === screen));
   document.body.dataset.screen = screen;
   document.title = name === 'hub' ? 'NOVAE' : `${TITLES[name] || ''} | NOVAE`;
