@@ -212,7 +212,7 @@ body[data-screen="invito"] .dock, body[data-screen="hub"] .dock { display: none;
   position: absolute; left: 50%; top: -5.5px; width: 88px; height: 44px; /* a true half circle: height = radius */ transform: translateX(-50%);
   border: var(--stroke) solid var(--line); border-bottom: 0; border-radius: 44px 44px 0 0; background: var(--bg-2);
 }
-.dock-side { position: absolute; bottom: max(0px, calc(env(safe-area-inset-bottom) - 20px)); /* low and to the outside of the bar, clear of the iPhone home bar */ width: 48px; height: 48px; display: grid; place-items: center; font-size: 30px; transition: transform .2s var(--ease); }
+.dock-side { position: absolute; bottom: calc((var(--dock-h) - 36px - 48px) / 2); /* centred in the visible bar (below its line), the same on iPhone and Android */ width: 48px; height: 48px; display: grid; place-items: center; font-size: 30px; transition: transform .2s var(--ease); }
 .dock-side:active { transform: scale(.9); }
 .dock-search { left: 12px; }
 .dock-menu { right: 12px; }
