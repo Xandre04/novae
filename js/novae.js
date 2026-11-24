@@ -73,9 +73,9 @@ function updateCountryUi() {
 async function initGlobe() {
   updateCountryUi();
   if (globe.ready || globe.loading) return;
-  if (!window.d3 || !window.topojson) { $('#globeMsg').textContent = 'Mappa non disponibile offline'; return; }
   globe.loading = true;
   try {
+    await Promise.all([loadScript(LIBS.d3), loadScript(LIBS.topojson)]);
     const world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(r => r.json());
     const feats = topojson.feature(world, world.objects.countries).features;
     const land = topojson.mesh(world, world.objects.countries, (a, b) => a === b);
@@ -181,7 +181,7 @@ async function initGlobe() {
     selectCountry(globe.idx); // zoom in on the country picked last time
     $('#globeMsg').textContent = '';
   } catch {
-    $('#globeMsg').textContent = 'Non riesco a caricare il globo';
+    $('#globeMsg').textContent = navigator.onLine ? 'Non riesco a caricare il globo' : 'Mappa non disponibile offline';
   } finally { globe.loading = false; }
 }
 // where to look for a country: centred on it, zoomed so the country and its places fill about half the globe

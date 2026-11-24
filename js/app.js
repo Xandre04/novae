@@ -132,8 +132,19 @@ function burst(host, e) {
 document.addEventListener('load', e => {
   if (e.target.tagName === 'IMG') { e.target.classList.add('loaded'); e.target.parentElement?.classList.add('loaded'); }
 }, true);
+// a picture that can't load: stop the shimmer and leave a quiet empty frame instead of a broken-image icon
+document.addEventListener('error', e => {
+  if (e.target.tagName === 'IMG') { e.target.classList.add('broken'); e.target.parentElement?.classList.add('loaded'); }
+}, true);
+addEventListener('offline', () => toast('Sei offline: vedi quello che hai già aperto'));
+addEventListener('online', () => toast('Di nuovo online'));
 
 document.addEventListener('click', e => {
+  // a link to the page you're already on (e.g. Sfoglia while in Sfoglia) takes you back to the top
+  const here = e.target.closest('a[href^="#"]');
+  if (here && here.getAttribute('href') === location.hash && !here.closest('#sheet') && !e.target.closest('[data-dbl]')) {
+    e.preventDefault(); scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' }); return;
+  }
   // choosing the point of a comment: a tap on the work marks it instead of opening it
   const ptMedia = document.body.classList.contains('pt-picking') && e.target.closest('#thread .x-media');
   if (ptMedia) { e.preventDefault(); setPt(ptMedia, e); return; }

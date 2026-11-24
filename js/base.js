@@ -46,6 +46,19 @@ if (LANG === 'en' && window.NOVAE_I18N) {
   });
   walk(document.body); walk(document.querySelector('title')); observe();
 }
+// Third-party libraries load the first time they're needed (the globe, a real QR code), not at every start
+const LIBS = {
+  d3: 'https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js',
+  topojson: 'https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js',
+  qrcode: 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js',
+};
+const loaded = {};
+const loadScript = src => loaded[src] ||= new Promise((res, rej) => {
+  const s = document.createElement('script');
+  s.src = src; s.onload = res;
+  s.onerror = () => { delete loaded[src]; s.remove(); rej(new Error(src)); }; // offline: try again next time
+  document.head.append(s);
+});
 const rng = seed => { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); };
 const pic = (seed, w, h, gray) => `https://picsum.photos/seed/novae-${seed}/${w}/${h}${gray ? '?grayscale' : ''}`;
 const img = (src, alt = '', cls = '') => `<img class="fade ${cls}" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
@@ -142,7 +155,8 @@ function addWork(o) {
   if (o.demo === 'cmp') w.before = stage(3, true);
   if (o.demo === 'steps') w.steps = [stage(10, true), stage(4, true), stage(1, true), stage(2)];
   // "Correlati": what's behind the work, one swipe to the side of the post (every other sample work)
-  if (!o.demo && o.type !== 'audio' && wid % 2 === 0) w.making = [{ src: stage(6, true), cap: 'Bozza' }, { src: pic('studio-' + w.id, o.w || 1200, o.h || 900), cap: 'Nello studio' }];
+  const mw = 720, mh = Math.round(720 * (o.h || 900) / (o.w || 1200)); // the post's frame size, not full screen
+  if (!o.demo && o.type !== 'audio' && wid % 2 === 0) w.making = [{ src: `${pic(w.id, mw, mh, true)}&blur=6`, cap: 'Bozza' }, { src: pic('studio-' + w.id, mw, mh), cap: 'Nello studio' }];
   WORKS.push(w);
   byId[w.id] = w;
   return w;

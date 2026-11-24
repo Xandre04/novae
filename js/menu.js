@@ -5,8 +5,10 @@
 /* ---------------- 1. Gate ---------------- */
 // A real QR (dark on light, so phone cameras read it) that opens NOVAE with the invite code filled in
 const inviteLink = code => `${location.origin}${location.pathname}?invito=${encodeURIComponent(code)}`;
-function drawInviteQR(c, text) {
-  if (!window.qrcode) return drawQR(c); // library didn't load (offline): fall back to the drawn one
+function drawInviteQR(c, text) { // the QR library loads the first time a real code is needed; offline: the drawn one
+  return loadScript(LIBS.qrcode).then(() => paintQR(c, text), () => drawQR(c));
+}
+function paintQR(c, text) {
   const q = qrcode(0, 'H'); // high error correction: the logo in the middle hides a few modules
   q.addData(text); q.make();
   const N = q.getModuleCount(), pad = 3, m = c.width / (N + pad * 2), ctx = c.getContext('2d');

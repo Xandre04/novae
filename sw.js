@@ -1,8 +1,9 @@
 // NOVAE service worker: network first, so every deploy shows up right away; the cache is only the offline fallback.
 // Our own files are always revalidated with the server (cache: 'no-cache' -> a quick 304 when nothing changed),
 // so there are no ?v= version numbers to bump: a push is enough.
-// ponytail: the cache grows with every image seen (picsum); add a size cap or skip third-party images if it gets heavy.
-const CACHE = 'novae';
+// Pictures from other sites (the sample works) go in their own cache, trimmed to the last IMG_MAX seen.
+const CACHE = 'novae', IMG_CACHE = 'novae-img', IMG_MAX = 150;
+const trim = c => c.keys().then(k => Promise.all(k.slice(0, Math.max(0, k.length - IMG_MAX)).map(r => c.delete(r)))); // oldest first
 const PUSH_ICON = './assets/app/icon-192.png';
 // the small icon in Android's status bar, next to the clock: white on transparent, Android only keeps the shape
 const PUSH_BADGE = './assets/app/badge-96.png';
@@ -16,7 +17,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   // drop the old numbered caches (novae-v1 ... novae-v31)
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== IMG_CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', e => {
@@ -26,8 +27,8 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     (own ? fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(req)).then(res => {
       if (res.ok || res.type === 'opaque') {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(req, copy));
+        const copy = res.clone(), pic = !own && req.destination === 'image';
+        caches.open(pic ? IMG_CACHE : CACHE).then(c => c.put(req, copy).then(() => pic && trim(c)));
       }
       return res;
     }).catch(() => caches.match(req, { ignoreSearch: true })

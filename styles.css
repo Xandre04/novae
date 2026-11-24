@@ -1204,3 +1204,6 @@ body.pt-picking #thread .x-media { cursor: crosshair; outline: 2px dashed var(--
 .poi-type > span { width: 100%; font-weight: 400; color: var(--ink-3); font-size: 14px; }
 .poi-sheet { display: grid; gap: 14px; }
 .poi-sheet .country-artists { justify-content: flex-start; }
+
+/* a picture that couldn't load: hidden, its frame stays quiet (app.js) */
+img.broken { visibility: hidden; }

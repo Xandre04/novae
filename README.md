@@ -167,7 +167,7 @@ novae/
 │   └── app.js              router, eventi e avvio (per ultimo)
 ├── i18n.js                 traduzioni in inglese dell'interfaccia
 ├── manifest.webmanifest    nome, icone e colori dell'app installata
-├── sw.js                   service worker: funziona anche offline e mostra le notifiche
+├── sw.js                   service worker: offline (con le ultime 150 immagini) e notifiche
 ├── assets/
 │   ├── app/                icone dell'app (schermata Home)
 │   ├── svg/                logo e icone delle sezioni (SVG)
