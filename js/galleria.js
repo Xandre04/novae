@@ -6,11 +6,29 @@
 function renderStile() {
   $('#disciplines').innerHTML = DISCIPLINES.map(d => {
     const ws = WORKS.filter(w => w.disc === d && canSee(w));
-    return `<a class="disc ${ws.length ? '' : 'empty-disc'}" href="#galleria/${slugOf(d)}">
+    return `<a class="disc ${ws.length ? '' : 'empty-disc'}" href="#galleria/${slugOf(d)}" style="--c:${CAT_COLORS[d] || ''}">
       ${catIcon(d)}<h2>${d}</h2>
     </a>`;
   }).join('');
+  queueSky(); // the stars behind each category take its colour
 }
+
+// In Galleria the stars of the sky that sit behind a category light up in its colour, and change as the list scrolls
+let skyRaf = 0;
+function tintSky() {
+  skyRaf = 0;
+  const rows = document.body.dataset.screen === 'galleria' ? $$('#disciplines .disc').map(r => [r.getBoundingClientRect(), r.style.getPropertyValue('--c')]) : [];
+  $$('#sky svg').forEach(s => {
+    const b = s.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2;
+    const c = rows.find(([r]) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom)?.[1];
+    s.classList.toggle('tinted', !!c);
+    s.style.color = c || '';
+  });
+}
+const queueSky = () => { if (!skyRaf) skyRaf = requestAnimationFrame(tintSky); };
+addEventListener('scroll', () => { if (document.body.dataset.screen === 'galleria') queueSky(); }, { passive: true });
+addEventListener('resize', queueSky);
+addEventListener('hashchange', queueSky); // leaving Galleria turns them grey again
 
 /* ---------------- 7. Disciplina ---------------- */
 const cineState = { tab: prefs.cineTab, sort: prefs.cineSort, expanded: null, sortOpen: false, center: { Novae: 3, Thriller: 3, Storico: 3 } };

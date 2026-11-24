@@ -35,6 +35,15 @@ const workMedia = (w, src) => {
   const all = [...w.steps, src];
   return `<div class="steps" data-k="0">${all.map((s, i) => img(s, i === all.length - 1 ? w.t : '', i ? '' : 'on')).join('')}<span class="steps-tag"><i class="ph-light ph-film-strip"></i>Processo</span><span class="steps-dots" aria-hidden="true">${all.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</span></div>`;
 };
+// "In the making": the work first, then what's behind it; swipe sideways (or the arrows with a mouse), dots below
+const hasMaking = w => !w.before && w.making?.length; // not on "prima e dopo": its bar takes the sideways drag
+const carousel = (w, first) => `<div class="car" data-car="${w.id}">
+    <div class="car-slide">${first}</div>
+    ${w.making.map(m => `<div class="car-slide">${img(m.src, m.cap || '')}<span class="mk-tag"><i class="ph-light ph-film-strip"></i>In the making</span>${m.cap ? `<span class="mk-cap">${m.cap}</span>` : ''}</div>`).join('')}
+  </div>
+  <span class="car-dots" aria-hidden="true">${[0, ...w.making].map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</span>
+  <button class="car-arrow prev" data-act="car-step" data-dir="-1" aria-label="Indietro"><i class="ph-light ph-caret-left"></i></button>
+  <button class="car-arrow next" data-act="car-step" data-dir="1" aria-label="In the making"><i class="ph-light ph-caret-right"></i></button>`;
 // the frame takes the work's own shape: wide works are wide, tall works are tall and narrower
 const mediaFrame = w => {
   const ratio = Math.max(.56, Math.min(1.91, (w.w || 1200) / (w.h || 900)));
@@ -42,7 +51,8 @@ const mediaFrame = w => {
   const style = `style="aspect-ratio:${ratio.toFixed(3)};width:${width}%"`;
   const src = w.ts || w.before || w.steps ? w.img : w.thumb; // the stages are full size, so the finished work matches them
   if (w.before) return `<div class="x-media ph-img" ${style}>${workMedia(w, src)}</div>`; // no link: the bar takes the drag
-  return `<a class="x-media ph-img" href="#vista/${w.id}" data-dbl="${w.id}" ${style} aria-label="Apri ${w.t} a schermo intero">${workMedia(w, src)}${mediaOverlay(w)}</a>`;
+  const main = workMedia(w, src) + mediaOverlay(w);
+  return `<a class="x-media ph-img" href="#vista/${w.id}" data-dbl="${w.id}" ${style} aria-label="Apri ${w.t} a schermo intero">${hasMaking(w) ? carousel(w, main) : main}</a>`;
 };
 // who can see a work: a "utente" publishes only for followers
 const canSee = w => !blocked.has(w.a) && (w.audience !== 'followers' || w.a === 'me' || followed.has(w.a));
@@ -245,7 +255,7 @@ function reelHtml(w) {
   const src = w.ts ? w.img : pic(w.id, 900, 1600); // portrait crop of the same photo
   const canFollow = w.a !== 'me' && !followed.has(w.a);
   return `<section class="reel" data-id="${w.id}" data-type="${w.type}" aria-label="${w.t} \u2014 ${a.name}">
-    <div class="reel-media ph-img" data-dbl="${w.id}">${img(src, w.t)}</div>
+    <div class="reel-media ph-img" data-dbl="${w.id}">${hasMaking(w) ? carousel(w, img(src, w.t)) : img(src, w.t)}</div>
     <span class="reel-shade" aria-hidden="true"></span>
     ${w.type !== 'image' ? '<span class="reel-paused" aria-hidden="true"><i class="ph-fill ph-play"></i></span><div class="progress"><span></span></div>' : ''}
     <div class="reel-rail">

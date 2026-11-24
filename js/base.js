@@ -64,18 +64,18 @@ const coin = () => crop('mercato', 'coin');
 
 /* ---------------- Mock data ---------------- */
 const ARTISTS = {
-  livia:  { name: 'Livia Marchetti',  handle: 'livia.mar',   country: 'Italia',     bio: 'Cortometraggi girati con pellicola scaduta.' },
-  nicolo: { name: 'Nicolò Brancato',  handle: 'brancato',    country: 'Italia',     bio: 'Pittura a olio, grandi formati, porti del sud.' },
-  kitti:  { name: 'Kittipong Srisuk', handle: 'kittip',      country: 'Thailandia', bio: 'Fotografia notturna tra Bangkok e Chiang Mai.' },
-  ploy:   { name: 'Ploy Chaiyasit',   handle: 'ploy.c',      country: 'Thailandia', bio: 'Illustrazione e animazione a mano.' },
-  aiko:   { name: 'Aiko Tanabe',      handle: 'aiko.t',      country: 'Giappone',   bio: 'Documentari brevi sui mestieri che scompaiono.' },
-  ruben:  { name: 'Rubén Aldana',     handle: 'rubenaldana', country: 'Messico',    bio: 'Muralista. Colori pieni, muri lunghi.' },
-  ines:   { name: 'Ines Obi',         handle: 'inesobi',     country: 'Nigeria',    bio: 'Scultura in metallo di recupero.' },
-  mara:   { name: 'Mara Delvecchio',  handle: 'maradv',      country: 'Francia',    bio: 'Musica elettronica e field recording.' },
-  thiago: { name: 'Thiago Moreira',   handle: 'thiagomor',   country: 'Brasile',    bio: 'Thriller a basso budget, luci al neon.' },
-  ananya: { name: 'Ananya Rao',       handle: 'ananya.rao',  country: 'India',      bio: 'Poesia visiva e tipografia.' },
-  giulia: { name: 'Giulia Ferri',     handle: 'giulia.critica', country: 'Italia',  bio: 'Critica. Scrivo di cinema indipendente e pittura contemporanea.', type: 'critico' },
-  teo:    { name: 'Teo Marini',       handle: 'teo.guarda',  country: 'Francia',    bio: 'Guardo, salvo, voto. Non creo (ancora).', type: 'utente' },
+  livia:  { name: 'Livia Marchetti',  handle: 'livia.mar',   country: 'Italia',     bio: 'Cortometraggi girati con pellicola scaduta.', city: 'Roma', ll: [12.5, 41.9] },
+  nicolo: { name: 'Nicolò Brancato',  handle: 'brancato',    country: 'Italia',     bio: 'Pittura a olio, grandi formati, porti del sud.', city: 'Catania', ll: [15.09, 37.5] },
+  kitti:  { name: 'Kittipong Srisuk', handle: 'kittip',      country: 'Thailandia', bio: 'Fotografia notturna tra Bangkok e Chiang Mai.', city: 'Bangkok', ll: [100.5, 13.75] },
+  ploy:   { name: 'Ploy Chaiyasit',   handle: 'ploy.c',      country: 'Thailandia', bio: 'Illustrazione e animazione a mano.', city: 'Chiang Mai', ll: [98.98, 18.79] },
+  aiko:   { name: 'Aiko Tanabe',      handle: 'aiko.t',      country: 'Giappone',   bio: 'Documentari brevi sui mestieri che scompaiono.', city: 'Kyoto', ll: [135.77, 35.01] },
+  ruben:  { name: 'Rubén Aldana',     handle: 'rubenaldana', country: 'Messico',    bio: 'Muralista. Colori pieni, muri lunghi.', city: 'Oaxaca', ll: [-96.72, 17.06] },
+  ines:   { name: 'Ines Obi',         handle: 'inesobi',     country: 'Nigeria',    bio: 'Scultura in metallo di recupero.', city: 'Lagos', ll: [3.38, 6.52] },
+  mara:   { name: 'Mara Delvecchio',  handle: 'maradv',      country: 'Francia',    bio: 'Musica elettronica e field recording.', city: 'Marsiglia', ll: [5.37, 43.3] },
+  thiago: { name: 'Thiago Moreira',   handle: 'thiagomor',   country: 'Brasile',    bio: 'Thriller a basso budget, luci al neon.', city: 'San Paolo', ll: [-46.63, -23.55] },
+  ananya: { name: 'Ananya Rao',       handle: 'ananya.rao',  country: 'India',      bio: 'Poesia visiva e tipografia.', city: 'Bangalore', ll: [77.59, 12.97] },
+  giulia: { name: 'Giulia Ferri',     handle: 'giulia.critica', country: 'Italia',  bio: 'Critica. Scrivo di cinema indipendente e pittura contemporanea.', type: 'critico', city: 'Milano', ll: [9.19, 45.46] },
+  teo:    { name: 'Teo Marini',       handle: 'teo.guarda',  country: 'Francia',    bio: 'Guardo, salvo, voto. Non creo (ancora).', type: 'utente', city: 'Lione', ll: [4.83, 45.76] },
 };
 const AIDS = Object.keys(ARTISTS);
 const avatar = id => id === 'me' ? ME_AVATAR : pic('av-' + id, 160, 160, true);
@@ -141,6 +141,8 @@ function addWork(o) {
   const stage = (blur, gray) => `${pic(w.id, o.w || 1200, o.h || 900, gray)}${gray ? '&' : '?'}blur=${blur}`;
   if (o.demo === 'cmp') w.before = stage(3, true);
   if (o.demo === 'steps') w.steps = [stage(10, true), stage(4, true), stage(1, true), stage(2)];
+  // "In the making": what's behind the work, one swipe to the side of the post (every other sample work)
+  if (!o.demo && o.type !== 'audio' && wid % 2 === 0) w.making = [{ src: stage(6, true), cap: 'Bozza' }, { src: pic('studio-' + w.id, o.w || 1200, o.h || 900), cap: 'Nello studio' }];
   WORKS.push(w);
   byId[w.id] = w;
   return w;

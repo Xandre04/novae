@@ -42,6 +42,23 @@ async function initGlobe() {
     const markers = COUNTRIES.flatMap(c => artistsIn(c).map(() => [c.c[0] + (r() - .5) * 6, c.c[1] + (r() - .5) * 4]))
       .concat(Array.from({ length: 10 }, () => [r() * 360 - 180, r() * 120 - 50]));
     const mk = svg.append('g').selectAll('image').data(markers).join('image').attr('href', STAR_SRC).attr('class', 'mk').attr('width', 18).attr('height', 20);
+    // points of interest of the chosen country: a white star on each city where its artists work, with the name
+    const poiG = svg.append('g').attr('class', 'pois');
+    globe.showPois = () => {
+      const byCity = {};
+      artistsIn(COUNTRIES[globe.idx]).forEach(id => { const a = ARTISTS[id]; if (a.ll) (byCity[a.city] ||= { city: a.city, ll: a.ll, ids: [] }).ids.push(id); });
+      poiG.selectAll('*').remove();
+      Object.values(byCity).forEach((p, i) => {
+        const g = poiG.append('g').attr('class', 'poi').datum(p).attr('tabindex', 0).attr('role', 'link')
+          .attr('aria-label', `${p.city}: ${p.ids.map(id => ARTISTS[id].name).join(', ')}`)
+          .on('click', () => { location.hash = '#artista/' + p.ids[0]; });
+        const inner = g.append('g').attr('class', 'poi-in').style('animation-delay', `${200 + i * 140}ms`);
+        inner.append('circle').attr('r', 16).attr('class', 'poi-hit');
+        inner.append('use').attr('href', '#star4').attr('x', -11).attr('y', -11).attr('width', 22).attr('height', 22);
+        inner.append('text').attr('x', 15).attr('y', 5).text(p.city);
+      });
+      drawFrame();
+    };
     // While the globe moves: no chalk filter (it re-renders the whole map every frame) and no invisible
     // tap areas; both come back once it stops. One redraw per frame at most.
     const drawFrame = () => {
@@ -50,6 +67,11 @@ async function initGlobe() {
       const cur = feats.find(f => f.properties.name === COUNTRIES[globe.idx].en);
       sel.datum(cur).attr('d', cur ? path : null);
       const center = [-globe.rot[0], -globe.rot[1]];
+      poiG.selectAll('.poi').each(function (p) {
+        const [x, y] = proj(p.ll);
+        this.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+        this.style.display = d3.geoDistance(p.ll, center) < Math.PI / 2 - .05 ? '' : 'none';
+      });
       mk.each(function (p) {
         const vis = d3.geoDistance(p, center) < Math.PI / 2 - .05;
         const [x, y] = proj(p);
@@ -91,6 +113,7 @@ async function initGlobe() {
       }));
     settle();
     globe.ready = true;
+    globe.showPois();
     $('#globeMsg').textContent = '';
   } catch {
     $('#globeMsg').textContent = 'Non riesco a caricare il globo';
@@ -101,6 +124,7 @@ function selectCountry(i) {
   prefs.country = globe.idx; savePrefs();
   updateCountryUi();
   if (!globe.ready) return;
+  globe.showPois();
   const c = COUNTRIES[globe.idx];
   const to = [-c.c[0], -c.c[1], 0];
   if (reduceMotion) { globe.rot = to; globe.draw(); return; }

@@ -249,6 +249,9 @@ function openPublish(w) {
         <div class="field"><span class="field-label">Processo</span>
           <label class="pub-extra"><input type="file" accept="image/*" multiple id="pubSteps"><i class="ph-light ph-film-strip"></i><span id="pubStepsTxt"></span></label>
           <small class="x-note">Da 2 a 6 foto delle fasi, in ordine: scorrono come un piccolo video e finiscono sull'opera.</small></div>
+        <div class="field"><span class="field-label">In the making</span>
+          <label class="pub-extra"><input type="file" accept="image/*" multiple id="pubMaking"><i class="ph-light ph-film-strip"></i><span id="pubMakingTxt"></span></label>
+          <small class="x-note">Fino a 4 foto di com'è nata (studio, schizzi, materiali): si vedono scorrendo di lato il post.</small></div>
         <div class="field"><label for="pubCo">Insieme a</label><select id="pubCo"><option value="">Nessuno</option>${AIDS.filter(id => typeOf(id) === 'artista').map(id => `<option value="${id}" ${w?.co === id ? 'selected' : ''}>${ARTISTS[id].name}</option>`).join('')}</select>
           <small class="x-note">L'opera compare su tutti e due i profili. Con il server, l'altro artista dovrà accettare.</small></div>
       </details>
@@ -256,20 +259,23 @@ function openPublish(w) {
       <button class="btn-accent" type="submit">${w ? 'Salva modifiche' : 'Pubblica'}</button>
     </form>`);
   pubExtra = { before: w?.before, steps: w?.steps };
+  pubMaking = w?.making || null;
   pubExtraText();
 }
 const pubCm = () => { const cm = [+$('#pubCmW').value, +$('#pubCmH').value]; return cm.every(n => n > 0 && n <= 2000) ? cm : undefined; };
 // extras of the work being published: a sketch for "prima e dopo" or the stages of the process (one or the other)
-let pubExtra = {};
+let pubExtra = {}, pubMaking = null; // pubMaking: the "In the making" photos, alongside either extra
 function pubExtraText() {
   $('#pubBeforeTxt').textContent = T(pubExtra.before ? 'Bozza aggiunta. Tocca per cambiarla' : 'Aggiungi la bozza');
   $('#pubStepsTxt').textContent = pubExtra.steps ? `${pubExtra.steps.length} ${T('fasi aggiunte. Tocca per cambiarle')}` : T('Aggiungi le fasi');
+  $('#pubMakingTxt').textContent = pubMaking ? `${pubMaking.length} ${T('foto aggiunte. Tocca per cambiarle')}` : T('Aggiungi le foto');
 }
 async function onPubExtra(input) {
   const files = [...input.files];
   if (!files.length) return;
   try {
-    if (input.id === 'pubBefore') pubExtra = { before: (await compressImage(files[0])).data };
+    if (input.id === 'pubMaking') pubMaking = (await Promise.all(files.slice(0, 4).map(f => compressImage(f, 720)))).map(r => ({ src: r.data }));
+    else if (input.id === 'pubBefore') pubExtra = { before: (await compressImage(files[0])).data };
     else {
       if (files.length < 2) { $('#pubErr').textContent = 'Scegli almeno due foto delle fasi.'; return; }
       pubExtra = { steps: (await Promise.all(files.slice(0, 6).map(f => compressImage(f, 720)))).map(r => r.data) };
@@ -296,7 +302,7 @@ function submitPublish(f) {
   if (f.dataset.edit) {
     const w = byId[f.dataset.edit], before = { ...w };
     Object.assign(w, { t, disc: $('#pubDisc').value, desc: $('#pubDesc').value.trim() || w.desc, img: f.dataset.img, thumb: f.dataset.img, w: +f.dataset.w, h: +f.dataset.h,
-      before: pubExtra.before, steps: pubExtra.steps, co: $('#pubCo').value || undefined, cm: pubCm() });
+      before: pubExtra.before, steps: pubExtra.steps, co: $('#pubCo').value || undefined, cm: pubCm(), making: pubMaking || undefined });
     if (!saveMine()) { Object.assign(w, before); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: usa un\'immagine più leggera.'; return; }
     if (w.co && w.co !== before.co && w.co !== 'me') {
       window.NovaePush?.notifyEvent('E5', { workId: w.id, workTitle: w.t, actorName: ARTISTS.me.name }, { recipients: [w.co], actorId: 'me' });
@@ -309,7 +315,7 @@ function submitPublish(f) {
     img: f.dataset.img, thumb: f.dataset.img, w: +f.dataset.w, h: +f.dataset.h,
     likes: 0, rating: 0, views: 0, comments: 0, price: 0, year: new Date().getFullYear(), ts: Date.now(),
     audience: typeOf('me') === 'utente' ? 'followers' : 'public', // users publish only for their followers
-    before: pubExtra.before, steps: pubExtra.steps, co: $('#pubCo').value || undefined, cm: pubCm(),
+    before: pubExtra.before, steps: pubExtra.steps, co: $('#pubCo').value || undefined, cm: pubCm(), making: pubMaking || undefined,
   };
   MINE.unshift(w);
   if (!saveMine()) { MINE.shift(); $('#pubErr').textContent = 'Spazio pieno su questo dispositivo: elimina una tua opera e riprova.'; return; }

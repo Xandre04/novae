@@ -1159,3 +1159,39 @@ body.pt-picking #thread .x-media { cursor: crosshair; outline: 2px dashed var(--
 @media (prefers-reduced-motion: reduce) { .prof-cta .pop { animation: none; } }
 .action-list button > span { display: grid; text-align: left; }
 .action-list button > span small { margin-top: 2px; font-size: 12px; color: var(--ink-3); font-weight: 400; }
+
+/* "In the making" carousel inside a post (feed.js): swipe sideways, dots below, arrows with a mouse */
+.car { position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+.car::-webkit-scrollbar { display: none; }
+.car-slide { position: relative; flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; }
+.car-slide > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mk-tag, .mk-cap { position: absolute; left: 10px; padding: 3px 9px; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .1em; }
+.mk-tag { top: 10px; display: flex; align-items: center; gap: 5px; text-transform: uppercase; }
+.mk-cap { bottom: 26px; letter-spacing: .02em; font-weight: 500; font-size: 12px; }
+.car-dots { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; justify-content: center; gap: 5px; pointer-events: none; }
+.car-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .45); transition: background .3s, transform .3s var(--ease-out); }
+.car-dots i.on { background: #fff; transform: scale(1.25); }
+.car-arrow { position: absolute; top: 50%; width: 34px; height: 34px; margin-top: -17px; border-radius: 50%; background: rgba(0, 0, 0, .5); color: #fff; font-size: 18px; display: none; place-items: center; }
+.car-arrow.prev { left: 8px; } .car-arrow.next { right: 8px; }
+@media (hover: hover) and (pointer: fine) {
+  .x-media:hover .car-arrow.next, .reel-media:hover .car-arrow.next, .car-moved:hover .car-arrow.prev { display: grid; }
+  .car-end:hover .car-arrow.next { display: none; }
+}
+.reel-media .car-dots { bottom: auto; top: calc(60px + env(safe-area-inset-top)); }
+.reel-media .mk-tag { top: calc(84px + env(safe-area-inset-top)); }
+.reel-media .mk-cap { bottom: auto; top: calc(116px + env(safe-area-inset-top)); }
+
+/* Galleria: the stars behind a category take its colour (galleria.js: tintSky) */
+#sky svg { transition: fill .4s ease, filter .4s ease; }
+#sky svg.tinted { fill: currentColor; opacity: .95; animation: none; filter: drop-shadow(0 0 4px currentColor); }
+
+/* Novae: points of interest of the chosen country, white stars that pop in one after the other */
+#globe .poi { cursor: pointer; }
+#globe .poi-in { fill: #fff; animation: poi-in .5s var(--ease-out) both; transform-box: fill-box; transform-origin: 11px 11px; }
+#globe .poi-in use { filter: drop-shadow(0 0 5px rgba(255, 255, 255, .7)); }
+#globe .poi-hit { fill: transparent; }
+#globe .poi text { font: 600 14px var(--sans); fill: #fff; paint-order: stroke; stroke: #141414; stroke-width: 4px; stroke-linejoin: round; letter-spacing: .04em; }
+#globe .poi:focus-visible { outline: none; }
+#globe .poi:focus-visible use { filter: drop-shadow(0 0 6px var(--accent-hi)); }
+@keyframes poi-in { from { opacity: 0; transform: scale(.3); } }
+@media (prefers-reduced-motion: reduce) { #globe .poi-in { animation: none; } }

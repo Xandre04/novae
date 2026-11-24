@@ -241,6 +241,12 @@ document.addEventListener('click', e => {
     case 'card-save': saveCard(); break;
     case 'show': openShow(showList); break;
     case 'cmp': break;
+    case 'car-step': { // a mouse has no sideways swipe: the arrows move the carousel one slide
+      e.preventDefault();
+      const car = el.parentElement.querySelector('.car');
+      car.scrollBy({ left: +el.dataset.dir * car.clientWidth, behavior: reduceMotion ? 'auto' : 'smooth' });
+      break;
+    }
     case 'pt-pick': togglePtPick(el); break;
     case 'pt': showPt(+el.dataset.x, +el.dataset.y); break;
     case 'sig-clear': clearSig(); break;
@@ -405,7 +411,7 @@ document.addEventListener('submit', e => {
 document.addEventListener('change', e => {
   if (e.target.id === 'pubFile') { onPubFile(e.target.files[0]); return; }
   if (e.target.id === 'bnFile') { onBannerFile(e.target.files[0]); return; }
-  if (e.target.id === 'pubBefore' || e.target.id === 'pubSteps') { onPubExtra(e.target); return; }
+  if (e.target.id === 'pubBefore' || e.target.id === 'pubSteps' || e.target.id === 'pubMaking') { onPubExtra(e.target); return; }
   if (e.target.matches('[data-lang]')) { store.set('novae.lang', e.target.value); location.reload(); return; }
   if (e.target.dataset.pushPref) { window.NovaePush?.setEventPref(e.target.dataset.pushPref, e.target.checked); return; }
   const k = e.target.dataset.toggle;
@@ -417,6 +423,14 @@ document.addEventListener('change', e => {
 });
 
 $('#q').addEventListener('input', e => renderResults(e.target.value));
+// carousels: the dot of the slide on screen lights up
+document.addEventListener('scroll', e => {
+  const car = e.target;
+  if (!car.classList?.contains('car')) return;
+  const i = Math.round(car.scrollLeft / car.clientWidth), box = car.parentElement;
+  $$('.car-dots i', box).forEach((d, j) => d.classList.toggle('on', j === i));
+  box.classList.toggle('car-moved', i > 0); box.classList.toggle('car-end', i === car.children.length - 1);
+}, true);
 // "prima e dopo": the bar moves the edge between sketch and finished work
 document.addEventListener('input', e => { if (e.target.matches('.cmp-range')) e.target.parentElement.style.setProperty('--x', e.target.value + '%'); });
 // process posts: every 1.2 s each one shows its next stage, and holds one beat longer on the finished work

@@ -45,6 +45,9 @@ window.NOVAE_I18N = { en: {} };
     'Servono per vederla sul muro, in realtà aumentata, alla grandezza vera.': 'Used to see it on a wall, in augmented reality, at its real size.',
     'Misure, bozza, processo, collaborazione': 'Size, sketch, process, collaboration',
     'Vedila sul tuo muro': 'See it on your wall', "Preparo l'opera per il tuo muro": 'Getting the work ready for your wall', 'Non riesco a preparare questa immagine': "I can't prepare this image",
+    'Roma': 'Rome', 'Milano': 'Milan', 'Marsiglia': 'Marseille', 'Lione': 'Lyon', 'San Paolo': 'São Paulo', // cities on the globe
+    'In the making': 'In the making', 'Bozza': 'Sketch', 'Nello studio': 'In the studio', 'Aggiungi le foto': 'Add the photos', 'foto aggiunte. Tocca per cambiarle': 'photos added. Tap to change them',
+    "Fino a 4 foto di com'è nata (studio, schizzi, materiali): si vedono scorrendo di lato il post.": 'Up to 4 photos of how it was made (studio, sketches, materials): people see them by swiping the post sideways.',
     'Inquadra il codice': 'Scan the code', 'per entrare su NOVAE': 'to get into NOVAE', 'il social di chi crea': 'the social network for makers',
     ...CATS, ...COUNTRIES,
     // navigation, sections, titles
