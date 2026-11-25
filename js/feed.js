@@ -272,8 +272,8 @@ function reelHtml(w) {
         ${w.a === 'me' ? '' : `<button class="reel-follow ${follows ? 'on' : ''}" data-act="follow" data-a="${w.a}" aria-pressed="${follows}">${follows ? 'Segui già' : 'Segui'}</button>`}
       </div>
       <h2>${w.t}</h2>
-      <p class="reel-desc" data-act="expand">${w.desc}</p>
       <p class="reel-tags">${catTag(w)}${w.rating ? rating(w.rating, 12) : '<span class="new-tag">Nuova</span>'}<span>${agoText(w)}</span></p>
+      <p class="reel-desc" data-act="expand">${w.desc}</p>
     </div>
   </section>`;
 }
