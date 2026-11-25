@@ -275,8 +275,8 @@ function reelHtml(w) {
         <p class="reel-by">${[w.a, w.co].filter(Boolean).map(aid => `<a href="${profileHref(aid)}">@${ARTISTS[aid].handle}</a>`).join(' <span class="x-and">e</span> ')} <span class="reel-time">· ${agoText(w)}</span></p>
         ${w.a === 'me' ? '' : `<button class="reel-follow ${follows ? 'on' : ''}" data-act="follow" data-a="${w.a}" aria-pressed="${follows}">${follows ? 'Segui già' : 'Segui'}</button>`}
       </div>
-      <h2>${w.t}</h2>
-      <p class="reel-tags">${catIconLink(w)}${ratePill(w)}</p>
+      <div class="reel-title">${catIconLink(w)}<h2>${w.t}</h2></div>
+      <p class="reel-tags">${ratePill(w)}</p>
       <p class="reel-desc" data-act="expand">${w.desc}</p>
     </div>
   </section>`;

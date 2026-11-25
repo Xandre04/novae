@@ -1247,3 +1247,8 @@ img.broken { visibility: hidden; }
 .reel-cat img { width: 30px; height: 30px; }
 .reel-cat i { font-size: 22px; color: #fff; }
 .reel-meta .reel-tags { align-items: center; gap: 8px; }
+
+/* Scorri: the category icon to the left of the title, the vote pill under it */
+.reel-title { display: flex; align-items: center; gap: 9px; margin: 10px 0 6px; min-width: 0; }
+.reel-meta .reel-title h2 { margin: 0; min-width: 0; }
+.reel-meta .reel-tags { margin-top: 0; }
