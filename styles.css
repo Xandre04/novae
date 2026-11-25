@@ -1219,6 +1219,7 @@ img.broken { visibility: hidden; }
 .reel-who .reel-by { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
 .reel-who .reel-follow { position: static; transform: none; width: auto; height: auto; padding: 5px 14px; border-radius: 9px; background: none; border: 1.5px solid rgba(255, 255, 255, .85); color: #fff; font-size: 13px; font-weight: 600; line-height: 1.2; flex: none; text-shadow: none; }
 .reel-who .reel-follow:hover { background: rgba(255, 255, 255, .12); }
+.reel-who .reel-follow.on { background: rgba(255, 255, 255, .2); border-color: transparent; } /* "Segui già": quieter than "Segui" */
 .reel-meta h2 { font-size: 16px; margin: 10px 0 4px; }
 .reel-meta .reel-desc { -webkit-line-clamp: 1; }
 .reel-meta .reel-desc.open { -webkit-line-clamp: unset; }

@@ -253,7 +253,7 @@ let reelObserver;
 function reelHtml(w) {
   const a = ARTISTS[w.a];
   const src = w.ts ? w.img : pic(w.id, 720, 1280); // portrait crop of the same photo (sharp on a phone, a third lighter than 900x1600)
-  const canFollow = w.a !== 'me' && !followed.has(w.a);
+  const follows = followed.has(w.a);
   return `<section class="reel" data-id="${w.id}" data-type="${w.type}" aria-label="${w.t} \u2014 ${a.name}">
     <div class="reel-media ph-img" data-dbl="${w.id}">${img(src, w.t).replace(' src="', ' data-src="')}</div>
     <span class="reel-shade" aria-hidden="true"></span>
@@ -269,7 +269,7 @@ function reelHtml(w) {
     <div class="reel-meta">
       <div class="reel-who">${avatarRing(w.a, 'sm')}
         <p class="reel-by">${[w.a, w.co].filter(Boolean).map(aid => `<a href="${profileHref(aid)}">@${ARTISTS[aid].handle}</a>`).join(' <span class="x-and">e</span> ')}</p>
-        ${canFollow ? `<button class="reel-follow" data-act="follow" data-a="${w.a}" aria-label="Segui ${a.name}">Segui</button>` : ''}
+        ${w.a === 'me' ? '' : `<button class="reel-follow ${follows ? 'on' : ''}" data-act="follow" data-a="${w.a}" aria-pressed="${follows}">${follows ? 'Segui già' : 'Segui'}</button>`}
       </div>
       <h2>${w.t}</h2>
       <p class="reel-desc" data-act="expand">${w.desc}</p>
