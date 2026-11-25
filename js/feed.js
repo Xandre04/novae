@@ -83,13 +83,17 @@ const CAT_COLORS = {
 const catIcon = d => CAT_COLORS[d] ? `<img class="cat-ico" src="assets/categorie/${slugOf(d)}.svg" alt="" aria-hidden="true">`
   : `<span class="cat-ico ring" aria-hidden="true"><i class="ph-light ph-${CAT_ICONS[d]}"></i></span>`;
 const catTag = w => CAT_ICONS[w.disc] ? `<a class="cat-tag" href="#galleria/${slugOf(w.disc)}"${CAT_COLORS[w.disc] ? ` style="--c:${CAT_COLORS[w.disc]}"` : ''}>${CAT_COLORS[w.disc] ? `<img src="assets/categorie/${slugOf(w.disc)}.svg" alt="" aria-hidden="true">` : `<i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>`}${w.disc}</a>` : '';
+// the stars in a pill with the vote in numbers ("3,9"), in every feed; a work with no vote yet says "Nuova"
+const ratePill = w => `<span class="rate-pill">${w.rating ? `${rating(w.rating, 11)}<b>${w.rating.toLocaleString(LOCALE, { minimumFractionDigits: 1 })}</b>` : '<b>Nuova</b>'}</span>`;
+// in Scorri the category is just its icon (the name is in its label for screen readers)
+const catIconLink = w => CAT_ICONS[w.disc] ? `<a class="reel-cat" href="#galleria/${slugOf(w.disc)}" aria-label="${w.disc}" title="${w.disc}">${CAT_COLORS[w.disc] ? `<img src="assets/categorie/${slugOf(w.disc)}.svg" alt="">` : `<i class="ph-light ph-${CAT_ICONS[w.disc]}"></i>`}</a>` : '';
 function postX(w) {
   return `<article class="xpost" data-thread="${w.id}">
     <div class="x-ava">${avatarRing(w.a)}${w.co ? avatarRing(w.co, 'co') : ''}</div>
     <div class="x-body">
       <div class="x-head">
         <p class="x-meta">${byline(w)} <span class="x-time">· ${agoText(w)}</span></p>
-        ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
+        ${ratePill(w)}
       </div>
       <p class="x-title">${w.t}</p>
       <p class="x-tags">${catTag(w)}${audTag(w)}</p>
@@ -155,7 +159,7 @@ function renderThread(id, focus) {
       <div class="x-body">
         <div class="x-head">
           <p class="x-meta">${byline(w)} <span class="x-time">· ${agoText(w)}</span></p>
-          ${w.rating ? rating(w.rating, 16) : '<span class="new-tag">Nuova</span>'}
+          ${ratePill(w)}
         </div>
         <p class="x-title">${w.t}</p>
       <p class="x-tags">${catTag(w)}${audTag(w)}</p>
@@ -272,7 +276,7 @@ function reelHtml(w) {
         ${w.a === 'me' ? '' : `<button class="reel-follow ${follows ? 'on' : ''}" data-act="follow" data-a="${w.a}" aria-pressed="${follows}">${follows ? 'Segui già' : 'Segui'}</button>`}
       </div>
       <h2>${w.t}</h2>
-      <p class="reel-tags">${catTag(w)}<span class="rate-pill">${w.rating ? `${rating(w.rating, 11)}<b>${w.rating.toLocaleString(LOCALE, { minimumFractionDigits: 1 })}</b>` : '<b>Nuova</b>'}</span></p>
+      <p class="reel-tags">${catIconLink(w)}${ratePill(w)}</p>
       <p class="reel-desc" data-act="expand">${w.desc}</p>
     </div>
   </section>`;
