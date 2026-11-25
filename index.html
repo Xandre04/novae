@@ -146,12 +146,10 @@
           <svg id="globe" viewBox="0 0 540 540" role="img" aria-label="Globo con gli artisti nel mondo"></svg>
           <p class="globe-msg" id="globeMsg">Carico il mondo...</p>
         </div>
-        <div class="country-nav">
-          <button class="icon-btn" data-act="country-prev" aria-label="Paese precedente"><i class="ph-light ph-caret-left"></i></button>
-          <span class="dots" aria-hidden="true"></span>
-          <h2 class="hand" id="countryName">Thailandia</h2>
-          <span class="dots" aria-hidden="true"></span>
-          <button class="icon-btn" data-act="country-next" aria-label="Paese successivo"><i class="ph-light ph-caret-right"></i></button>
+        <div class="country-wheel" id="countryWheel" role="group" aria-label="Paesi">
+          <button class="cw-side" data-act="country-prev" id="countryPrev"></button>
+          <h2 class="cw-cur hand" id="countryName">Thailandia</h2>
+          <button class="cw-side" data-act="country-next" id="countryNext"></button>
         </div>
         <p class="country-meta" id="countryMeta"></p>
         <div class="country-artists" id="countryArtists"></div>

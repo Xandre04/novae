@@ -61,12 +61,18 @@ function openPoi(p) {
     ${ids.length ? `<p class="x-note">Artisti NOVAE in ${c.it}</p><div class="country-artists">${ids.map(id => `<a class="c-artist" href="#artista/${id}" data-act="sheet-close"><span class="avatar-ring">${img(avatar(id), '')}</span>${ARTISTS[id].name.split(' ')[0]}</a>`).join('')}</div>` : ''}
   </div>`);
 }
+// the countries in alphabetical order (in the interface language), for the wheel under the globe
+const ORDER = COUNTRIES.map((c, i) => i).sort((a, b) => T(COUNTRIES[a].it).localeCompare(T(COUNTRIES[b].it), LOCALE));
+const stepCountry = d => { const n = ORDER.length, p = ORDER.indexOf(globe.idx); selectCountry(ORDER[(p + d + n) % n], d); };
 function artistsIn(c) { return AIDS.filter(id => ARTISTS[id].country === c.it); }
 function updateCountryUi() {
   const c = COUNTRIES[globe.idx];
   const ids = artistsIn(c);
   const works = WORKS.filter(w => ids.includes(w.a)).length;
   $('#countryName').textContent = c.it;
+  const n = ORDER.length, p = ORDER.indexOf(globe.idx); // the one before and the one after, on the sides of the wheel
+  $('#countryPrev').textContent = COUNTRIES[ORDER[(p - 1 + n) % n]].it;
+  $('#countryNext').textContent = COUNTRIES[ORDER[(p + 1) % n]].it;
   $('#countryMeta').textContent = `${ids.length} ${ids.length === 1 ? 'artista' : 'artisti'}, ${works} opere`;
   $('#countryArtists').innerHTML = ids.map(id => `<a class="c-artist" href="#artista/${id}"><span class="avatar-ring">${img(avatar(id), '')}</span>${ARTISTS[id].name.split(' ')[0]}</a>`).join('');
 }
@@ -228,13 +234,33 @@ function flyTo(to, scale) {
 }
 function zoomOut() { if (globe.ready) flyTo(globe.rot, WORLD); }
 function zoomIn() { if (globe.ready) flyTo(...zoomFor(COUNTRIES[globe.idx])); }
-function selectCountry(i) {
+// dir: the wheel's direction (1 = next, -1 = previous), for its little slide
+function selectCountry(i, dir) {
   globe.idx = (i + COUNTRIES.length) % COUNTRIES.length;
   prefs.country = globe.idx; savePrefs();
   updateCountryUi();
+  const wh = $('#countryWheel');
+  wh.classList.remove('slide-l', 'slide-r'); void wh.offsetWidth;
+  if (dir) wh.classList.add(dir > 0 ? 'slide-l' : 'slide-r');
   if (!globe.ready) return;
   globe.showPois();
   const sel = document.querySelector('#globe .sel'); // a red glow pulses around the new country, then stays soft
   if (sel) { sel.classList.toggle('pulse', false); void sel.getBoundingClientRect(); sel.classList.toggle('pulse', true); }
-  flyTo(...zoomFor(COUNTRIES[globe.idx]));
+  const c = COUNTRIES[globe.idx];
+  flyTo([-c.c[0], -c.c[1], 0], globe.scale); // turn to it, keeping the zoom: zooming in is by hand (pinch) or the button
+}
+// swipe the wheel to run through the countries: one step every 56px dragged
+{
+  const wh = $('#countryWheel');
+  let x0 = null, dragged = false;
+  wh.addEventListener('pointerdown', e => { x0 = e.clientX; dragged = false; });
+  wh.addEventListener('pointermove', e => {
+    if (x0 === null) return;
+    const dx = e.clientX - x0;
+    if (!dragged && Math.abs(dx) > 8) { dragged = true; try { wh.setPointerCapture(e.pointerId); } catch { /* gone */ } }
+    if (Math.abs(dx) >= 56) { stepCountry(dx < 0 ? 1 : -1); x0 = e.clientX; }
+  });
+  const end = () => { x0 = null; };
+  wh.addEventListener('pointerup', end); wh.addEventListener('pointercancel', end);
+  wh.addEventListener('click', e => { if (dragged) { e.stopPropagation(); e.preventDefault(); dragged = false; } }, true); // a swipe isn't a tap
 }

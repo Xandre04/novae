@@ -368,8 +368,8 @@ document.addEventListener('click', e => {
       $('#relPanel').classList.toggle('open', open);
       break;
     }
-    case 'country-prev': selectCountry(globe.idx - 1); break;
-    case 'country-next': selectCountry(globe.idx + 1); break;
+    case 'country-prev': stepCountry(-1); break;
+    case 'country-next': stepCountry(1); break;
     case 'ptab': profTab = el.dataset.v; renderProfile(el.dataset.a || undefined); break;
     case 'psort': profSort = el.dataset.v; renderProfile(el.dataset.a || undefined); break;
     case 'pick-col': profCol = el.dataset.col || null; refresh(); break;
@@ -473,7 +473,7 @@ document.addEventListener('keydown', e => {
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === '/' && store.get('novae.in')) { e.preventDefault(); openSearch(); }
   if (scr === 'vista' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); stepVista(e.key === 'ArrowDown' ? 1 : -1); }
-  if (scr === 'novae' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) selectCountry(globe.idx + (e.key === 'ArrowRight' ? 1 : -1));
+  if (scr === 'novae' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) stepCountry(e.key === 'ArrowRight' ? 1 : -1);
 });
 
 window.addEventListener('hashchange', route);
