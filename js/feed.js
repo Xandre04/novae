@@ -272,7 +272,7 @@ function reelHtml(w) {
     </div>
     <div class="reel-meta">
       <div class="reel-who">${avatarRing(w.a, 'sm')}
-        <p class="reel-by">${[w.a, w.co].filter(Boolean).map(aid => `<a href="${profileHref(aid)}">@${ARTISTS[aid].handle}</a>`).join(' <span class="x-and">e</span> ')} <span class="reel-time">· ${agoText(w)}</span></p>
+        <p class="reel-by">${[w.a, w.co].filter(Boolean).map(aid => `<a href="${profileHref(aid)}">@${ARTISTS[aid].handle}</a>`).join(' <span class="x-and">&amp;</span> ')} <span class="reel-time">· ${agoText(w)}</span></p>
         ${w.a === 'me' ? '' : `<button class="reel-follow ${follows ? 'on' : ''}" data-act="follow" data-a="${w.a}" aria-pressed="${follows}">${follows ? 'Segui già' : 'Segui'}</button>`}
       </div>
       <div class="reel-title">${catIconLink(w)}<h2>${w.t}</h2></div>

@@ -1054,7 +1054,7 @@ body[data-screen="opera"] .player { border-bottom-color: transparent; }
 
 /* Collaborations: the second author's small avatar on the first, "e" between the names */
 .x-ava .avatar-ring.co { position: relative; width: 30px; height: 30px; padding: 2px; border-width: 1.5px; margin: -16px 0 0 32px; background: var(--bg); }
-.x-and { color: var(--ink-3); font-weight: 400; }
+.x-and { color: inherit; } /* "&" between collaborators, the same colour as their names */
 .reel-by { display: flex; flex-wrap: wrap; gap: 0 5px; }
 
 /* Profile: sort pills and the "Mostra" button on one row */
@@ -1219,7 +1219,7 @@ img.broken { visibility: hidden; }
 .reel-who .reel-by { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
 .reel-who .reel-follow { position: static; transform: none; width: auto; height: auto; padding: 5px 14px; border-radius: 9px; background: none; border: 1.5px solid rgba(255, 255, 255, .85); color: #fff; font-size: 13px; font-weight: 600; line-height: 1.2; flex: none; text-shadow: none; }
 .reel-who .reel-follow:hover { background: rgba(255, 255, 255, .12); }
-.reel-who .reel-follow.on { background: rgba(255, 255, 255, .2); border-color: transparent; } /* "Segui già": quieter than "Segui" */
+.reel-who .reel-follow.on { background: rgba(255, 255, 255, .2); } /* "Segui già": the same outline as "Segui", plus a light fill */
 .reel-meta h2 { font-size: 16px; margin: 10px 0 4px; }
 .reel-meta .reel-desc { -webkit-line-clamp: 1; margin-top: 8px; }
 .reel-meta .reel-tags { margin-top: 2px; }

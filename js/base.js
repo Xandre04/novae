@@ -282,7 +282,7 @@ const heart = (w, withCount = false, cls = '') => {
 const shareBtn = w => `<button class="act" data-act="share" data-id="${w.id}" aria-label="Condividi"><i class="ph-light ph-arrow-bend-up-right"></i></button>`;
 const commentBtn = w => `<button class="act" data-act="comments" data-id="${w.id}" aria-label="Commenti"><i class="ph-light ph-chat-circle"></i></button>`;
 // a work's authors, each name linking to its profile; in the narrow post header a collaboration uses first names ("Ploy e Ananya")
-const byline = (w, cls = 'x-name') => [w.a, w.co].filter(Boolean).map(aid => `<a class="${cls}" href="${profileHref(aid)}">${w.co && cls ? ARTISTS[aid].name.split(' ')[0] : ARTISTS[aid].name}</a>`).join(' <span class="x-and">e</span> ');
+const byline = (w, cls = 'x-name') => [w.a, w.co].filter(Boolean).map(aid => `<a class="${cls}" href="${profileHref(aid)}">${w.co && cls ? ARTISTS[aid].name.split(' ')[0] : ARTISTS[aid].name}</a>`).join(' <span class="x-and">&amp;</span> ');
 const authorOf = (w, aid) => w.a === aid || w.co === aid;
 // The colour of a work (Spotify-style): the most common saturated colour of a tiny copy of the image, cached per image
 const TINTS = new Map();
