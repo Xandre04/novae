@@ -1207,3 +1207,21 @@ body.pt-picking #thread .x-media { cursor: crosshair; outline: 2px dashed var(--
 
 /* a picture that couldn't load: hidden, its frame stays quiet (app.js) */
 img.broken { visibility: hidden; }
+
+/* Scorri laid out like the big reels apps: who + Segui bottom left, a column of icons with counts on the right
+   ending at the same height, a thin time bar with margins just above the capsule */
+.reel-rail { bottom: calc(var(--dock-h) + 22px); gap: 14px; }
+.reel-rail .act { display: grid; justify-items: center; gap: 2px; font-size: 30px; }
+.reel-rail .act small { font-size: 12px; }
+.reel-meta { bottom: calc(var(--dock-h) + 22px); right: 74px; }
+.reel-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.reel-who .avatar-ring.sm { width: 38px; height: 38px; padding: 2px; border-color: var(--ink); flex: none; }
+.reel-who .reel-by { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.reel-who .reel-follow { position: static; transform: none; width: auto; height: auto; padding: 5px 14px; border-radius: 9px; background: none; border: 1.5px solid rgba(255, 255, 255, .85); color: #fff; font-size: 13px; font-weight: 600; line-height: 1.2; flex: none; text-shadow: none; }
+.reel-who .reel-follow:hover { background: rgba(255, 255, 255, .12); }
+.reel-meta h2 { font-size: 16px; margin: 10px 0 4px; }
+.reel-meta .reel-desc { -webkit-line-clamp: 1; }
+.reel-meta .reel-desc.open { -webkit-line-clamp: unset; }
+.reel-tags { flex-wrap: wrap; gap: 6px 10px; }
+.reel-tags .cat-tag { background: rgba(0, 0, 0, .35); color: #eee; border-color: rgba(255, 255, 255, .35); }
+.reel .progress { left: 20px; right: 20px; bottom: calc(var(--dock-h) + 8px); height: 2px; border-radius: 2px; overflow: hidden; }

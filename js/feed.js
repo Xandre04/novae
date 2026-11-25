@@ -259,19 +259,21 @@ function reelHtml(w) {
     <span class="reel-shade" aria-hidden="true"></span>
     ${w.type !== 'image' ? '<span class="reel-paused" aria-hidden="true"><i class="ph-fill ph-play"></i></span><div class="progress"><span></span></div>' : ''}
     <div class="reel-rail">
-      <span class="reel-ava">${avatarRing(w.a)}${canFollow ? `<button class="reel-follow" data-act="follow" data-a="${w.a}" aria-label="Segui ${a.name}">+</button>` : ''}</span>
       ${heart(w, true)}
-      <button class="act" data-act="comments" data-id="${w.id}" aria-label="Commenti"><i class="ph-light ph-chat-circle"></i><small>${fmt(w.comments)}</small></button>
-      ${saveBtn(w)}
+      <button class="act" data-act="comments" data-id="${w.id}" aria-label="Commenti"><i class="ph-light ph-chat-circle"></i><small>${short(w.comments)}</small></button>
+      <button class="act repost ${reposted.has(w.id) ? 'on' : ''}" data-act="repost" data-id="${w.id}" aria-pressed="${reposted.has(w.id)}" aria-label="Ripubblica"><i class="ph-light ph-repeat"></i><small data-rp="${w.id}" data-short="1">${short(repostCount(w))}</small></button>
       ${shareBtn(w)}
+      ${saveBtn(w)}
       <button class="act" data-act="more" data-id="${w.id}" aria-label="Altro"><i class="ph-light ph-dots-three"></i></button>
     </div>
     <div class="reel-meta">
-      <p class="reel-by">${[w.a, w.co].filter(Boolean).map(aid => `<a href="${profileHref(aid)}">@${ARTISTS[aid].handle}</a>`).join(' <span class="x-and">e</span> ')}</p>
+      <div class="reel-who">${avatarRing(w.a, 'sm')}
+        <p class="reel-by">${[w.a, w.co].filter(Boolean).map(aid => `<a href="${profileHref(aid)}">@${ARTISTS[aid].handle}</a>`).join(' <span class="x-and">e</span> ')}</p>
+        ${canFollow ? `<button class="reel-follow" data-act="follow" data-a="${w.a}" aria-label="Segui ${a.name}">Segui</button>` : ''}
+      </div>
       <h2>${w.t}</h2>
       <p class="reel-desc" data-act="expand">${w.desc}</p>
-      <p class="reel-tags">${w.rating ? rating(w.rating, 12) : '<span class="new-tag">Nuova</span>'}<span>${agoText(w)}</span></p>
-      <p class="reel-cats">${catTag(w)}</p>
+      <p class="reel-tags">${catTag(w)}${w.rating ? rating(w.rating, 12) : '<span class="new-tag">Nuova</span>'}<span>${agoText(w)}</span></p>
     </div>
   </section>`;
 }
