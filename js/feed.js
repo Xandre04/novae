@@ -268,11 +268,11 @@ function reelHtml(w) {
     </div>
     <div class="reel-meta">
       <div class="reel-who">${avatarRing(w.a, 'sm')}
-        <p class="reel-by">${[w.a, w.co].filter(Boolean).map(aid => `<a href="${profileHref(aid)}">@${ARTISTS[aid].handle}</a>`).join(' <span class="x-and">e</span> ')}</p>
+        <p class="reel-by">${[w.a, w.co].filter(Boolean).map(aid => `<a href="${profileHref(aid)}">@${ARTISTS[aid].handle}</a>`).join(' <span class="x-and">e</span> ')} <span class="reel-time">· ${agoText(w)}</span></p>
         ${w.a === 'me' ? '' : `<button class="reel-follow ${follows ? 'on' : ''}" data-act="follow" data-a="${w.a}" aria-pressed="${follows}">${follows ? 'Segui già' : 'Segui'}</button>`}
       </div>
       <h2>${w.t}</h2>
-      <p class="reel-tags">${catTag(w)}${w.rating ? rating(w.rating, 12) : '<span class="new-tag">Nuova</span>'}<span>${agoText(w)}</span></p>
+      <p class="reel-tags">${catTag(w)}<span class="rate-pill">${w.rating ? `${rating(w.rating, 11)}<b>${w.rating.toLocaleString(LOCALE, { minimumFractionDigits: 1 })}</b>` : '<b>Nuova</b>'}</span></p>
       <p class="reel-desc" data-act="expand">${w.desc}</p>
     </div>
   </section>`;
